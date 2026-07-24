@@ -1,0 +1,12 @@
+-- SIGOM 2026 V31.0 GOLD — ORDEM DE INSTALAÇÃO
+-- Execute os arquivos abaixo, nesta ordem, no SQL Editor do Supabase:
+-- 1. 01_schema_rls.sql
+-- 2. 03_v30_1_importacao_obras.sql
+-- 3. 04_v30_2_grupos_usuarios.sql
+-- 4. 05_v30_5_fio_online.sql
+--
+-- Para banco que já recebeu parte dos scripts e apresentou erro de política duplicada:
+-- execute 03A_correcao_politicas_importacao.sql antes de repetir o passo 2.
+--
+-- Depois, promova o primeiro administrador usando:
+-- 06_promover_administrador_por_email.sql
