@@ -44,6 +44,7 @@ async function refreshAll(){
   $('baseStatus').textContent='Atualizando dados...';
   try{
     const works=await fetchAllWorks();
+    if(window.SG_setData) window.SG_setData(works).catch(e=>console.error('Painel (legado):',e));
     const [{count:groups},{count:fio},{data:lastImport}]=await Promise.all([
       supabase.from('grupos').select('*',{count:'exact',head:true}).eq('arquivado',false),
       supabase.from('fio_edicoes').select('*',{count:'exact',head:true}),
@@ -267,3 +268,60 @@ $('fioGroupPrintBtn')?.addEventListener('click',async()=>{
  const gid=$('fioGroupSelect').value;if(!gid)return alert('Selecione um grupo para exportação.');$('fioGroupPrintBtn').disabled=true;
  try{const {data:links,error}=await supabase.from('grupo_obras').select('obras(*)').eq('grupo_id',gid);if(error)throw error;const works=(links||[]).map(x=>x.obras).filter(Boolean);if(!works.length)throw new Error('O grupo não possui obras.');let body='';for(const work of works){const {data}=await supabase.from('fio_edicoes').select('*').eq('obra_id',work.id).order('versao',{ascending:false}).limit(1).maybeSingle();body+=fioPrintable(work,data?.conteudo||{},data?.versao);}openPrintWindow(body,'FIO por grupo — SIGOM 2026');}catch(e){alert(e.message);}finally{$('fioGroupPrintBtn').disabled=false;}
 });
+
+
+/* ================= Ponte para o motor de visualização legado ================
+   dashboard-legacy.js (script clássico, fora do módulo) chama estas funções
+   via window.SIGOM para reaproveitar login/dados/grupos/FIO já existentes. */
+function sgGroupPath(g){
+  const by=new Map(groupsData.map(x=>[x.id,x]));
+  const parts=[g.nome];let p=g.grupo_pai_id?by.get(g.grupo_pai_id):null;
+  while(p){parts.unshift(p.nome);p=p.grupo_pai_id?by.get(p.grupo_pai_id):null;}
+  return parts.join(' › ');
+}
+async function sgGetGroupObraMap(){
+  const map=new Map();
+  const {data,error}=await supabase.from('grupo_obras').select('grupo_id,obra_id');
+  if(error)return map;
+  const byId=new Map(groupsData.map(g=>[g.id,g.nome]));
+  (data||[]).forEach(l=>{
+    const nome=byId.get(l.grupo_id); if(!nome)return;
+    if(!map.has(nome))map.set(nome,new Set());
+    map.get(nome).add(l.obra_id);
+  });
+  return map;
+}
+async function sgAddWorksToGroupFlow(obraIds){
+  if(!selectedGroupId){
+    alert('Abra a página Grupos, selecione (ou crie) o grupo desejado e clique novamente em "Adicionar selecionadas ao grupo".');
+    showPage('groups');
+    return;
+  }
+  const payload=obraIds.map(obra_id=>({grupo_id:selectedGroupId,obra_id,adicionado_por:currentUser.id}));
+  const {error}=await supabase.from('grupo_obras').upsert(payload,{onConflict:'grupo_id,obra_id',ignoreDuplicates:true});
+  if(error){alert(error.message);return;}
+  await selectGroup(selectedGroupId);
+  alert(obraIds.length+' obra(s) adicionada(s) ao grupo.');
+}
+async function sgOpenFioForObra(obraId){
+  if(!obraId){alert('Obra não identificada.');return;}
+  showPage('fio');
+  await loadFioModule();
+  $('fioWorkSelect').value=obraId;
+  await openFioWork(obraId);
+}
+async function sgOpenFioForGroup(groupId){
+  showPage('fio');
+  await loadFioModule();
+  $('fioGroupSelect').value=groupId;
+}
+window.SIGOM={
+  showPage,
+  getGroups:()=>groupsData,
+  groupPath:sgGroupPath,
+  getGroupObraMap:sgGetGroupObraMap,
+  addWorksToGroupFlow:sgAddWorksToGroupFlow,
+  openFioForObra:sgOpenFioForObra,
+  openFioForGroup:sgOpenFioForGroup,
+  canEdit,
+};

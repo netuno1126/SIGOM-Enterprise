@@ -10,3 +10,6 @@
 --
 -- Depois, promova o primeiro administrador usando:
 -- 06_promover_administrador_por_email.sql
+
+-- 5. 07_v31_0_gold_1_security_hardening.sql
+-- 6. 08_verificar_seguranca_funcoes.sql (somente conferência)

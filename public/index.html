@@ -6,6 +6,7 @@
   <title>SIGOM 2026</title>
   <link rel="stylesheet" href="assets/app.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <script src="config.js"></script>
   <script type="module" src="assets/app.js"></script>
 </head>
@@ -41,9 +42,241 @@
     <section class="panel auth-panel"><h2>Verificação em duas etapas</h2><p id="mfaText">Digite o código do aplicativo autenticador.</p><div id="mfaQrWrap" class="hidden"><img id="mfaQr" alt="QR Code TOTP"><code id="mfaSecret"></code></div><form id="mfaForm"><label>Código de 6 dígitos<input id="mfaCode" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required></label><button type="submit">Verificar</button></form><button id="enrollMfaBtn" type="button" class="secondary hidden">Configurar autenticador</button><div id="mfaMessage" class="message"></div></section>
   </main>
   <main id="appView" class="hidden">
-    <header class="topbar"><div><strong>SIGOM 2026</strong><span class="system-full-name">Sistema Integrado de Gestão de Obras Militares</span><small id="versionLabel"></small></div><nav><button data-page="dashboard">Dashboard</button><button data-page="works">Obras</button><button data-page="imports">Importações</button><button data-page="groups">Grupos</button><button data-page="fio">FIO</button><button data-page="admin" id="adminNav" class="hidden">Administração</button><button id="logoutBtn">Sair</button></nav></header>
+    <header class="topbar"><div><strong>SIGOM 2026</strong><span class="system-full-name">Sistema Integrado de Gestão de Obras Militares</span><small id="versionLabel"></small></div><nav><button data-page="dashboard">Painel</button><button data-page="works">Obras</button><button data-page="imports">Importações</button><button data-page="groups">Grupos</button><button data-page="fio">FIO</button><button data-page="admin" id="adminNav" class="hidden">Administração</button><button id="logoutBtn">Sair</button></nav></header>
     <section class="content">
-      <section id="page-dashboard" class="page panel"><div class="page-head"><div><h2 id="welcomeTitle">Bem-vindo</h2><p id="profileSummary"></p></div><button id="refreshBtn" class="secondary compact">Atualizar</button></div><div class="cards"><article><h3>Obras</h3><strong id="worksCount">0</strong></article><article><h3>Valor atual</h3><strong id="valueCount">R$ 0,00</strong></article><article><h3>Grupos ativos</h3><strong id="groupsCount">0</strong></article><article><h3>FIO editadas</h3><strong id="fioCount">0</strong></article><article><h3>Segurança</h3><strong id="aalStatus">AAL1</strong></article></div><div class="grid2"><div><h3>Última importação</h3><div id="lastImport" class="muted">Nenhuma importação registrada.</div></div><div><h3>Situação da base</h3><div id="baseStatus" class="muted">Carregando...</div></div></div></section>
+      <section id="page-dashboard" class="page panel"><div class="page-head"><div><h2 id="welcomeTitle">Bem-vindo</h2><p id="profileSummary"></p></div><button id="refreshBtn" class="secondary compact">Atualizar</button></div><div class="cards"><article><h3>Obras</h3><strong id="worksCount">0</strong></article><article><h3>Valor atual</h3><strong id="valueCount">R$ 0,00</strong></article><article><h3>Grupos ativos</h3><strong id="groupsCount">0</strong></article><article><h3>FIO editadas</h3><strong id="fioCount">0</strong></article><article><h3>Segurança</h3><strong id="aalStatus">AAL1</strong></article></div><div class="grid2"><div><h3>Última importação</h3><div id="lastImport" class="muted">Nenhuma importação registrada.</div></div><div><h3>Situação da base</h3><div id="baseStatus" class="muted">Carregando...</div></div></div><div id="sgLegacyRoot">
+    <div class="tabs no-print">
+      <button id="tabV" class="on" onclick="show('visao')">Visão Geral</button>
+      <button id="tabO" onclick="show('obra')">Visão da Obra</button>
+      <button id="tabA" onclick="show('analise')">Análises</button>
+      <button id="tabM" onclick="show('mediaGlobal')">Média Mensal Global</button>
+      <button id="tabS" onclick="show('saldos')">Saldos Alongados</button>
+      <div class="dropdown" id="tabExtraDrop">
+        <button class="dropbtn" id="tabExtraBtn" onclick="toggleDrop('tabExtraDrop',event)">Tabelas ▾</button>
+        <div class="dropcontent">
+          <button id="tabP" onclick="show('planilha');closeDrops()">📑 Planilha completa</button>
+          <button id="tabF" onclick="show('portfolio');closeDrops()">📋 Portfólio</button>
+        </div>
+      </div>
+      <div class="right">
+        <input type="file" id="portInput" accept=".xlsx" style="display:none">
+        <input type="file" id="saldoInput" accept=".xlsx" style="display:none">
+        <input type="file" id="principaisObrasInput" accept=".xlsx" style="display:none">
+        <button class="btn gray sm" onclick="pick('portInput')" title="Carregar planilha de Portfólio (sessão atual)">📋 Portfólio (upload)</button>
+        <button class="btn gray sm" onclick="pick('saldoInput')" title="Carregar planilha de Saldos Alongados (sessão atual)">💰 Saldos (upload)</button>
+        <button class="btn gray sm" onclick="pick('principaisObrasInput')" title="Carregar planilha Principais Obras (nomes curtos por Nº OPUS, sessão atual)">🏷 Nomes de obra (upload)</button>
+      </div>
+    </div>
+
+    <!-- ===== VISÃO GERAL ===== -->
+    <div id="visao">
+      <div class="printTitle">Sistema Integrado de Gestão de Obras — Visão Geral</div>
+      <div class="filters no-print">
+        <select id="fGrupo" onchange="render()" title="Grupo de Obras: escolha Todos, Portfólio Selecionado ou um grupo criado"><option value="">Grupo — todos</option></select>
+        <button class="btn blue" style="padding:7px 11px" onclick="abrirGrupos(false)" title="Criar, editar, excluir grupos e adicionar obras aos grupos.">🗂 Gerenciar Grupos</button>
+        <button class="btn gray" style="padding:7px 11px" onclick="abrirGrupos(true)" title="Consultar os grupos existentes e as obras pertencentes a cada grupo.">👁 Visualizar Grupos</button>
+        <button class="btn green" style="padding:7px 11px" onclick="abrirFIOGrupoSelecionado()" title="Gerar/visualizar FIO das obras do grupo selecionado.">📊 FIO por grupo</button>
+        <button class="btn orange" style="padding:7px 11px" onclick="abrirExportTabela()" title="Exportar tabela filtrada para Word ou impressão selecionando colunas">📤 Exportar tabela</button>
+        <select id="fRM"><option value="">RM — todas</option></select>
+        <select id="fCt"><option value="">Contratante — todos</option></select>
+        <select id="fEmp"><option value="">Empresa — todas</option></select>
+        <select id="fContrato" title="Filtrar por contrato. A lista mostra quantos Nº OPUS existem no contrato e a soma do Valor Atual."><option value="">Contrato — todos</option></select>
+        <select id="fPrazo"><option value="">Prazo — todos</option><option value="SIM">No prazo</option><option value="NÃO">Atrasadas</option></select>
+        <label class="chk"><input type="checkbox" id="fSel"> Somente portfólio selecionado (planilha do Portfólio)</label>
+        <input id="fBusca" placeholder="🔎 Buscar obra, OPUS, contrato, empresa…">
+      </div>
+      <div class="kpis" id="kpis"></div>
+      <div class="card collapsible" id="cardResumoContratos" style="margin-bottom:14px">
+        <button class="winToggle no-print" onclick="toggleCardCollapse('cardResumoContratos')" title="Ocultar esta seção">—</button>
+        <h3>Resumo por Contrato — Nº OPUS e Valor Atual Total</h3>
+        <div class="collapsibleBody">
+          <div class="note" style="margin-bottom:8px">Use o filtro <b>Contrato</b> acima ou clique em uma linha da tabela abaixo para visualizar apenas aquele contrato. A soma considera todas as obras/Nº OPUS consolidadas do contrato.</div>
+          <div class="tblbox" style="max-height:300px"><table id="tblResumoContratos">
+            <thead><tr><th>Contrato</th><th>Qtd Nº OPUS</th><th>Nº OPUS vinculados</th><th>Valor Atual Total</th><th>Empenhado NE</th><th>Liquidado NF</th><th>Saldo NE não liquidado</th></tr></thead>
+            <tbody></tbody></table></div>
+        </div>
+      </div>
+      <div class="grid g2" style="margin-bottom:14px">
+        <div class="card collapsible" id="cardValorContratante">
+          <button class="winToggle no-print" onclick="toggleCardCollapse('cardValorContratante')" title="Ocultar este gráfico">—</button>
+          <h3>Valor Atual por Contratante (R$ Mi)</h3>
+          <div class="collapsibleBody"><div class="chartbox sm"><canvas id="chCt"></canvas></div></div>
+        </div>
+        <div class="card collapsible" id="cardExecucaoMedEmp">
+          <button class="winToggle no-print" onclick="toggleCardCollapse('cardExecucaoMedEmp')" title="Ocultar este gráfico">—</button>
+          <h3>Execução: % Medido × % Empenhado (top 15 por valor)</h3>
+          <div class="collapsibleBody"><div class="chartbox sm"><canvas id="chExec"></canvas></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Obras (<span id="nObras"></span>) — ☑ seleciona para o PowerPoint · clique na linha para detalhar</h3>
+        <div style="margin-bottom:8px" class="no-print">
+          <button class="btn blue sm" onclick="selTodos(true)" title="Marque todas as obras filtradas para PowerPoint.">Selecionar todas</button>
+          <button class="btn gray sm" onclick="selTodos(false)" title="Limpa a seleção de obras para PowerPoint.">Limpar seleção</button>
+          <button class="btn green sm" onclick="adicionarSelecionadasAoGrupo()" title="Adicionar as obras marcadas na coluna Grupo a um grupo existente ou novo, sem remover de outros grupos.">Adicionar selecionadas ao grupo</button>
+          <span class="note" id="selCount"></span>
+          <span class="note" id="grpSelCount"></span>
+        </div>
+        <div class="tblbox"><table id="tbl">
+          <thead><tr>
+            <th class="no-print" title="Selecionar obras para PowerPoint">☑ PPT</th>
+            <th class="no-print" title="Selecionar obras para adicionar a um grupo">☑ Grupo</th>
+            <th data-k="RM">RM</th><th data-k="Contratante">Contratante</th>
+            <th data-k="Solicitação">Nº OPUS</th><th data-k="Descrição">Obra</th><th data-k="Nome da Obra">Nome da Obra</th>
+            <th data-k="Contrato">Contrato</th><th data-k="Empresa">Empresa</th>
+            <th data-k="Valor Atual">Valor Atual</th><th data-k="% medido">% Medido</th>
+            <th data-k="% Empenhado">% Emp.</th><th data-k="data projetada">Término Projetado</th>
+            <th data-k="dias atrasados">Atraso (d)</th><th>No Prazo</th>
+          </tr>
+          <tr class="tblFilterRow no-print">
+            <th></th><th></th>
+            <th><input data-col="RM" placeholder="RM"></th>
+            <th><input data-col="Contratante" placeholder="Contratante"></th>
+            <th><input data-col="Solicitação" placeholder="OPUS"></th>
+            <th><input data-col="Descrição" placeholder="Obra"></th>
+            <th><input data-col="Nome da Obra" placeholder="Nome da Obra"></th>
+            <th><input data-col="Contrato" placeholder="Contrato"></th>
+            <th><input data-col="Empresa" placeholder="Empresa"></th>
+            <th><input data-col="Valor Atual" placeholder="Valor"></th>
+            <th><input data-col="% medido" placeholder="% Med"></th>
+            <th><input data-col="% Empenhado" placeholder="% Emp"></th>
+            <th><input data-col="data projetada" placeholder="Término"></th>
+            <th><input data-col="dias atrasados" placeholder="Atraso"></th>
+            <th><input data-col="_prazo" placeholder="Prazo"></th>
+          </tr></thead><tbody></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ===== DETALHE ===== -->
+    <div id="obra" class="hidden">
+      <button class="back no-print" onclick="show('visao')">← Voltar à visão geral</button>
+      <div class="printTitle">Sistema Integrado de Gestão de Obras — Visão da Obra</div>
+      <div class="filters no-print">
+        <input id="buscaObraDetalhe" placeholder="🔎 Buscar obra por OPUS, contrato, nome, empresa, OM ou RM" style="min-width:280px" title="Digite para filtrar a lista de obras da Visão da Obra">
+        <select id="selObra" style="min-width:360px;max-width:100%"></select>
+        <select id="selAtrasadas"><option value="">🚨 Obras atrasadas — selecionar</option></select>
+        <button class="btn gray sm" onclick="toggleFields()">⚙ Escolher informações exibidas</button>
+        <button class="btn blue sm" onclick="exportarPDF()">🖨 PDF desta obra</button>
+        <button class="btn orange sm" onclick="abrirFIOExternoObra()">📊 FIO desta obra</button>
+        <button class="btn gray sm" onclick="menuObraDetalhe(event)">🗂 Grupos desta obra</button>
+        <button class="btn green sm" onclick="abrirFIOGrupoSelecionado()">📊 FIO por grupo</button>
+      </div>
+      <div id="cardCamposDetalhe" class="card collapsible hidden no-print">
+        <button class="winToggle no-print" onclick="toggleCardCollapse('cardCamposDetalhe')" title="Ocultar informações exibidas">—</button>
+        <h3>Informações exibidas na Visão da Obra</h3>
+        <div class="collapsibleBody">
+          <div id="fieldPanel"></div>
+        </div>
+      </div>
+      <div class="detail-grid" id="dCards"></div>
+      <div class="grid g3">
+        <div class="card"><h3>Curva de Execução — % Medido</h3><div class="chartbox"><canvas id="chCurva"></canvas></div></div>
+        <div class="card"><h3>Financeiro (R$ Mi)</h3><div class="chartbox"><canvas id="chFin"></canvas></div></div>
+      </div>
+    </div>
+
+    <!-- ===== ANÁLISES ===== -->
+    <div id="analise" class="hidden">
+      <div class="printTitle">Sistema Integrado de Gestão de Obras — Análises</div>
+      <div class="filters no-print">
+        <select id="fAnaliseFonte" onchange="renderAnalise()" title="Escolha se a aba Análises usará todas as obras, apenas o Portfólio ou um grupo criado">
+          <option value="__GERAL__">Análise — Geral</option>
+        </select>
+        <button class="btn orange" onclick="abrirExportAnaliseWord()" title="Exportar os gráficos e tabelas da aba Análises para Word em A4 paisagem">📄 Exportar análises Word</button>
+      </div>
+      <div class="kpis" id="kpisAnalise"></div>
+      <div class="grid g2" style="margin-bottom:14px">
+        <div class="card"><h3>Maiores obras por valor — top 15</h3><div class="chartbox" style="height:920px"><canvas id="chTopObrasValor"></canvas></div></div>
+        <div class="card"><h3>Maiores empresas por valor — top 15</h3><div class="chartbox" style="height:920px"><canvas id="chTopEmpresasValor"></canvas></div></div>
+      </div>
+      <div class="grid g2" style="margin-bottom:14px">
+        <div class="card"><h3>Dias sem medir — top 15 obras</h3><div class="chartbox" style="height:920px"><canvas id="chSemMedir"></canvas></div></div>
+        <div class="card"><h3>Distribuição do IDP</h3><div class="chartbox"><canvas id="chIDP"></canvas></div>
+          <div class="note">IDP &lt; 0,7: crítico · 0,7–0,85: atenção · 0,85–1: adequado · &gt; 1: adiantado</div></div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <h3>Projeção de Término das Obras — tendência das medições (15 mais próximas)</h3>
+        <div class="note" style="margin-bottom:6px">Barra = dias a partir de hoje até atingir 100% mantido o ritmo das medições. Vermelho: projeção ultrapassa o Fim do Prazo contratual. A data projetada aparece no rótulo de cada obra.</div>
+        <div class="chartbox" style="height:980px"><canvas id="chProj"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Obras críticas (IDP &lt; 0,7 ou &gt; 90 dias sem medir)</h3>
+        <div class="tblbox" style="max-height:340px"><table id="tblCrit">
+          <thead><tr><th>Obra</th><th>Nº OPUS</th><th>Contrato</th><th>Empresa</th><th>IDP</th><th>Dias sem medir</th><th>Estimativa recursos</th></tr></thead>
+          <tbody></tbody></table></div>
+      </div>
+    </div>
+
+
+    <!-- ===== MÉDIA MENSAL GLOBAL ===== -->
+    <div id="mediaGlobal" class="hidden">
+      <div class="printTitle">Sistema Integrado de Gestão de Obras — Média Mensal Global</div>
+      <div class="kpis" id="kpisMediaGlobal"></div>
+      <div class="grid g2" style="margin-bottom:14px">
+        <div class="card">
+          <h3>Média Mensal Global por Obra — top 15 (R$ Mi/mês)</h3>
+          <div class="chartbox"><canvas id="chMediaGlobal"></canvas></div>
+        </div>
+        <div class="card">
+          <h3>Estimativa de Duração dos Recursos Atuais — menores fôlegos</h3>
+          <div class="chartbox"><canvas id="chMesesRecursos"></canvas></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Média Mensal Global por Obra</h3>
+        <div class="note" style="margin-bottom:8px">
+          Fórmula: Média Mensal Global = Total Notas Fiscais ÷ (HOJE() - Data Assinatura) × 30. 
+          Estimativa = Saldo NE não liquidado ÷ Média Mensal Global, sempre arredondada para baixo.
+        </div>
+        <div class="tblbox" style="max-height:640px"><table id="tblMediaGlobal">
+          <thead><tr>
+            <th>Obra</th><th>Nº OPUS</th><th>Contrato</th><th>Empresa</th>
+            <th>Total NE</th><th>Total NF</th><th>Saldo NE não liquidado</th>
+            <th>Data Assinatura</th><th>Dias</th><th>Média Mensal Global</th><th>Estimativa</th>
+          </tr></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- ===== PLANILHA ===== -->
+    <div id="planilha" class="hidden">
+      <div class="card">
+        <h3>Planilha completa (todas as colunas)</h3>
+        <div class="tblbox" style="max-height:640px"><table id="tblFull"><thead></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- ===== SALDOS ALONGADOS ===== -->
+    <div id="saldos" class="hidden">
+      <div class="printTitle">Sistema Integrado de Gestão de Obras — Saldos Alongados</div>
+      <div class="filters no-print" id="saldoFilters" style="display:none">
+        <select id="fAnoSaldo"></select>
+        <select id="fOMSaldo"><option value="">OM — todas</option></select>
+      </div>
+      <div class="kpis" id="kpisSaldo"></div>
+      <div class="grid g2" style="margin-bottom:14px" id="saldoCharts" style="display:none">
+        <div class="card"><h3>Saldo Alongado por Ano — barras + TEREO (R$ Bi)</h3><div class="chartbox sm"><canvas id="chSaldoEvol"></canvas></div></div>
+        <div class="card"><h3>Total SOM × EB (R$ Bi)</h3><div class="chartbox sm"><canvas id="chSaldoSomEb"></canvas></div></div>
+        <div class="card"><h3 id="hSaldoOM">Saldo por OM (R$ Mi)</h3><div class="chartbox sm"><canvas id="chSaldoOM"></canvas></div></div>
+      </div>
+      <div class="card">
+        <h3>Saldos Alongados <span class="note" id="saldoInfo">— nenhuma planilha carregada nesta sessão</span></h3>
+        <div class="note no-print" style="margin-bottom:8px">Fonte: upload manual nesta sessão (sem tabela própria no Supabase ainda). Use o botão "💰 Saldos (upload)" acima das abas para carregar a planilha (válido durante esta sessão do navegador).</div>
+        <div class="note" style="margin-bottom:6px">Valores em R$ Mi</div><div class="tblbox" style="max-height:560px"><table id="tblSaldos"><thead></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- ===== PORTFÓLIO ===== -->
+    <div id="portfolio" class="hidden">
+      <div class="card">
+        <h3>Portfólio de Obras Selecionadas <span class="note" id="portInfo">— nenhuma planilha carregada nesta sessão</span></h3>
+        <div class="note no-print" style="margin-bottom:8px">Fonte: upload manual nesta sessão (sem tabela própria no Supabase ainda). Marque "Somente portfólio selecionado" na Visão Geral para que o dashboard use DIRETAMENTE estas obras como fonte (KPIs, gráficos e tabela). Requer coluna Valor Atual e demais campos na planilha. Use o botão "📋 Portfólio (upload)" acima das abas para carregar a planilha (válido durante esta sessão do navegador).</div>
+        <div class="tblbox" style="max-height:640px"><table id="tblPort"><thead></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+
+</div>
+</section>
       <section id="page-works" class="page panel hidden"><div class="page-head"><div><h2>Obras</h2><p>Base central do Supabase, consolidada por Nº OPUS + contrato.</p></div><div class="actions"><button id="openImportBtn">Importar Excel</button><button id="exportCsvBtn" class="secondary">Exportar CSV filtrado</button></div></div><div class="filters"><input id="workSearch" placeholder="Buscar OPUS, obra, contrato, empresa ou OM"><select id="filterRm"><option value="">RM — todas</option></select><select id="filterCompany"><option value="">Empresa — todas</option></select></div><div id="workSummary" class="muted"></div><div class="table-wrap"><table><thead><tr><th>RM</th><th>Nº OPUS</th><th>Contrato</th><th>Obra</th><th>Empresa</th><th>Valor Atual</th><th>Total NE</th><th>Total NF</th><th>% Medido</th><th>Atualizado</th></tr></thead><tbody id="worksBody"></tbody></table></div></section>
       <section id="page-imports" class="page panel hidden"><div class="page-head"><div><h2>Importar planilha de obras</h2><p>Arquivos XLSX/XLSM. A chave de atualização é Nº OPUS + contrato.</p></div></div><div id="importPermission" class="notice hidden">Seu perfil permite apenas consulta. Administrador ou editor deve fazer a importação.</div><div id="importBox" class="dropzone"><input id="excelFile" type="file" accept=".xlsx,.xlsm,.xls"><strong>Selecionar planilha Excel</strong><span>As colunas originais também serão preservadas no campo dados.</span></div><div class="import-options"><label><input id="preferPortfolio" type="checkbox"> Aceitar planilha de portfólio como fonte</label><button id="importBtn">Processar e enviar ao Supabase</button></div><progress id="importProgress" value="0" max="100"></progress><pre id="importLog" class="log">Aguardando arquivo.</pre><h3>Histórico recente</h3><div class="table-wrap"><table><thead><tr><th>Data</th><th>Arquivo</th><th>Linhas</th><th>Obras</th><th>Erros</th><th>Status</th></tr></thead><tbody id="importsBody"></tbody></table></div></section>
       <section id="page-groups" class="page panel hidden">
@@ -110,5 +343,6 @@
 </section>
     </section>
   </main>
+  <script src="assets/dashboard-legacy.js"></script>
 </body>
 </html>
