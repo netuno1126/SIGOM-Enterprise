@@ -1,4 +1,4 @@
-# SIGOM 2026 V30.1 — Obras e Importação Excel
+# SIGOM 2026 V30.2 — Obras e Importação Excel
 
 Esta entrega acrescenta à fundação V30.0:
 
@@ -27,7 +27,7 @@ Não execute novamente o arquivo `01_schema_rls.sql` sobre o banco em produção
 
 ## Primeiro teste
 
-1. Publique a V30.1 no GitHub/Netlify.
+1. Publique a V30.2 no GitHub/Netlify.
 2. Entre com usuário administrador ou editor.
 3. Abra `Importações`.
 4. Escolha a Planilha de Obras do SIGOM.
@@ -75,3 +75,7 @@ supabase/03A_correcao_politicas_importacao.sql
 ```
 
 O arquivo principal `03_v30_1_importacao_obras.sql` também foi corrigido e agora pode ser executado novamente com segurança.
+
+
+## V30.2
+Execute `supabase/04_v30_2_grupos_usuarios.sql` e publique o projeto novamente no Netlify. Consulte `docs/V30_2_GRUPOS_USUARIOS.md`.
