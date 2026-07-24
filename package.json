@@ -1,0 +1,16 @@
+{
+  "name": "sigom-enterprise-v30",
+  "version": "30.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "netlify dev",
+    "build": "node scripts/build.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.57.0"
+  },
+  "devDependencies": {
+    "netlify-cli": "^23.5.0"
+  }
+}
