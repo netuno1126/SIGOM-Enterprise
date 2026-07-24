@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SIGOM Enterprise 2026</title>
+  <link rel="stylesheet" href="assets/app.css">
+  <script src="config.js"></script>
+  <script type="module" src="assets/app.js"></script>
+</head>
+<body>
+  <main id="loginView" class="center-page">
+    <section class="panel auth-panel">
+      <h1>SIGOM Enterprise 2026</h1>
+      <p>Plataforma Integrada de Gestão de Obras do DEC</p>
+      <form id="loginForm">
+        <label>E-mail<input id="email" type="email" required autocomplete="username"></label>
+        <label>Senha<input id="password" type="password" required autocomplete="current-password"></label>
+        <button type="submit">Entrar</button>
+      </form>
+      <div id="loginMessage" class="message"></div>
+    </section>
+  </main>
+
+  <main id="mfaView" class="center-page hidden">
+    <section class="panel auth-panel">
+      <h2>Verificação em duas etapas</h2>
+      <p id="mfaText">Digite o código do aplicativo autenticador.</p>
+      <div id="mfaQrWrap" class="hidden"><img id="mfaQr" alt="QR Code TOTP"><code id="mfaSecret"></code></div>
+      <form id="mfaForm">
+        <label>Código de 6 dígitos<input id="mfaCode" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required></label>
+        <button type="submit">Verificar</button>
+      </form>
+      <button id="enrollMfaBtn" type="button" class="secondary hidden">Configurar autenticador</button>
+      <div id="mfaMessage" class="message"></div>
+    </section>
+  </main>
+
+  <main id="appView" class="hidden">
+    <header class="topbar">
+      <div><strong>SIGOM Enterprise</strong><small id="versionLabel"></small></div>
+      <nav>
+        <button data-page="dashboard">Dashboard</button>
+        <button data-page="groups">Grupos</button>
+        <button data-page="fio">FIO</button>
+        <button data-page="admin" id="adminNav" class="hidden">Administração</button>
+        <button id="logoutBtn">Sair</button>
+      </nav>
+    </header>
+    <section class="content">
+      <div class="panel">
+        <h2 id="welcomeTitle">Bem-vindo</h2>
+        <p id="profileSummary"></p>
+        <div class="cards">
+          <article><h3>Obras</h3><strong id="worksCount">0</strong></article>
+          <article><h3>Grupos ativos</h3><strong id="groupsCount">0</strong></article>
+          <article><h3>FIO editadas</h3><strong id="fioCount">0</strong></article>
+          <article><h3>Segurança</h3><strong id="aalStatus">AAL1</strong></article>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Implantação V30.0</h2>
+        <ol>
+          <li>Execute o arquivo SQL no Supabase.</li>
+          <li>Crie o primeiro usuário no Supabase Authentication.</li>
+          <li>Promova o usuário para administrador na tabela profiles.</li>
+          <li>Importe os grupos pelo utilitário de migração.</li>
+          <li>Conecte o repositório ao Netlify.</li>
+        </ol>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
