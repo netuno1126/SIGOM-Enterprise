@@ -3,71 +3,32 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>SIGOM Enterprise 2026</title>
+  <title>SIGOM 2026</title>
   <link rel="stylesheet" href="assets/app.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="config.js"></script>
   <script type="module" src="assets/app.js"></script>
 </head>
 <body>
   <main id="loginView" class="center-page">
     <section class="panel auth-panel">
-      <h1>SIGOM Enterprise 2026</h1>
-      <p>Plataforma Integrada de Gestão de Obras do DEC</p>
-      <form id="loginForm">
-        <label>E-mail<input id="email" type="email" required autocomplete="username"></label>
-        <label>Senha<input id="password" type="password" required autocomplete="current-password"></label>
-        <button type="submit">Entrar</button>
-      </form>
+      <h1>SIGOM 2026</h1><p>Plataforma Integrada de Gestão de Obras do DEC</p>
+      <form id="loginForm"><label>E-mail<input id="email" type="email" required autocomplete="username"></label><label>Senha<input id="password" type="password" required autocomplete="current-password"></label><button type="submit">Entrar</button></form>
       <div id="loginMessage" class="message"></div>
     </section>
   </main>
-
   <main id="mfaView" class="center-page hidden">
-    <section class="panel auth-panel">
-      <h2>Verificação em duas etapas</h2>
-      <p id="mfaText">Digite o código do aplicativo autenticador.</p>
-      <div id="mfaQrWrap" class="hidden"><img id="mfaQr" alt="QR Code TOTP"><code id="mfaSecret"></code></div>
-      <form id="mfaForm">
-        <label>Código de 6 dígitos<input id="mfaCode" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required></label>
-        <button type="submit">Verificar</button>
-      </form>
-      <button id="enrollMfaBtn" type="button" class="secondary hidden">Configurar autenticador</button>
-      <div id="mfaMessage" class="message"></div>
-    </section>
+    <section class="panel auth-panel"><h2>Verificação em duas etapas</h2><p id="mfaText">Digite o código do aplicativo autenticador.</p><div id="mfaQrWrap" class="hidden"><img id="mfaQr" alt="QR Code TOTP"><code id="mfaSecret"></code></div><form id="mfaForm"><label>Código de 6 dígitos<input id="mfaCode" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required></label><button type="submit">Verificar</button></form><button id="enrollMfaBtn" type="button" class="secondary hidden">Configurar autenticador</button><div id="mfaMessage" class="message"></div></section>
   </main>
-
   <main id="appView" class="hidden">
-    <header class="topbar">
-      <div><strong>SIGOM Enterprise</strong><small id="versionLabel"></small></div>
-      <nav>
-        <button data-page="dashboard">Dashboard</button>
-        <button data-page="groups">Grupos</button>
-        <button data-page="fio">FIO</button>
-        <button data-page="admin" id="adminNav" class="hidden">Administração</button>
-        <button id="logoutBtn">Sair</button>
-      </nav>
-    </header>
+    <header class="topbar"><div><strong>SIGOM 2026</strong><small id="versionLabel"></small></div><nav><button data-page="dashboard">Dashboard</button><button data-page="works">Obras</button><button data-page="imports">Importações</button><button data-page="groups">Grupos</button><button data-page="fio">FIO</button><button data-page="admin" id="adminNav" class="hidden">Administração</button><button id="logoutBtn">Sair</button></nav></header>
     <section class="content">
-      <div class="panel">
-        <h2 id="welcomeTitle">Bem-vindo</h2>
-        <p id="profileSummary"></p>
-        <div class="cards">
-          <article><h3>Obras</h3><strong id="worksCount">0</strong></article>
-          <article><h3>Grupos ativos</h3><strong id="groupsCount">0</strong></article>
-          <article><h3>FIO editadas</h3><strong id="fioCount">0</strong></article>
-          <article><h3>Segurança</h3><strong id="aalStatus">AAL1</strong></article>
-        </div>
-      </div>
-      <div class="panel">
-        <h2>Implantação V30.0</h2>
-        <ol>
-          <li>Execute o arquivo SQL no Supabase.</li>
-          <li>Crie o primeiro usuário no Supabase Authentication.</li>
-          <li>Promova o usuário para administrador na tabela profiles.</li>
-          <li>Importe os grupos pelo utilitário de migração.</li>
-          <li>Conecte o repositório ao Netlify.</li>
-        </ol>
-      </div>
+      <section id="page-dashboard" class="page panel"><div class="page-head"><div><h2 id="welcomeTitle">Bem-vindo</h2><p id="profileSummary"></p></div><button id="refreshBtn" class="secondary compact">Atualizar</button></div><div class="cards"><article><h3>Obras</h3><strong id="worksCount">0</strong></article><article><h3>Valor atual</h3><strong id="valueCount">R$ 0,00</strong></article><article><h3>Grupos ativos</h3><strong id="groupsCount">0</strong></article><article><h3>FIO editadas</h3><strong id="fioCount">0</strong></article><article><h3>Segurança</h3><strong id="aalStatus">AAL1</strong></article></div><div class="grid2"><div><h3>Última importação</h3><div id="lastImport" class="muted">Nenhuma importação registrada.</div></div><div><h3>Situação da base</h3><div id="baseStatus" class="muted">Carregando...</div></div></div></section>
+      <section id="page-works" class="page panel hidden"><div class="page-head"><div><h2>Obras</h2><p>Base central do Supabase, consolidada por Nº OPUS + contrato.</p></div><div class="actions"><button id="openImportBtn">Importar Excel</button><button id="exportCsvBtn" class="secondary">Exportar CSV filtrado</button></div></div><div class="filters"><input id="workSearch" placeholder="Buscar OPUS, obra, contrato, empresa ou OM"><select id="filterRm"><option value="">RM — todas</option></select><select id="filterCompany"><option value="">Empresa — todas</option></select></div><div id="workSummary" class="muted"></div><div class="table-wrap"><table><thead><tr><th>RM</th><th>Nº OPUS</th><th>Contrato</th><th>Obra</th><th>Empresa</th><th>Valor Atual</th><th>Total NE</th><th>Total NF</th><th>% Medido</th><th>Atualizado</th></tr></thead><tbody id="worksBody"></tbody></table></div></section>
+      <section id="page-imports" class="page panel hidden"><div class="page-head"><div><h2>Importar planilha de obras</h2><p>Arquivos XLSX/XLSM. A chave de atualização é Nº OPUS + contrato.</p></div></div><div id="importPermission" class="notice hidden">Seu perfil permite apenas consulta. Administrador ou editor deve fazer a importação.</div><div id="importBox" class="dropzone"><input id="excelFile" type="file" accept=".xlsx,.xlsm,.xls"><strong>Selecionar planilha Excel</strong><span>As colunas originais também serão preservadas no campo dados.</span></div><div class="import-options"><label><input id="preferPortfolio" type="checkbox"> Aceitar planilha de portfólio como fonte</label><button id="importBtn">Processar e enviar ao Supabase</button></div><progress id="importProgress" value="0" max="100"></progress><pre id="importLog" class="log">Aguardando arquivo.</pre><h3>Histórico recente</h3><div class="table-wrap"><table><thead><tr><th>Data</th><th>Arquivo</th><th>Linhas</th><th>Obras</th><th>Erros</th><th>Status</th></tr></thead><tbody id="importsBody"></tbody></table></div></section>
+      <section id="page-groups" class="page panel hidden"><h2>Grupos</h2><p>O módulo completo de grupos será ligado ao Supabase na V30.2. Os grupos já migrados aparecem no contador do dashboard.</p></section>
+      <section id="page-fio" class="page panel hidden"><h2>FIO</h2><p>A edição completa e as fotos da FIO serão ligadas ao banco e ao Storage na V30.3.</p></section>
+      <section id="page-admin" class="page panel hidden"><h2>Administração</h2><p>Área reservada ao administrador. A gestão visual de usuários será ampliada na V30.2.</p></section>
     </section>
   </main>
 </body>

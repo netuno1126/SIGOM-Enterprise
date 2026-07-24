@@ -1,4 +1,4 @@
--- SIGOM Enterprise V30.0
+-- SIGOM 2026 V30.0
 -- Execute no SQL Editor do Supabase usando uma conta proprietária do projeto.
 
 create extension if not exists pgcrypto;

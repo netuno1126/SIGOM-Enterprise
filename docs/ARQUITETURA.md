@@ -1,4 +1,4 @@
-# Arquitetura SIGOM Enterprise
+# Arquitetura SIGOM 2026
 
 ```text
 Usuário autenticado

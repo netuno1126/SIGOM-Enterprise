@@ -1,34 +1,77 @@
-# SIGOM Enterprise 2026 — V30.0
+# SIGOM 2026 V30.1 — Obras e Importação Excel
 
-Base inicial para migração do SIGOM local para Netlify + Supabase, mantendo a versão V29 em `legacy/` como contingência.
+Esta entrega acrescenta à fundação V30.0:
 
-## Conteúdo
+- dashboard ligado ao Supabase;
+- listagem, pesquisa e filtros de obras;
+- upload de XLSX/XLSM pelo navegador;
+- detecção automática da aba de obras;
+- normalização de nomes de colunas;
+- atualização por `Nº OPUS + contrato`;
+- preservação da linha original no campo JSON `dados`;
+- importação em lotes de 200 registros;
+- histórico de arquivos importados;
+- registro do usuário responsável;
+- exportação CSV respeitando os filtros da tela;
+- UTF-8/Unicode para acentos e cedilha.
 
-- `public/`: frontend inicial com login, sessão e MFA TOTP.
-- `supabase/01_schema_rls.sql`: tabelas, perfis, RLS e bucket de fotos.
-- `supabase/02_promover_primeiro_admin.sql`: promoção do primeiro administrador.
-- `netlify/functions/admin-create-user.mjs`: criação protegida de usuários.
-- `migracao/importar_grupos.mjs`: importação dos grupos atuais.
-- `legacy/`: cópia dos HTMLs atuais, sem alteração.
-- `docs/`: arquitetura, implantação e cronograma.
+## Atualização do banco
 
-## Ordem de implantação
+Quem já executou a V30.0 deve executar apenas:
 
-1. No Supabase, abra **SQL Editor** e execute `supabase/01_schema_rls.sql`.
-2. Em **Authentication > Users**, crie seu primeiro usuário por e-mail e senha.
-3. Edite e execute `supabase/02_promover_primeiro_admin.sql`.
-4. Ative MFA TOTP em **Authentication > Multi-Factor Authentication**.
-5. Crie um repositório GitHub privado e envie esta pasta.
-6. No Netlify, importe o repositório.
-7. Configure as variáveis:
-   - `SUPABASE_URL`
-   - `SUPABASE_SERVICE_ROLE_KEY`
-8. Faça o deploy.
+```text
+supabase/03_v30_1_importacao_obras.sql
+```
+
+Não execute novamente o arquivo `01_schema_rls.sql` sobre o banco em produção.
+
+## Primeiro teste
+
+1. Publique a V30.1 no GitHub/Netlify.
+2. Entre com usuário administrador ou editor.
+3. Abra `Importações`.
+4. Escolha a Planilha de Obras do SIGOM.
+5. Confirme o processamento.
+6. Abra `Obras` para conferir os dados.
+
+## Chave de atualização
+
+```text
+Nº OPUS + contrato
+```
+
+Uma nova importação atualiza a obra existente e não cria duplicidade para a mesma chave.
+
+## Colunas reconhecidas
+
+O importador aceita variações dos seguintes nomes:
+
+- Solicitação, Nº OPUS, Nr OPUS ou Código da Obra;
+- Contrato ou Nº Contrato;
+- RM;
+- Contratante;
+- OM Beneficiada;
+- Descrição ou Descrição da Obra;
+- Nome da Obra;
+- Empresa, Fornecedor, Contratada ou Construtora;
+- Valor Atual;
+- Total NE;
+- Total Notas Fiscais ou Total NF;
+- % Medido;
+- % Estimado.
+
+As demais colunas continuam preservadas em `obras.dados`.
 
 ## Segurança
 
-A publishable key do Supabase pode ficar no frontend. A `service_role key` nunca deve ser incluída no GitHub, HTML ou mensagens. Ela só deve existir nas variáveis protegidas do Netlify e, temporariamente, no terminal local durante migrações administrativas.
+A chave `service_role` não é usada pelo importador do navegador. A escrita é autorizada pelas políticas RLS e pelo perfil do usuário autenticado.
 
-## Situação desta entrega
+## Correção do erro 42710 nas políticas
 
-A V30.0 entrega a fundação: autenticação, MFA, perfis, RLS, banco, Storage, Netlify e migração de grupos. Os dashboards completos da V29 ainda estão em `legacy/` e serão convertidos módulo por módulo nas versões V30.1 em diante.
+Se o SQL anterior já criou a tabela e apareceu a mensagem de que a política `importacoes_read` já existe, execute apenas:
+
+```text
+supabase/03A_correcao_politicas_importacao.sql
+```
+
+O arquivo principal `03_v30_1_importacao_obras.sql` também foi corrigido e agora pode ser executado novamente com segurança.

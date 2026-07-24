@@ -2,7 +2,7 @@
 
 ## GitHub
 
-1. Crie um repositório privado chamado `SIGOM-Enterprise`.
+1. Crie um repositório privado chamado `SIGOM-2026`.
 2. Envie todos os arquivos desta pasta, exceto `.env` e `node_modules`.
 3. Ative autenticação em duas etapas na conta GitHub.
 4. Proteja a branch principal e use Deploy Previews para mudanças futuras.
