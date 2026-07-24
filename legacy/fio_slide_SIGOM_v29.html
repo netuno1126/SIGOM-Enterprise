@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>SIGOM · Apresentação FIO</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pptxgenjs/3.12.0/pptxgen.bundle.js"></script>
+<style>
+:root{
+  --fio-azul:#0070c0;
+  --fio-azul-escuro:#1e4e79;
+  --fio-amarelo:#ffcc33;
+  --fio-laranja:#e67e22;
+  --fio-cinza-fundo:#e6e6e6;
+  --fio-borda:#4d4d4d;
+  --fio-verde:#70ad47;
+  --fio-texto:#000;
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:Arial, Helvetica, sans-serif}
+body{background:#d9dde4;color:#102030;min-height:100vh}
+.topbar{background:linear-gradient(90deg,#1e4e79,#2e75b6);color:#fff;padding:10px 16px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,.25);position:sticky;top:0;z-index:50}
+.topbar h1{font-size:18px;letter-spacing:.3px;white-space:nowrap}
+.topbar .spacer{flex:1}.topbar .status{font-size:12px;opacity:.9}
+.btn{border:none;border-radius:8px;padding:8px 12px;font-weight:700;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.18);font-size:12px}
+.btn.blue{background:#2e75b6;color:#fff}.btn.green{background:#70ad47;color:#fff}.btn.orange{background:#e67e22;color:#fff}.btn.gray{background:#8aa3bd;color:#fff}.btn.white{background:#fff;color:#1e4e79}
+.toolbar{max-width:1180px;margin:14px auto 8px;display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;padding:0 10px}
+.toolbar select,.toolbar input{padding:8px;border:1px solid #b8c6d8;border-radius:8px;background:#fff;min-width:220px;font-size:13px}
+.note{max-width:1120px;margin:8px auto;color:#4e647d;font-size:12px;text-align:center;padding:0 14px}
+.fio-slide{width:1120px;min-height:630px;background:var(--fio-cinza-fundo);border:8px solid var(--fio-borda);margin:14px auto 28px;padding:10px 20px 12px;box-shadow:0 10px 28px rgba(0,0,0,.22)}
+.fio-header{height:84px;background:linear-gradient(180deg,#8fa6c4 0%,#1e3d68 100%);color:#fff;display:flex;align-items:flex-start;padding:20px 10px;border:1px solid #b8c6d8}
+.fio-title{font-size:37px;font-weight:800;line-height:1;flex:1;outline:0}.fio-logos{display:flex;gap:6px;align-items:flex-start}.fio-logo{width:54px;height:54px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;color:#1e4e79;background:#fff;border:1px solid rgba(255,255,255,.85);overflow:hidden}.fio-logo img{width:100%;height:100%;object-fit:contain}
+.fio-opus-bar{height:22px;background:var(--fio-azul);color:#fff;text-align:center;font-size:18px;font-weight:800;line-height:22px;border:1px solid #fff;text-decoration:underline;outline:0}
+.fio-caracteristicas{background:var(--fio-amarelo);padding:2px 16px 6px;font-size:17px;font-weight:700;color:#000;min-height:130px;border-left:1px solid #fff;border-right:1px solid #fff;outline:0}.fio-caracteristicas ul{margin:0;padding-left:18px}.fio-caracteristicas li{margin:2px 0}.fio-caracteristicas li::marker{color:var(--fio-laranja)}
+.fio-table{width:100%;border-collapse:collapse;table-layout:fixed}.fio-table th{background:var(--fio-azul);color:#fff;font-size:18px;line-height:1.05;font-weight:800;text-align:center;border:1px solid #fff;padding:3px 4px;height:42px}.fio-table td{background:var(--fio-amarelo);color:#000;font-size:18px;text-align:center;border:1px solid #fff;padding:6px 4px;height:98px;vertical-align:middle;outline:0}.fio-table td.small{font-size:16px}.fio-table td.money{font-size:18px}.fio-table td.wrap{word-break:break-word;line-height:1.35}
+.fio-bottom{display:grid;grid-template-columns:280px 760px;gap:12px;margin-top:12px;align-items:end}.fio-photo{width:253px;height:145px;background:#fff;border:1px solid #70ad47;display:flex;align-items:center;justify-content:center;text-align:center;font-size:18px;line-height:1.25;color:#000;cursor:pointer;overflow:hidden;margin-left:0}.fio-photo img{width:100%;height:100%;object-fit:cover}.fio-photo input{display:none}
+.fio-obs-grid{display:grid;grid-template-columns:56px 54px 1fr;align-items:stretch}.fio-mini-head,.fio-obs-head{background:#245fa8;color:#fff;font-weight:800;text-align:center;border:1px solid #fff;font-size:16px;padding:7px 3px}.fio-obs-head{font-size:18px}.fio-mini-val{background:#ffc000;border:1px solid #fff;min-height:130px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:18px;outline:0}.fio-obs-body{background:#ffc000;border:1px solid #fff;min-height:130px;padding:7px 10px;font-size:17px;line-height:1.5;outline:0}.fio-obs-body ul{margin:0;padding-left:18px}.fio-obs-body li::marker{color:var(--fio-laranja)}
+
+.fio-entrega-ok{background:#c6e0b4!important;font-weight:800}.fio-entrega-alerta{background:#ffe699!important;font-weight:800}.fio-entrega-critica{background:#f4b084!important;font-weight:800}.fio-entrega-sem-dados{background:#d9e2f3!important;font-weight:800}
+.fio-table td small{font-size:11px;line-height:1.05;font-weight:700}
+[contenteditable="true"]:focus{box-shadow:inset 0 0 0 2px rgba(230,126,34,.65);background-color:rgba(255,244,205,.9)!important}
+.empty{color:#738091;font-style:italic}.hidden{display:none!important}
+@media(max-width:1180px){.fio-slide{transform:scale(calc((100vw - 24px)/1120));transform-origin:top center;margin-bottom:calc(28px - (630px * (1 - ((100vw - 24px)/1120))))}.note{margin-top:-8px}}
+@media print{body{background:#fff}.topbar,.toolbar,.note{display:none!important}.fio-slide{box-shadow:none;border:0;margin:0;width:100%;min-height:auto;transform:none;padding:0}.fio-header{border:none}@page{size:landscape;margin:8mm}}
+
+/* ===== Atualizações FIO: ajuste de fonte, grupos e exportação ===== */
+.toolbar .sep{width:1px;height:28px;background:#b8c6d8;margin:0 2px}
+.toolbar .compact{min-width:150px!important}.toolbar .tiny{min-width:76px!important;width:76px;text-align:center}
+.fio-slide{--fio-font-scale:1}
+.fio-slide .fio-title{font-size:calc(37px * var(--fio-font-scale))}
+.fio-slide .fio-opus-bar{font-size:calc(18px * var(--fio-font-scale))}
+.fio-slide .fio-caracteristicas{font-size:calc(17px * var(--fio-font-scale))}
+.fio-slide .fio-table th{font-size:calc(18px * var(--fio-font-scale))}
+.fio-slide .fio-table td{font-size:calc(18px * var(--fio-font-scale));overflow:hidden}
+.fio-slide .fio-table td.small{font-size:calc(16px * var(--fio-font-scale))}
+.fio-slide .fio-mini-head,.fio-slide .fio-mini-val{font-size:calc(16px * var(--fio-font-scale))}
+.fio-slide .fio-obs-head{font-size:calc(18px * var(--fio-font-scale))}
+.fio-slide .fio-obs-body{font-size:calc(17px * var(--fio-font-scale));overflow:hidden}
+.fio-slide td,.fio-slide .fio-title,.fio-slide .fio-opus-bar,.fio-slide .fio-caracteristicas,.fio-slide .fio-obs-body,.fio-slide .fio-mini-val{overflow-wrap:anywhere}
+.fio-slide .fio-fit{max-height:100%;overflow:hidden}
+.fio-slide .fio-title.fio-fit,.fio-slide .fio-caracteristicas.fio-fit,.fio-slide .fio-obs-body.fio-fit,.fio-slide .fio-mini-val.fio-fit{display:block}
+.fio-slide .fio-table td.fio-fit{display:table-cell!important}
+.fio-slide .fio-table tr{display:table-row!important}.fio-slide .fio-table thead{display:table-header-group!important}.fio-slide .fio-table tbody{display:table-row-group!important}
+.fio-entrega-ok,.fio-entrega-alerta,.fio-entrega-critica,.fio-entrega-sem-dados{font-weight:800}
+.print-group-container{display:none}
+@media print{
+  body.printing-group .fio-slide{page-break-after:always;margin:0 auto 8mm!important;border:8px solid var(--fio-borda)!important;box-shadow:none!important;transform:none!important}
+  body.printing-group #fioSlide{display:none!important}
+  body.printing-group .print-group-container{display:block!important}
+}
+
+</style>
+</head>
+<body>
+<header class="topbar no-print">
+  <h1>📊 SIGOM · Apresentação FIO</h1>
+  <span class="status" id="status">Carregando dados...</span>
+  <div class="spacer"></div>
+  <button class="btn white" onclick="voltarDashboard()">↩ Dashboard</button>
+</header>
+
+<div class="toolbar no-print">
+  <button class="btn blue" onclick="fioAnterior()">← Obra anterior</button>
+  <select id="fioSelectObra" onchange="fioSelecionarObra(this.value)"></select>
+  <button class="btn blue" onclick="fioProxima()">Próxima obra →</button>
+  <span class="sep"></span>
+  <select id="fioSelectGrupo" class="compact" onchange="selecionarGrupoFIO(this.value)"><option value="">Grupo/Subgrupo — todos</option></select>
+  <select id="fioSelectObraGrupo" class="compact" onchange="abrirObraGrupoSelecionada(this.value)"><option value="">Obra do grupo</option></select>
+  <button class="btn gray" onclick="visualizarGrupoFIO()">👁 Visualizar grupo</button>
+  <span class="sep"></span>
+  <button class="btn gray" onclick="ajustarFonteFIO(-0.05)">A−</button>
+  <input id="fioFontScale" class="tiny" value="100%" readonly title="Escala da fonte do slide FIO">
+  <button class="btn gray" onclick="ajustarFonteFIO(0.05)">A+</button>
+  <button class="btn gray" onclick="autoAjustarFonteFIO()">↕ Auto fonte</button>
+  <span class="sep"></span>
+  <button class="btn green" onclick="salvarEdicaoFIO()">💾 Salvar edição</button>
+  <button class="btn gray" onclick="restaurarFIO()">↩ Restaurar planilha</button>
+  <button class="btn orange" onclick="exportarPDFObraAtual()">🖨 PDF obra</button>
+  <button class="btn orange" onclick="exportarPPTObraAtual()">📊 PPT obra</button>
+  <button class="btn blue" onclick="exportarPDFGrupoSelecionado()">🖨 PDF grupo</button>
+  <button class="btn blue" onclick="exportarPPTGrupoSelecionado()">📊 PPT grupo</button>
+  <button class="btn gray" onclick="copiarSlideFIO()">📋 Copiar</button>
+  <input type="file" id="fileInput" accept=".xlsx,.xlsm" style="display:none">
+  <button class="btn white" onclick="document.getElementById('fileInput').click()">📂 Carregar Excel</button>
+</div>
+<div class="note" id="nota">Este HTML pode ficar na mesma pasta do dashboard SIGOM. Ele lê as mesmas planilhas das pastas do SIGOM e salva edições por OPUS + Contrato no navegador.</div>
+<div id="fioSlide" class="fio-slide"></div>
+
+<script>
+const MAIN_PATHS=['1-Planilha de Obras_Dash/Planilha de Obras_Dash.xlsx','1-Planilha de Obras_Dash/tudao.xlsx','Objetivos e Metas/Relatorio_Gerencial.xlsx','Objetivos e Metas/Relatório_Gerencial.xlsx','consolidado_obras_processado_projecoes_final_v2.xlsx','Planilha de Obras_Dash.xlsx','Planilha_de_Obras_Dash.xlsx'];
+const PORT_PATHS=['2-Planilha portfólio_Dash/Planilha_portfólio_Dash.xlsx','2-Planilha portfólio_Dash/Planilha portfólio_Dash.xlsx','2-Planilha portfólio_Dash/Planilha_portfolio_Dash.xlsx','2-Planilha portfolio_Dash/Planilha portfolio_Dash.xlsx','Obras_Selecionadas_Dash/Obras_Selecionadas_Dash.xlsx','Obras_Selecionadas_Dash.xlsx','Planilha portfolio_Dash.xlsx'];
+let DATA=[], PORT=[], OBRAS=[], fioIndexAtual=0, GRUPOS={}, GRUPO_ATUAL="";
+const store={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){alert('Não foi possível salvar: limite do navegador atingido.')}}};
+const norm=s=>String(s??'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim();
+const digits=v=>String(v??'').replace(/\D/g,'');
+function isNum(n){return typeof n==='number'&&isFinite(n)}
+function toNum(v){if(v==null||v==='')return null;if(typeof v==='number')return isFinite(v)?v:null;let s=String(v).replace(/R\$|\s|%/g,'');if(!s||s==='-')return null;if(/,/.test(s))s=s.replace(/\./g,'').replace(',','.');else if(/^\d{1,3}(\.\d{3})+$/.test(s))s=s.replace(/\./g,'');const n=parseFloat(s);return isFinite(n)?n:null}
+function fmtR(n){return isNum(n)?'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'—'}
+function fmtMi(n){return isNum(n)?'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'—'}
+function pct(n){return isNum(n)?n.toLocaleString('pt-BR',{maximumFractionDigits:2})+'%':'—'}
+function asDate(v){if(v==null||v==='')return null;if(v instanceof Date)return v;if(typeof v==='number'){try{const d=XLSX.SSF.parse_date_code(v);return new Date(d.y,d.m-1,d.d)}catch(e){return null}}const s=String(v);let m=s.match(/(\d{4})-(\d{2})-(\d{2})/);if(m)return new Date(+m[1],+m[2]-1,+m[3]);m=s.match(/(\d{2})\/(\d{2})\/(\d{4})/);if(m)return new Date(+m[3],+m[2]-1,+m[1]);return null}
+function dt(v){const d=asDate(v);return d?d.toLocaleDateString('pt-BR'):(v?String(v):'—')}
+function fmtContrato(v){if(v==null||v==='')return '';if(v instanceof Date)return String(v.getMonth()+1).padStart(2,'0')+'/'+v.getFullYear();if(typeof v==='number'){try{const d=XLSX.SSF.parse_date_code(v);if(d)return String(d.m).padStart(2,'0')+'/'+d.y}catch(e){}return String(v)}return String(v).trim()}
+const ALIASES={
+  'Contrato':['Contrato','Nr Contrato','N° Contrato','Nº Contrato','Numero Contrato'],
+  'Solicitação':['Solicitação','Nr Solicitação','N° Solicitação','Nº Solicitação','OPUS','Nr OPUS','Nº OPUS','Código da Obra','Codigo da Obra'],
+  'Descrição':['Descrição','Descrição Solicitação','Descricao','Descricao Solicitacao','Descrição da Obra','Descricao da Obra'],
+  'Empresa':['Empresa','Nome Fornecedor','Fornecedor','Contratada','Construtora'],
+  'RM':['RM','Região Militar','Regiao Militar'],
+  '% medido':['% medido','% Medido','percentual medido'],
+  '% estimado':['% estimado','% Estimado','percentual estimado'],
+  'Data Assinatura':['Data Assinatura','Assinatura de Contrato','Data assinatura','Data Assinatura Contrato'],
+  'Início Obra':['Início Obra','Início da Obra','Inicio da Obra','Início (OS)','Inicio (OS)','Data da Ordem de Serviço','Data OS'],
+  'Fim Prazo':['Fim Prazo','Término de Prazo','Termino de Prazo','Fim do Prazo'],
+  'Fim Vigência':['Fim Vigência','Término de Vigência','Termino de Vigencia','Término de Vigencia','Fim Vigencia'],
+  'Ações Financeiras':['Ações Financeiras','Acoes Financeiras','Ações Orçamentárias','Ações Orcamentarias'],
+  'Ação Orçamentaria':['Ação Orçamentaria','Ação Orçamentária','Acao Orcamentaria','Ação Orcamentaria'],
+  'Valor Atual':['Valor Atual','Valor Total','Valor Contratado Atual'],
+  'Valor Inicial':['Valor Inicial','Valor Contratado','Valor Solicitação','Valor Solicitacao'],
+  'Total NE':['Total NE','Total Empenho','Empenho','Total Empenhado'],
+  'Total Notas Fiscais':['Total Notas Fiscais','Total NF','Total Liquidado','Notas Fiscais'],
+  'Falta Empenhar':['Falta Empenhar','Falta Descentralizar','Saldo de Empenho','Saldo a Descentralizar'],
+  'obs':['obs','Obs','Observações','Observacoes','Observação','Problemas','Observações/Problemas'],
+  'media mensal global':['media mensal global','média mensal global','Média Mensal Global','media mensal','média mensal'],
+  'media medicao 3':['media medicao 3','Média Medição 3','média medição 3','média liq 3 últimas medições','media liq 3'],
+  '% Quarta':['% Quarta','Percentual Quarta','Quarta medição','Quarta Medição'],
+  'Data quarta':['Data quarta','Data Quarta','Data da quarta medição','Data da Quarta Medição'],
+  '% Antepenúltima':['% Antepenúltima','% Antepenultima','Percentual Antepenúltima','Antepenúltima medição','Antepenultima medicao'],
+  'Data Antepenúltima':['Data Antepenúltima','Data Antepenultima','Data da antepenúltima medição','Data da Antepenultima Medição'],
+  '% Penúltima':['% Penúltima','% Penultima','Percentual Penúltima','Penúltima medição','Penultima medicao'],
+  'Data Penúltima':['Data Penúltima','Data Penultima','Data da penúltima medição','Data da Penultima Medição'],
+  '% Última':['% Última','% Ultima','Percentual Última','Última medição','Ultima medicao'],
+  'Data Última':['Data Última','Data Ultima','Data da última medição','Data da ultima medicao'],
+  'data projetada':['data projetada','Data Projetada','Término Projetado','Termino Projetado'],
+  'Concepção do Objeto':['Concepção do Objeto','Concepcao do Objeto','Concepção','Concepcao'],
+  'Fundações':['Fundações','Fundacoes'],
+  'Estrutura':['Estrutura'],
+  'Cobertura':['Cobertura'],
+  'Paredes Internas':['Paredes Internas','Paredes'],
+  'Terraplenagem e Pavimentação':['Terraplenagem e Pavimentação','Terraplenagem e Pavimentacao','Terraplenagem'],
+  'PA':['PA','Processo Administrativo'],
+  'IDP':['IDP']
+};
+const NUMCOLS=['% estimado','% medido','% Quarta','% Antepenúltima','% Penúltima','% Última','Valor Inicial','Valor Atual','Total NE','Total Notas Fiscais','Falta Empenhar','IDP','media mensal global','media medicao 3'];
+function normalizeRows(rows){if(!rows.length)return rows;const map={};Object.keys(rows[0]).forEach(k=>{let canon=String(k).trim();for(const [c,alts] of Object.entries(ALIASES)){if(alts.map(norm).includes(norm(k))){canon=c;break}}map[k]=canon});return rows.map(r=>{const o={};for(const [k,v] of Object.entries(r)){const c=map[k];if(!(c in o)||o[c]==null||o[c]==='')o[c]=v}NUMCOLS.forEach(c=>{if(c in o)o[c]=toNum(o[c])});return o})}
+function pickSheet(wb){for(const name of wb.SheetNames){const rows=XLSX.utils.sheet_to_json(wb.Sheets[name],{defval:null});if(!rows.length)continue;const keys=Object.keys(rows[0]).map(norm);if((keys.some(k=>k.includes('contrato'))||keys.some(k=>k.includes('opus'))||keys.some(k=>k.includes('codigo da obra')))&&keys.some(k=>k.includes('valor')||k.includes('medido')))return rows}return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:null})}
+function chave(r){const op=String(r['Solicitação']??'').trim();const ct=fmtContrato(r['Contrato']??'');return (op||ct)?op+'|'+ct:norm(r['Descrição'])+'|'+norm(r['Empresa'])}
+function consolidar(rows){const m=new Map();rows.forEach(r=>{const k=chave(r);if(!m.has(k)){m.set(k,{...r});return}const o=m.get(k);for(const [c,v] of Object.entries(r)){if(o[c]==null||o[c]==='')o[c]=v;else if(isNum(o[c])&&isNum(v)&&['Valor Atual','Total NE','Total Notas Fiscais','Falta Empenhar'].includes(c))o[c]=Math.max(o[c],v)}});return [...m.values()]}
+async function listarXlsxPasta(pasta){try{const res=await fetch('/api/xlsx?folder='+encodeURIComponent(pasta));if(!res.ok)return[];const j=await res.json();return j.ok&&Array.isArray(j.files)?j.files.map(f=>f.path):[]}catch(e){return[]}}
+async function fetchXlsx(path){const res=await fetch(path);if(!res.ok)throw new Error(path);return await res.arrayBuffer()}
+async function tryLoad(){
+  document.getElementById('status').textContent='Buscando planilhas...';
+  await carregarGruposFIO();
+  const autoMain=await listarXlsxPasta('1-Planilha de Obras_Dash');
+  const autoPort=await listarXlsxPasta('2-Planilha portfólio_Dash');
+  for(const p of [...autoPort,...PORT_PATHS]){try{PORT=consolidar(normalizeRows(pickSheet(XLSX.read(await fetchXlsx(p),{type:'array',cellDates:true}))));break}catch(e){}}
+  for(const p of [...autoMain,...MAIN_PATHS]){try{DATA=consolidar(normalizeRows(pickSheet(XLSX.read(await fetchXlsx(p),{type:'array',cellDates:true}))));break}catch(e){}}
+  OBRAS=PORT.length?PORT:DATA;
+  if(OBRAS.length){
+    document.getElementById('status').textContent=OBRAS.length+' obras carregadas · saldo = Total NE - Total NF';
+    montarSelectFIO();montarSelectGruposFIO();aplicarQueryInicial();renderFioSlide(fioIndexAtual);
+  }else{
+    montarSelectGruposFIO();
+    document.getElementById('status').textContent='Use “Carregar Excel”';
+    document.getElementById('fioSlide').innerHTML='<div style="padding:40px;text-align:center;font-size:20px">Nenhuma planilha carregada.<br><br>Clique em <b>📂 Carregar Excel</b> ou abra pelo servidor SIGOM na mesma pasta do dashboard.</div>'
+  }
+}
+document.getElementById('fileInput').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=ev=>{DATA=consolidar(normalizeRows(pickSheet(XLSX.read(ev.target.result,{type:'array',cellDates:true}))));PORT=[];OBRAS=DATA;document.getElementById('status').textContent=OBRAS.length+' obras carregadas do arquivo · saldo = Total NE - Total NF';montarSelectFIO();montarSelectGruposFIO();renderFioSlide(0)};rd.readAsArrayBuffer(f)});
+
+function normalizarGruposSIGOM(payload){
+  if(!payload)return {};
+  const out={};
+  function obrasArr(g){return Array.isArray(g&&g.obras)?g.obras.map(String):[]}
+  function addGrupo(nome,g,prefixo){
+    if(!g||!nome||g.arquivado)return;
+    const full=prefixo?prefixo+' / '+nome:nome;
+    out[full]={
+      nome:full,
+      nomeBase:nome,
+      grupoPai:prefixo||'',
+      descricao:g.descricao||g.descrição||g.obs||'',
+      criadoEm:g.criadoEm||g.criado_em||'',
+      criadoPor:g.criadoPor||g.criado_por||'',
+      criador:g.criador||g.usuario||'',
+      obras:obrasArr(g),
+      origem:prefixo?'subgrupo':'grupo'
+    };
+    const subs=g.subgrupos||{};
+    if(Array.isArray(subs)){
+      subs.forEach((sg,idx)=>{
+        const sn=String((sg&& (sg.nome||sg.grupo||sg.name)) || ('Subgrupo '+(idx+1))).trim();
+        if(sn)addGrupo(sn,sg,full);
+      });
+    }else if(subs&&typeof subs==='object'){
+      Object.keys(subs).forEach(sg=>addGrupo(sg,subs[sg],full));
+    }
+  }
+  if(!Array.isArray(payload.grupos)&&typeof payload==='object'&&!('config' in payload)){
+    Object.keys(payload).forEach(k=>addGrupo(k,payload[k],''));
+  }else{
+    (payload.grupos||[]).forEach((g,idx)=>{
+      const nome=String(g&& (g.nome||g.grupo||g.name) || ('Grupo '+(idx+1))).trim();
+      if(nome)addGrupo(nome,g,'');
+    });
+  }
+  return out;
+}
+async function carregarGruposFIO(){
+  const candidatos=['/api/grupos','Usuarios/grupos_obras.json','usuarios/grupos_obras.json','grupos_obras.json'];
+  for(const url of candidatos){
+    try{const res=await fetch(url+'?t='+Date.now(),{cache:'no-store'});if(!res.ok)continue;const j=await res.json();GRUPOS=normalizarGruposSIGOM(j);if(Object.keys(GRUPOS).length)return true;}catch(e){}
+  }
+  try{GRUPOS=normalizarGruposSIGOM(JSON.parse(store.get('go_grupos')||'{}')||{});}catch(e){GRUPOS={};}
+  return Object.keys(GRUPOS).length>0;
+}
+function montarSelectGruposFIO(){
+  const s=document.getElementById('fioSelectGrupo');if(!s)return;
+  const atual=s.value;
+  const nomes=Object.keys(GRUPOS).sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  s.innerHTML='<option value="">Grupo/Subgrupo — todos</option>'+nomes.map(g=>{
+    const item=GRUPOS[g]||{};
+    const prefixo=item.origem==='subgrupo'?'↳ ':'';
+    return `<option value="${escapeAttr(g)}">${prefixo}${escapeHtml(g)} (${(item.obras||[]).length})</option>`;
+  }).join('');
+  if([...s.options].some(o=>o.value===atual))s.value=atual;
+  montarSelectObrasGrupoFIO(s.value||'');
+}
+function groupKey(r){return String(r['Solicitação']??'').trim()+'|'+fmtContrato(r['Contrato']??'').trim()}
+function legacyOpusKey(r){return String(r['Solicitação']??'').trim()}
+function obraPorKeyGrupo(k){
+  const opus=String(k||'').split('|')[0];
+  return OBRAS.find(r=>groupKey(r)===k||legacyOpusKey(r)===k||String(r['Solicitação'])===opus)||null;
+}
+function obrasDoGrupo(nome){
+  const keys=(GRUPOS[nome]&&GRUPOS[nome].obras)||[];
+  return keys.map(k=>({key:k,obra:obraPorKeyGrupo(k)})).filter(x=>x.obra);
+}
+function selecionarGrupoFIO(nome){
+  GRUPO_ATUAL=nome||'';
+  montarSelectObrasGrupoFIO(GRUPO_ATUAL);
+  const obras=obrasDoGrupo(GRUPO_ATUAL);
+  if(obras.length){const idx=OBRAS.indexOf(obras[0].obra);if(idx>=0)renderFioSlide(idx);}
+}
+function montarSelectObrasGrupoFIO(nome){
+  const s=document.getElementById('fioSelectObraGrupo');if(!s)return;
+  if(!nome){s.innerHTML='<option value="">Obra do grupo</option>';return;}
+  const itens=obrasDoGrupo(nome);
+  s.innerHTML='<option value="">Obra do grupo</option>'+itens.map(x=>{const i=OBRAS.indexOf(x.obra);return `<option value="${i}">${escapeHtml(x.key)} — ${escapeHtml(String(x.obra['Descrição']||'').slice(0,70))}</option>`}).join('');
+}
+function abrirObraGrupoSelecionada(v){if(v===''||v==null)return;renderFioSlide(+v);}
+function visualizarGrupoFIO(){
+  const nome=document.getElementById('fioSelectGrupo')?.value||'';
+  if(!nome){alert('Selecione um grupo ou subgrupo.');return;}
+  const itens=obrasDoGrupo(nome);
+  if(!itens.length){alert('Nenhuma obra deste grupo/subgrupo foi localizada na planilha carregada.');return;}
+  const tipo=(GRUPOS[nome]&&GRUPOS[nome].origem==='subgrupo')?'subgrupo':'grupo';
+  const msg=itens.map((x,i)=>`${i+1}. ${x.key} — ${x.obra['Descrição']||''}`).join('\n');
+  alert('Obras do '+tipo+' "'+nome+'":\n\n'+msg);
+}
+function setFonteEscalaFIO(v){
+  v=Math.max(0.62,Math.min(1.18,v));
+  const slide=document.getElementById('fioSlide'); if(slide)slide.style.setProperty('--fio-font-scale',v.toFixed(2));
+  const inp=document.getElementById('fioFontScale'); if(inp)inp.value=Math.round(v*100)+'%';
+  store.set('fio_font_scale',String(v));
+}
+function escalaAtualFIO(){const v=parseFloat(store.get('fio_font_scale')||'1');return isNum(v)?v:1;}
+function ajustarFonteFIO(delta){setFonteEscalaFIO(escalaAtualFIO()+delta);setTimeout(autoFitTextFIO,60);}
+function autoAjustarFonteFIO(){
+  setFonteEscalaFIO(1);
+  let v=1;
+  const slide=document.getElementById('fioSlide');
+  for(let i=0;i<12;i++){
+    autoFitTextFIO();
+    const overflow=[...slide.querySelectorAll('.fio-title,.fio-caracteristicas,.fio-table td,.fio-obs-body,.fio-mini-val')].some(el=>el.scrollHeight>el.clientHeight+2||el.scrollWidth>el.clientWidth+2);
+    if(!overflow)break;
+    v-=0.04; setFonteEscalaFIO(v);
+  }
+}
+function autoFitTextFIO(){
+  const slide=document.getElementById('fioSlide'); if(!slide)return;
+  slide.querySelectorAll('.fio-table td,.fio-mini-val,.fio-obs-body,.fio-caracteristicas,.fio-title').forEach(el=>{
+    el.classList.add('fio-fit');
+    // Mantém as células como tabela. O ajuste só reduz a fonte, sem transformar linha em coluna.
+    if(el.tagName==='TD')el.style.display='table-cell';
+    const base=parseFloat(getComputedStyle(el).fontSize)||16;
+    let size=base;
+    let guard=0;
+    while((el.scrollHeight>el.clientHeight+2||el.scrollWidth>el.clientWidth+2)&&size>9&&guard<14){
+      size-=1; el.style.fontSize=size+'px'; guard++;
+    }
+  });
+}
+function exportarPDFObraAtual(){window.print();}
+function exportarPDFGrupoSelecionado(){
+  const nome=document.getElementById('fioSelectGrupo')?.value||'';
+  if(!nome){alert('Selecione um grupo para exportar em PDF.');return;}
+  const itens=obrasDoGrupo(nome);
+  if(!itens.length){alert('Nenhuma obra do grupo foi localizada na planilha carregada.');return;}
+  let cont=document.getElementById('printGroupContainer');
+  if(!cont){cont=document.createElement('div');cont.id='printGroupContainer';cont.className='print-group-container';document.body.appendChild(cont);}
+  cont.innerHTML=itens.map(x=>`<div class="fio-slide" style="--fio-font-scale:${escalaAtualFIO()}">${buildFioSlideHTML(x.obra,false)}</div>`).join('');
+  document.body.classList.add('printing-group');
+  setTimeout(()=>{window.print();setTimeout(()=>{document.body.classList.remove('printing-group');cont.innerHTML='';},500)},100);
+}
+function nomeArquivoSeguro(s){return String(s||'FIO').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9_-]+/g,'_').replace(/^_+|_+$/g,'').slice(0,80)||'FIO'}
+async function exportarPPTObraAtual(){const r=OBRAS[fioIndexAtual];if(!r)return;await gerarPPTFIO([r],'FIO_'+nomeArquivoSeguro(r['Solicitação']||r['Descrição'])+'.pptx');}
+async function exportarPPTGrupoSelecionado(){
+  const nome=document.getElementById('fioSelectGrupo')?.value||'';
+  if(!nome){alert('Selecione um grupo para exportar em PowerPoint.');return;}
+  const obras=obrasDoGrupo(nome).map(x=>x.obra);
+  if(!obras.length){alert('Nenhuma obra do grupo foi localizada na planilha carregada.');return;}
+  await gerarPPTFIO(obras,'FIO_'+nomeArquivoSeguro(nome)+'.pptx');
+}
+function carregarScriptFIO(src){
+  return new Promise((resolve,reject)=>{
+    if([...document.scripts].some(s=>s.src&&s.src.includes(src))){resolve();return;}
+    const sc=document.createElement('script'); sc.src=src; sc.async=true;
+    sc.onload=()=>resolve(); sc.onerror=()=>reject(new Error(src)); document.head.appendChild(sc);
+  });
+}
+async function garantirBibliotecaPPT(){
+  if(typeof PptxGenJS!=='undefined')return true;
+  const fontes=[
+    'pptxgen.bundle.js',
+    'lib/pptxgen.bundle.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/pptxgenjs/3.12.0/pptxgen.bundle.js',
+    'https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js'
+  ];
+  for(const src of fontes){
+    try{await carregarScriptFIO(src); if(typeof PptxGenJS!=='undefined')return true;}catch(e){}
+  }
+  return false;
+}
+async function gerarPPTFIO(obras,arquivo){
+  const ok=await garantirBibliotecaPPT();
+  if(!ok){alert('Biblioteca PowerPoint não carregada. O HTML tentou carregar automaticamente de: pptxgen.bundle.js, lib/pptxgen.bundle.js e CDN. Para funcionar sem internet, coloque o arquivo pptxgen.bundle.js na mesma pasta do fio_slide_SIGOM.html. Enquanto isso, exporte em PDF.');return;}
+  const pptx=new PptxGenJS(); pptx.defineLayout({name:'FIO16x9',width:13.333,height:7.5}); pptx.layout='FIO16x9';
+  const AZ='0070C0',AZE='1E4E79',AM='FFCC33',CIN='E6E6E6',BOR='4D4D4D',VD='70AD47',LR='E67E22';
+  obras.forEach(r=>{
+    const s=pptx.addSlide(); s.background={color:CIN};
+    s.addShape(pptx.ShapeType.rect,{x:0.05,y:0.05,w:13.23,h:7.40,fill:{color:CIN},line:{color:BOR,width:3}});
+    const title=String(r['Descrição']||r['OM Beneficiada']||'Anexo da Obra'); const ao=acaoOrcamentariaFIO(r);
+    s.addShape(pptx.ShapeType.rect,{x:0.28,y:0.22,w:12.78,h:0.72,fill:{color:AZE},line:{color:'B8C6D8',width:.5}});
+    s.addText(title,{x:0.38,y:0.34,w:11.6,h:0.42,fontFace:'Arial',fontSize:20,bold:true,color:'FFFFFF',fit:'shrink'});
+    s.addText('DEC',{x:12.10,y:0.30,w:0.45,h:0.35,fontSize:9,bold:true,color:AZE,fill:{color:'FFFFFF'},align:'center',valign:'mid'});
+    s.addText('DOM',{x:12.58,y:0.30,w:0.45,h:0.35,fontSize:9,bold:true,color:AZE,fill:{color:'FFFFFF'},align:'center',valign:'mid'});
+    s.addShape(pptx.ShapeType.rect,{x:0.28,y:0.94,w:12.78,h:0.28,fill:{color:AZ},line:{color:'FFFFFF',width:.5}});
+    s.addText(`Nr OPUS: ${r['Solicitação']||'—'}  -  AO: ${ao}`,{x:0.32,y:0.98,w:12.65,h:0.16,fontSize:10,bold:true,color:'FFFFFF',align:'center',fit:'shrink'});
+    s.addShape(pptx.ShapeType.rect,{x:0.28,y:1.22,w:12.78,h:1.45,fill:{color:AM},line:{color:'FFFFFF',width:.5}});
+    const carac=['Concepção do Objeto','Fundações','Estrutura','Cobertura','Paredes Internas','Terraplenagem e Pavimentação'].map(k=>`${k}: ${r[k]||'—'}`).join('\n');
+    s.addText(carac,{x:0.45,y:1.30,w:12.45,h:1.25,fontSize:9.5,bold:true,color:'000000',breakLine:false,fit:'shrink',bullet:{type:'bullet'}});
+    const y=2.72, hH=.45, hV=1.03, x0=.28, totalW=12.78, cw=totalW/8;
+    const headers=['INÍCIO','EMPRESA','VALOR TOTAL','EMPENHO','SALDO DE\nEMPENHO','EXECUTADO','MEDIÇÃO\nMENSAL','ENTREGA COM BASE\nNA MEDIÇÃO'];
+    const totalNE=toNum(r['Total NE']); const totalNF=toNum(r['Total Notas Fiscais']); const saldoFinal=(isNum(totalNE)&&isNum(totalNF))?Math.max(0,totalNE-totalNF):null;
+    const vals=[dt(r['Data Assinatura']||r['Início Obra']),r['Empresa']||'—',fmtMi(toNum(r['Valor Atual'])),fmtMi(toNum(r['Total NE'])),fmtMi(saldoFinal),pct(pctAcumulado(r['% medido']||r['% Última'])),fmtR(mediaMensal(r)),entregaTextoPlano(r)];
+    headers.forEach((hh,i)=>{s.addShape(pptx.ShapeType.rect,{x:x0+i*cw,y,w:cw,h:hH,fill:{color:AZ},line:{color:'FFFFFF',width:.5}});s.addText(hh,{x:x0+i*cw,y:y+.06,w:cw,h:hH-.08,fontSize:9,bold:true,color:'FFFFFF',align:'center',valign:'mid',fit:'shrink'});});
+    vals.forEach((vv,i)=>{s.addShape(pptx.ShapeType.rect,{x:x0+i*cw,y:y+hH,w:cw,h:hV,fill:{color:AM},line:{color:'FFFFFF',width:.5}});s.addText(String(vv),{x:x0+i*cw+.02,y:y+hH+.12,w:cw-.04,h:hV-.18,fontSize:9.5,bold:true,color:'000000',align:'center',valign:'mid',fit:'shrink'});});
+    s.addShape(pptx.ShapeType.rect,{x:.28,y:4.42,w:3.0,h:1.63,fill:{color:'FFFFFF'},line:{color:VD,width:.8}});
+    s.addText('FOTO\nDa Obra',{x:.28,y:5.0,w:3.0,h:.45,fontSize:14,align:'center',valign:'mid',color:'000000'});
+    const idp=calcIDP(r);
+    s.addShape(pptx.ShapeType.rect,{x:3.45,y:4.42,w:.62,h:.42,fill:{color:'245FA8'},line:{color:'FFFFFF',width:.5}});s.addText('PA',{x:3.45,y:4.54,w:.62,h:.12,fontSize:9,bold:true,color:'FFFFFF',align:'center'});
+    s.addShape(pptx.ShapeType.rect,{x:4.07,y:4.42,w:.62,h:.42,fill:{color:'245FA8'},line:{color:'FFFFFF',width:.5}});s.addText('IDP',{x:4.07,y:4.54,w:.62,h:.12,fontSize:9,bold:true,color:'FFFFFF',align:'center'});
+    s.addShape(pptx.ShapeType.rect,{x:4.69,y:4.42,w:8.37,h:.42,fill:{color:'245FA8'},line:{color:'FFFFFF',width:.5}});s.addText('OBSERVAÇÕES/PROBLEMAS TÉCNICOS-ORÇAMENTÁRIOS',{x:4.75,y:4.54,w:8.25,h:.12,fontSize:9,bold:true,color:'FFFFFF',align:'center',fit:'shrink'});
+    s.addShape(pptx.ShapeType.rect,{x:3.45,y:4.84,w:.62,h:1.21,fill:{color:'FFC000'},line:{color:'FFFFFF',width:.5}});s.addText(String(r['PA']||'Não'),{x:3.45,y:5.25,w:.62,h:.25,fontSize:10,bold:true,align:'center'});
+    s.addShape(pptx.ShapeType.rect,{x:4.07,y:4.84,w:.62,h:1.21,fill:{color:'FFC000'},line:{color:'FFFFFF',width:.5}});s.addText(isNum(idp)?idp.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'—',{x:4.07,y:5.25,w:.62,h:.25,fontSize:10,bold:true,align:'center'});
+    s.addShape(pptx.ShapeType.rect,{x:4.69,y:4.84,w:8.37,h:1.21,fill:{color:'FFC000'},line:{color:'FFFFFF',width:.5}});s.addText(stripHtml(obsHTML(r)),{x:4.83,y:4.93,w:8.12,h:1.0,fontSize:9.5,color:'000000',fit:'shrink'});
+  });
+  pptx.writeFile({fileName:arquivo});
+}
+function stripHtml(s){return String(s||'').replace(/<li>/g,'• ').replace(/<br\s*\/?>/g,'\n').replace(/<[^>]+>/g,'').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>')}
+function entregaTextoPlano(r){const e=projetarEntregaMedicoes(r);if(e.tipo==='projecao')return e.texto;if(e.tipo==='concluida')return 'Concluída';if(e.status==='Datas inválidas')return 'Datas inválidas';if(e.status==='Sem dados suficientes')return 'Sem dados';return '—'}
+function escapeAttr(s){return escapeHtml(s).replace(/'/g,'&#39;')}
+function montarSelectFIO(){const s=document.getElementById('fioSelectObra');s.innerHTML='';OBRAS.forEach((r,i)=>{const o=document.createElement('option');o.value=i;o.textContent=`${r['Solicitação']||'—'} — ${fmtContrato(r['Contrato'])||'—'} — ${String(r['Descrição']||'').slice(0,80)}`;s.appendChild(o)});s.value=fioIndexAtual}
+function aplicarQueryInicial(){
+  const q=new URLSearchParams(location.search);
+  const grupo=q.get('grupo');
+  if(grupo&&GRUPOS[grupo]){
+    const sel=document.getElementById('fioSelectGrupo'); if(sel)sel.value=grupo;
+    selecionarGrupoFIO(grupo);
+    return;
+  }
+  const opus=q.get('opus'), contrato=q.get('contrato');
+  if(!opus&&!contrato)return;
+  const idx=OBRAS.findIndex(r=>(!opus||String(r['Solicitação'])===opus)&&(!contrato||fmtContrato(r['Contrato'])===contrato));
+  if(idx>=0)fioIndexAtual=idx;
+}
+function fioSelecionarObra(v){fioIndexAtual=+v||0;renderFioSlide(fioIndexAtual)}
+function fioAnterior(){if(!OBRAS.length)return;fioIndexAtual=(fioIndexAtual-1+OBRAS.length)%OBRAS.length;renderFioSlide(fioIndexAtual)}
+function fioProxima(){if(!OBRAS.length)return;fioIndexAtual=(fioIndexAtual+1)%OBRAS.length;renderFioSlide(fioIndexAtual)}
+function fioKey(r){return 'fio_edit_'+String(r['Solicitação']||'semopus').replace(/\W/g,'_')+'_'+fmtContrato(r['Contrato']).replace(/\W/g,'_')}
+function photoKey(r){return fioKey(r)+'_foto'}
+function getLogo(id,label){const data=store.get('go_'+id);return data?`<div class="fio-logo"><img src="${data}"></div>`:`<div class="fio-logo">${label}</div>`}
+function mediaMensal(r){
+  const direto=toNum(r['media mensal global']);
+  if(isNum(direto)&&direto>0)return direto;
+  const fallback=toNum(r['media medicao 3']);
+  if(isNum(fallback)&&fallback>0)return fallback;
+  const nf=toNum(r['Total Notas Fiscais']);
+  const d=asDate(r['Data Assinatura']||r['Início Obra']);
+  if(isNum(nf)&&d){const dias=(Date.now()-d.getTime())/864e5;if(dias>0)return nf/dias*30}
+  return null;
+}
+function calcIDP(r){const salvo=toNum(r['IDP']);if(isNum(salvo))return salvo;const est=toNum(r['% estimado']), med=toNum(r['% medido']);if(isNum(est)&&isNum(med)&&med!==0)return est/med;return null}
+function pctAcumulado(v){
+  const n=toNum(v);
+  if(!isNum(n))return null;
+  return Math.abs(n)<=1 ? n*100 : n;
+}
+function addDiasData(data,dias){
+  const d=new Date(data.getTime());
+  d.setDate(d.getDate()+Math.round(dias));
+  return d;
+}
+function pontosMedicaoValidos(r){
+  const defs=[
+    ['% Quarta','Data quarta'],
+    ['% Antepenúltima','Data Antepenúltima'],
+    ['% Penúltima','Data Penúltima'],
+    ['% Última','Data Última']
+  ];
+  return defs.map(([p,d])=>({p:pctAcumulado(r[p]),d:asDate(r[d]),campoPct:p,campoData:d}))
+    .filter(x=>isNum(x.p)&&x.d)
+    .sort((a,b)=>a.d-b.d);
+}
+function projetarEntregaMedicoes(r){
+  const pUlt=pctAcumulado(r['% Última'] ?? r['% medido']);
+  const dUlt=asDate(r['Data Última']);
+  if(isNum(pUlt)&&pUlt>=100){
+    return {tipo:'concluida',texto:'Concluída',classe:'fio-entrega-ok',status:'Concluída',data:dUlt||null,diasRestantes:0,velocidade:null};
+  }
+
+  // Regra: usar as 4 últimas medições quando existirem; se não houver a quarta, usar as 3 últimas válidas.
+  // A projeção sempre considera o intervalo entre a medição mais antiga disponível e a última medição.
+  const pts=pontosMedicaoValidos(r);
+  if(pts.length<3){
+    return {tipo:'erro',texto:'Sem dados suficientes',classe:'fio-entrega-sem-dados',status:'Sem dados suficientes'};
+  }
+  const basePts=pts.length>=4?pts.slice(-4):pts.slice(-3);
+  const inicio=basePts[0];
+  const fim=basePts[basePts.length-1];
+  if(!inicio.d||!fim.d||!isNum(inicio.p)||!isNum(fim.p)){
+    return {tipo:'erro',texto:'Sem dados suficientes',classe:'fio-entrega-sem-dados',status:'Sem dados suficientes'};
+  }
+  if(fim.p>=100){
+    return {tipo:'concluida',texto:'Concluída',classe:'fio-entrega-ok',status:'Concluída',data:fim.d,diasRestantes:0,velocidade:null};
+  }
+  const intervalo=(fim.d-inicio.d)/864e5;
+  if(intervalo<=0){
+    return {tipo:'erro',texto:'Datas inválidas',classe:'fio-entrega-sem-dados',status:'Datas inválidas'};
+  }
+  if(fim.p<=inicio.p){
+    return {tipo:'sem_avanco',texto:'—',classe:'fio-entrega-sem-dados',status:'Não projetado'};
+  }
+  const velocidade=(fim.p-inicio.p)/intervalo;
+  if(!isNum(velocidade)||velocidade<=0){
+    return {tipo:'sem_avanco',texto:'—',classe:'fio-entrega-sem-dados',status:'Não projetado'};
+  }
+  const faltante=100-fim.p;
+  const diasRestantes=faltante/velocidade;
+  const dataProj=addDiasData(fim.d,diasRestantes);
+  let classe='fio-entrega-critica';
+  if(diasRestantes<=180){classe='fio-entrega-ok'}
+  else if(diasRestantes<=365){classe='fio-entrega-alerta'}
+  const status='Data projetada';
+  return {tipo:'projecao',texto:dataProj.toLocaleDateString('pt-BR'),classe,status,data:dataProj,diasRestantes,velocidade,
+    detalhe:`base ${basePts.length} medições · faltam ${Math.ceil(diasRestantes)} dias · velocidade média ${velocidade.toLocaleString('pt-BR',{maximumFractionDigits:4})}% ao dia`};
+}
+function entregaHTML(r){
+  const e=projetarEntregaMedicoes(r);
+  const titulo=escapeHtml(e.detalhe||e.status||'');
+  if(e.tipo==='projecao')return `<span title="${titulo}"><b>${e.texto}</b></span>`;
+  if(e.tipo==='concluida')return `<span title="${titulo}"><b>Concluída</b></span>`;
+  if(e.status==='Datas inválidas')return `<span title="${titulo}"><b>Datas inválidas</b></span>`;
+  if(e.status==='Sem dados suficientes')return `<span title="${titulo}"><b>Sem dados</b></span>`;
+  return `<span title="${titulo}"><b>—</b></span>`;
+}
+function entregaClasse(r){return projetarEntregaMedicoes(r).classe||''}
+function acaoOrcamentariaFIO(r){return r['Ações Financeiras']||r['Ação Orçamentaria']||'—'}
+function caracteristicasHTML(r){const itens=[['Concepção do Objeto',r['Concepção do Objeto']],['Fundações',r['Fundações']],['Estrutura',r['Estrutura']],['Cobertura',r['Cobertura']],['Paredes Internas',r['Paredes Internas']],['Terraplenagem e Pavimentação',r['Terraplenagem e Pavimentação']]];return '<ul>'+itens.map(([l,v])=>`<li>${l}: ${v||'—'}</li>`).join('')+'</ul>'}
+function obsHTML(r){let o=r['obs']||r['Observações']||r['analise']||'—';const linhas=String(o).split(/\n|;/).map(x=>x.trim()).filter(Boolean);if(linhas.length>1)return '<ul>'+linhas.map(x=>`<li>${x}</li>`).join('')+'</ul>';return `<ul><li>${o}</li></ul>`}
+function buildFioSlideHTML(r,comFoto=true){
+  const title=(r['Descrição']||r['OM Beneficiada']||'Anexo da Obra');
+  const totalNE=toNum(r['Total NE']);
+  const totalNF=toNum(r['Total Notas Fiscais']);
+  const saldoFinal=(isNum(totalNE)&&isNum(totalNF))?Math.max(0,totalNE-totalNF):null;
+  const idp=calcIDP(r);
+  const foto=comFoto?store.get(photoKey(r)):null;
+  const ao=acaoOrcamentariaFIO(r);
+  return `
+  <div class="fio-header"><div class="fio-title" contenteditable="true">${escapeHtml(title)}</div><div class="fio-logos">${getLogo('logoR','DEC')}${getLogo('logoL','DOM')}</div></div>
+  <div class="fio-opus-bar" contenteditable="true">Nr OPUS: ${escapeHtml(r['Solicitação']||'—')} &nbsp;-&nbsp; AO: ${escapeHtml(ao)}</div>
+  <div class="fio-caracteristicas" contenteditable="true">${caracteristicasHTML(r)}</div>
+  <table class="fio-table"><thead><tr><th>INÍCIO</th><th>EMPRESA</th><th>VALOR TOTAL</th><th>EMPENHO</th><th>SALDO DE<br>EMPENHO</th><th>EXECUTADO</th><th>MEDIÇÃO<br>MENSAL</th><th>ENTREGA COM BASE<br>NA MEDIÇÃO</th></tr></thead><tbody><tr>
+    <td contenteditable="true">${dt(r['Data Assinatura']||r['Início Obra'])}</td>
+    <td class="wrap" contenteditable="true">${escapeHtml(r['Empresa']||'—')}</td>
+    <td class="money" contenteditable="true">${fmtMi(toNum(r['Valor Atual']))}</td>
+    <td class="money" contenteditable="true">${fmtMi(toNum(r['Total NE']))}</td>
+    <td class="wrap" contenteditable="true">${fmtMi(saldoFinal)}</td>
+    <td contenteditable="true">${pct(pctAcumulado(r['% medido']||r['% Última']))}</td>
+    <td class="money" contenteditable="true">${fmtR(mediaMensal(r))}</td>
+    <td class="${entregaClasse(r)}" contenteditable="true">${entregaHTML(r)}</td>
+  </tr></tbody></table>
+  <div class="fio-bottom">
+    <label class="fio-photo" title="Clique para inserir/trocar a foto da obra">${foto?`<img src="${foto}">`:'<span contenteditable="true">FOTO<br>Da Obra</span>'}<input id="fotoInputFIO" type="file" accept="image/*"></label>
+    <div class="fio-obs-grid">
+      <div class="fio-mini-head">PA</div><div class="fio-mini-head">IDP</div><div class="fio-obs-head">OBSERVAÇÕES/PROBLEMAS TÉCNICOS-ORÇAMENTÁRIOS</div>
+      <div class="fio-mini-val" contenteditable="true">${escapeHtml(r['PA']||'Não')}</div><div class="fio-mini-val" contenteditable="true">${isNum(idp)?idp.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'—'}</div><div class="fio-obs-body" contenteditable="true">${obsHTML(r)}</div>
+    </div>
+  </div>`;
+}
+function renderFioSlide(i){
+  const r=OBRAS[i];if(!r)return;
+  fioIndexAtual=i;
+  const sel=document.getElementById('fioSelectObra'); if(sel)sel.value=i;
+  const selG=document.getElementById('fioSelectObraGrupo'); if(selG){const k=groupKey(r);[...selG.options].forEach(o=>{if(o.value==String(i))selG.value=o.value;});}
+  const saved=store.get(fioKey(r));
+  document.getElementById('fioSlide').innerHTML=saved||buildFioSlideHTML(r,true);
+  setFonteEscalaFIO(escalaAtualFIO());
+  reativarFoto(r);
+  setTimeout(autoFitTextFIO,80);
+}
+function reativarFoto(r){const inp=document.getElementById('fotoInputFIO');if(!inp)return;inp.onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=ev=>{store.set(photoKey(r),ev.target.result);renderFioSlide(fioIndexAtual)};rd.readAsDataURL(f)}}
+function salvarEdicaoFIO(){const r=OBRAS[fioIndexAtual];if(!r)return;const clone=document.getElementById('fioSlide').cloneNode(true);clone.querySelectorAll('input').forEach(x=>x.remove());store.set(fioKey(r),clone.innerHTML);alert('Edição FIO salva para esta obra.')}
+function restaurarFIO(){const r=OBRAS[fioIndexAtual];if(!r)return;if(confirm('Restaurar os dados originais da planilha para esta obra?')){localStorage.removeItem(fioKey(r));renderFioSlide(fioIndexAtual)}}
+async function copiarSlideFIO(){try{const html=document.getElementById('fioSlide').outerHTML;await navigator.clipboard.writeText(html);alert('HTML do slide copiado. Cole no PowerPoint/Word ou em outro editor HTML.')}catch(e){alert('Não foi possível copiar automaticamente.')}}
+function voltarDashboard(){try{if(history.length>1)history.back();else location.href='dashboard_SIGOM.html'}catch(e){location.href='dashboard_SIGOM.html'}}
+function escapeHtml(s){return String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))}
+tryLoad();
+</script>
+</body>
+</html>
