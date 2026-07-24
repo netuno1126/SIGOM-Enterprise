@@ -1,4 +1,4 @@
-# SIGOM 2026 V30.3 — Obras e Importação Excel
+# SIGOM 2026 V30.4 — Obras e Importação Excel
 
 Esta entrega acrescenta à fundação V30.0:
 
@@ -27,7 +27,7 @@ Não execute novamente o arquivo `01_schema_rls.sql` sobre o banco em produção
 
 ## Primeiro teste
 
-1. Publique a V30.3 no GitHub/Netlify.
+1. Publique a V30.4 no GitHub/Netlify.
 2. Entre com usuário administrador ou editor.
 3. Abra `Importações`.
 4. Escolha a Planilha de Obras do SIGOM.
@@ -77,10 +77,15 @@ supabase/03A_correcao_politicas_importacao.sql
 O arquivo principal `03_v30_1_importacao_obras.sql` também foi corrigido e agora pode ser executado novamente com segurança.
 
 
-## V30.3
+## V30.4
 Execute `supabase/04_v30_2_grupos_usuarios.sql` e publique o projeto novamente no Netlify. Consulte `docs/V30_2_GRUPOS_USUARIOS.md`.
 
 
-## Identidade visual V30.3
+## Identidade visual V30.4
 
 A tela de entrada foi padronizada conforme o modelo institucional fornecido, com as logos do DEC, DOM e SIGOM e o nome oficial **Sistema Integrado de Gestão de Obras Militares**. O nome curto exibido no cabeçalho permanece **SIGOM 2026**.
+
+
+## V30.4
+
+Inclui o painel Administração > Importação de dados, com migração web do arquivo `grupos_obras.json`, sem Node.js ou Prompt de Comando.

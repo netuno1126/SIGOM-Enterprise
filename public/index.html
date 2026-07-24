@@ -53,7 +53,29 @@
 <dialog id="addWorksDialog"><form id="addWorksForm" method="dialog"><h3>Adicionar obras</h3><input id="addWorksSearch" placeholder="Buscar OPUS, contrato, obra ou empresa"><div id="addWorksList" class="pick-list"></div><div class="dialog-actions"><button type="button" class="secondary" data-close-dialog="addWorksDialog">Cancelar</button><button type="submit">Adicionar selecionadas</button></div></form></dialog>
 </section>
       <section id="page-fio" class="page panel hidden"><h2>FIO</h2><p>A edição completa e as fotos da FIO serão ligadas ao banco e ao Storage na V30.3.</p></section>
-      <section id="page-admin" class="page panel hidden"><div class="page-head"><div><h2>Administração de usuários</h2><p>Crie usuários, altere perfis e ative ou desative acessos.</p></div><button id="newUserBtn">Novo usuário</button></div><div class="table-wrap"><table><thead><tr><th>Nome</th><th>E-mail</th><th>Perfil</th><th>Ativo</th><th>Último acesso</th><th>Ações</th></tr></thead><tbody id="usersBody"></tbody></table></div>
+      <section id="page-admin" class="page panel hidden">
+<div class="page-head"><div><h2>Administração</h2><p>Gerencie usuários e migre dados antigos diretamente pelo navegador.</p></div><button id="newUserBtn">Novo usuário</button></div>
+<div class="admin-tabs"><button class="secondary active" data-admin-tab="users">Usuários</button><button class="secondary" data-admin-tab="data">Importação de dados</button></div>
+<div id="adminTab-users" class="admin-tab-panel"><div class="table-wrap"><table><thead><tr><th>Nome</th><th>E-mail</th><th>Perfil</th><th>Ativo</th><th>Último acesso</th><th>Ações</th></tr></thead><tbody id="usersBody"></tbody></table></div></div>
+<div id="adminTab-data" class="admin-tab-panel hidden">
+  <div class="admin-data-grid">
+    <article class="admin-data-card">
+      <h3>Importar grupos antigos</h3>
+      <p>Selecione o arquivo <code>grupos_obras.json</code>. O SIGOM corrigirá textos, criará grupos e subgrupos e vinculará as obras encontradas por OPUS + contrato.</p>
+      <input id="groupsJsonFile" type="file" accept=".json,application/json">
+      <label class="check-line"><input id="replaceGroupsImport" type="checkbox"> Arquivar grupos atuais que não estejam no arquivo importado</label>
+      <button id="importGroupsWebBtn" type="button">Importar grupos</button>
+      <progress id="groupsImportProgress" value="0" max="100"></progress>
+      <pre id="groupsImportLog" class="log">Aguardando o arquivo grupos_obras.json.</pre>
+    </article>
+    <article class="admin-data-card">
+      <h3>Resultado esperado</h3>
+      <div class="cards compact-cards"><article><h4>Grupos</h4><strong id="migGroupsCount">0</strong></article><article><h4>Subgrupos</h4><strong id="migSubgroupsCount">0</strong></article><article><h4>Vínculos</h4><strong id="migLinksCount">0</strong></article><article><h4>Não encontradas</h4><strong id="migMissingCount">0</strong></article></div>
+      <button id="downloadMissingBtn" class="secondary hidden" type="button">Baixar obras não encontradas</button>
+      <p class="muted">Faça primeiro a importação da planilha de obras. Sem obras cadastradas, os grupos serão criados, mas os vínculos não poderão ser concluídos.</p>
+    </article>
+  </div>
+</div>
 <dialog id="userDialog"><form id="userForm" method="dialog"><h3>Novo usuário</h3><label>Nome<input id="userName" required></label><label>E-mail<input id="userEmail" type="email" required></label><label>Senha provisória<input id="userPassword" type="password" minlength="8" required></label><label>Perfil<select id="userRole"><option value="consulta">Consulta</option><option value="editor">Editor</option><option value="auditor">Auditor</option><option value="administrador">Administrador</option></select></label><div class="dialog-actions"><button type="button" class="secondary" data-close-dialog="userDialog">Cancelar</button><button type="submit">Criar usuário</button></div></form></dialog>
 </section>
     </section>

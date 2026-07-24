@@ -30,7 +30,7 @@ async function loadApp(user,aal){
   $('importPermission').classList.toggle('hidden',canEdit());$('importBox').classList.toggle('hidden',!canEdit());$('importBtn').classList.toggle('hidden',!canEdit());
   show('appView');showPage('dashboard');await refreshAll();
 }
-function showPage(name){document.querySelectorAll('.page').forEach(p=>p.classList.toggle('hidden',p.id!==`page-${name}`));document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===name));if(name==='works')renderWorks();if(name==='imports')loadImports();if(name==='groups')loadGroups();if(name==='admin'&&currentProfile?.perfil==='administrador')loadUsers();}
+function showPage(name){document.querySelectorAll('.page').forEach(p=>p.classList.toggle('hidden',p.id!==`page-${name}`));document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===name));if(name==='works')renderWorks();if(name==='imports')loadImports();if(name==='groups')loadGroups();if(name==='admin'&&currentProfile?.perfil==='administrador'){loadUsers();activateAdminTab('users');}}
 document.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.page)));
 $('openImportBtn').addEventListener('click',()=>showPage('imports'));
 $('refreshBtn').addEventListener('click',refreshAll);
@@ -154,3 +154,33 @@ async function apiAdmin(path,options={}){const {data:{session}}=await supabase.a
 async function loadUsers(){try{const {users}=await apiAdmin('admin-list-users');$('usersBody').innerHTML=users.map(u=>`<tr><td>${escapeHtml(u.nome||'')}</td><td>${escapeHtml(u.email)}</td><td><select data-role-id="${u.id}">${['consulta','editor','auditor','administrador'].map(r=>`<option value="${r}" ${u.perfil===r?'selected':''}>${r}</option>`).join('')}</select></td><td><span class="status-dot ${u.ativo?'on':'off'}"></span>${u.ativo?'Sim':'Não'}</td><td>${dateTime(u.last_sign_in_at)}</td><td class="icon-actions"><button data-save-user="${u.id}">Salvar</button><button class="${u.ativo?'danger':'success'}" data-toggle-user="${u.id}" data-active="${u.ativo}">${u.ativo?'Desativar':'Ativar'}</button></td></tr>`).join('');$('usersBody').querySelectorAll('[data-save-user]').forEach(b=>b.onclick=()=>updateUser(b.dataset.saveUser,{perfil:$(`[data-role-id="${b.dataset.saveUser}"]`)?.value}));$('usersBody').querySelectorAll('[data-toggle-user]').forEach(b=>b.onclick=()=>updateUser(b.dataset.toggleUser,{ativo:b.dataset.active!=='true'}));}catch(e){$('usersBody').innerHTML=`<tr><td colspan="6">${escapeHtml(e.message)}</td></tr>`;}}
 async function updateUser(id,changes){try{await apiAdmin('admin-update-user',{method:'POST',body:JSON.stringify({id,...changes})});await loadUsers();}catch(e){alert(e.message);}}
 $('newUserBtn')?.addEventListener('click',()=>$('userDialog').showModal());$('userForm')?.addEventListener('submit',async e=>{e.preventDefault();try{await apiAdmin('admin-create-user',{method:'POST',body:JSON.stringify({nome:cleanText($('userName').value),email:cleanText($('userEmail').value),password:$('userPassword').value,perfil:$('userRole').value})});$('userDialog').close();e.target.reset();await loadUsers();}catch(err){alert(err.message);}});
+
+
+// V30.4 — Administração de dados e importação web de grupos
+let lastMissingWorks=[];
+function activateAdminTab(name){
+  document.querySelectorAll('[data-admin-tab]').forEach(b=>b.classList.toggle('active',b.dataset.adminTab===name));
+  document.querySelectorAll('.admin-tab-panel').forEach(p=>p.classList.toggle('hidden',p.id!==`adminTab-${name}`));
+}
+document.querySelectorAll('[data-admin-tab]').forEach(b=>b.addEventListener('click',()=>activateAdminTab(b.dataset.adminTab)));
+function resetMigrationCounters(){['migGroupsCount','migSubgroupsCount','migLinksCount','migMissingCount'].forEach(id=>$(id).textContent='0');$('downloadMissingBtn')?.classList.add('hidden');lastMissingWorks=[];}
+$('groupsJsonFile')?.addEventListener('change',()=>{resetMigrationCounters();$('groupsImportLog').textContent=$('groupsJsonFile').files?.[0]?`Arquivo selecionado: ${$('groupsJsonFile').files[0].name}`:'Aguardando o arquivo grupos_obras.json.';});
+$('importGroupsWebBtn')?.addEventListener('click',async()=>{
+  const file=$('groupsJsonFile').files?.[0];if(!file)return alert('Selecione o arquivo grupos_obras.json.');
+  resetMigrationCounters();$('groupsImportProgress').value=10;$('groupsImportLog').textContent='Lendo e validando o arquivo...';
+  try{
+    const text=await file.text();let data;try{data=JSON.parse(text);}catch{throw new Error('O arquivo selecionado não é um JSON válido.');}
+    $('groupsImportProgress').value=35;$('groupsImportLog').textContent+='\nEnviando os grupos para o Supabase...';
+    const result=await apiAdmin('admin-import-groups',{method:'POST',body:JSON.stringify({data,replaceMissing:$('replaceGroupsImport').checked})});
+    $('groupsImportProgress').value=100;
+    $('migGroupsCount').textContent=result.groups||0;$('migSubgroupsCount').textContent=result.subgroups||0;$('migLinksCount').textContent=result.links||0;$('migMissingCount').textContent=result.missing?.length||0;
+    lastMissingWorks=result.missing||[];$('downloadMissingBtn').classList.toggle('hidden',!lastMissingWorks.length);
+    $('groupsImportLog').textContent+=`\nConcluído.\nGrupos processados: ${result.groups||0}\nCriados: ${result.created||0}\nAtualizados: ${result.updated||0}\nSubgrupos: ${result.subgroups||0}\nVínculos de obras: ${result.links||0}\nObras não encontradas: ${lastMissingWorks.length}`;
+    await loadGroups();await refreshAll();
+  }catch(e){$('groupsImportProgress').value=0;$('groupsImportLog').textContent+=`\nERRO: ${e.message}`;alert(e.message);}
+});
+$('downloadMissingBtn')?.addEventListener('click',()=>{
+  if(!lastMissingWorks.length)return;const rows=[['Grupo','OPUS','Contrato'],...lastMissingWorks.map(x=>[x.grupo,x.opus,x.contrato])];
+  const csv='\ufeff'+rows.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(';')).join('\r\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='obras_nao_encontradas_grupos.csv';a.click();URL.revokeObjectURL(a.href);
+});
