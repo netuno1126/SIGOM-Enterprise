@@ -52,7 +52,37 @@
 <dialog id="groupDialog"><form id="groupForm" method="dialog"><h3 id="groupDialogTitle">Novo grupo</h3><input id="groupId" type="hidden"><label>Nome<input id="groupName" required maxlength="120"></label><label>Descrição<textarea id="groupDescription" rows="3"></textarea></label><label>Grupo principal<select id="groupParent"><option value="">Nenhum — grupo principal</option></select></label><div class="dialog-actions"><button type="button" class="secondary" data-close-dialog="groupDialog">Cancelar</button><button type="submit">Salvar</button></div></form></dialog>
 <dialog id="addWorksDialog"><form id="addWorksForm" method="dialog"><h3>Adicionar obras</h3><input id="addWorksSearch" placeholder="Buscar OPUS, contrato, obra ou empresa"><div id="addWorksList" class="pick-list"></div><div class="dialog-actions"><button type="button" class="secondary" data-close-dialog="addWorksDialog">Cancelar</button><button type="submit">Adicionar selecionadas</button></div></form></dialog>
 </section>
-      <section id="page-fio" class="page panel hidden"><h2>FIO</h2><p>A edição completa e as fotos da FIO serão ligadas ao banco e ao Storage na V30.3.</p></section>
+      <section id="page-fio" class="page panel hidden">
+<div class="page-head"><div><h2>FIO — Ficha de Informações da Obra</h2><p>Edição compartilhada, fotos no Storage e histórico de versões.</p></div><div class="actions"><button id="fioPrintBtn" class="secondary">Exportar FIO individual</button><button id="fioGroupPrintBtn" class="secondary">Exportar grupo</button></div></div>
+<div class="fio-toolbar"><label>Obra<select id="fioWorkSelect"><option value="">Selecione uma obra</option></select></label><label>Grupo para exportação<select id="fioGroupSelect"><option value="">Selecione um grupo</option></select></label><button id="fioReloadBtn" class="secondary compact" type="button">Atualizar</button></div>
+<div id="fioEmpty" class="empty-state">Selecione uma obra para visualizar ou editar a FIO.</div>
+<div id="fioWorkspace" class="fio-workspace hidden">
+  <section class="fio-sheet" id="fioSheet">
+    <div class="fio-header"><img src="assets/logos/logo-dec.png" alt="DEC"><div><strong>SIGOM 2026</strong><h2>FICHA DE INFORMAÇÕES DA OBRA</h2><span>Sistema Integrado de Gestão de Obras Militares</span></div><img src="assets/logos/logo-dom.png" alt="DOM"></div>
+    <div class="fio-identification"><div><b>Nº OPUS</b><span id="fioOpus"></span></div><div><b>Contrato</b><span id="fioContract"></span></div><div class="wide"><b>Obra</b><span id="fioWorkName"></span></div><div><b>Empresa</b><span id="fioCompany"></span></div><div><b>RM</b><span id="fioRm"></span></div></div>
+    <form id="fioForm">
+      <div class="fio-form-grid">
+        <label>Situação atual<select id="fioStatus"><option>Em andamento</option><option>Concluída</option><option>Paralisada</option><option>Não iniciada</option><option>Em recontratação</option></select></label>
+        <label>Data de referência<input id="fioReferenceDate" type="date"></label>
+        <label>Responsável pela atualização<input id="fioResponsible" maxlength="150"></label>
+        <label>Percentual físico informado<input id="fioPhysical" type="number" min="0" max="100" step="0.01"></label>
+      </div>
+      <label>Resumo executivo<textarea id="fioSummary" rows="4" placeholder="Síntese da situação da obra"></textarea></label>
+      <div class="fio-form-grid two">
+        <label>Serviços executados<textarea id="fioExecuted" rows="5"></textarea></label>
+        <label>Serviços em andamento / próximos passos<textarea id="fioNext" rows="5"></textarea></label>
+        <label>Problemas técnicos e orçamentários<textarea id="fioProblems" rows="5"></textarea></label>
+        <label>Providências adotadas<textarea id="fioActions" rows="5"></textarea></label>
+      </div>
+      <label>Observações<textarea id="fioNotes" rows="4"></textarea></label>
+      <div class="fio-photo-tools"><label>Adicionar fotos<input id="fioPhotos" type="file" accept="image/jpeg,image/png,image/webp" multiple></label><span>Máximo de 10 MB por foto.</span></div>
+      <div id="fioPhotoGallery" class="fio-photo-gallery"></div>
+      <div class="fio-savebar"><span id="fioSaveStatus" class="muted"></span><button id="fioSaveBtn" type="submit">Salvar nova versão</button></div>
+    </form>
+  </section>
+  <aside class="fio-history"><h3>Histórico de versões</h3><div id="fioHistoryList"></div></aside>
+</div>
+</section>
       <section id="page-admin" class="page panel hidden">
 <div class="page-head"><div><h2>Administração</h2><p>Gerencie usuários e migre dados antigos diretamente pelo navegador.</p></div><button id="newUserBtn">Novo usuário</button></div>
 <div class="admin-tabs"><button class="secondary active" data-admin-tab="users">Usuários</button><button class="secondary" data-admin-tab="data">Importação de dados</button></div>

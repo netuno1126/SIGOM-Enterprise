@@ -30,7 +30,7 @@ async function loadApp(user,aal){
   $('importPermission').classList.toggle('hidden',canEdit());$('importBox').classList.toggle('hidden',!canEdit());$('importBtn').classList.toggle('hidden',!canEdit());
   show('appView');showPage('dashboard');await refreshAll();
 }
-function showPage(name){document.querySelectorAll('.page').forEach(p=>p.classList.toggle('hidden',p.id!==`page-${name}`));document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===name));if(name==='works')renderWorks();if(name==='imports')loadImports();if(name==='groups')loadGroups();if(name==='admin'&&currentProfile?.perfil==='administrador'){loadUsers();activateAdminTab('users');}}
+function showPage(name){document.querySelectorAll('.page').forEach(p=>p.classList.toggle('hidden',p.id!==`page-${name}`));document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===name));if(name==='works')renderWorks();if(name==='imports')loadImports();if(name==='groups')loadGroups();if(name==='fio')loadFioModule();if(name==='admin'&&currentProfile?.perfil==='administrador'){loadUsers();activateAdminTab('users');}}
 document.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.page)));
 $('openImportBtn').addEventListener('click',()=>showPage('imports'));
 $('refreshBtn').addEventListener('click',refreshAll);
@@ -183,4 +183,87 @@ $('downloadMissingBtn')?.addEventListener('click',()=>{
   if(!lastMissingWorks.length)return;const rows=[['Grupo','OPUS','Contrato'],...lastMissingWorks.map(x=>[x.grupo,x.opus,x.contrato])];
   const csv='\ufeff'+rows.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(';')).join('\r\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='obras_nao_encontradas_grupos.csv';a.click();URL.revokeObjectURL(a.href);
+});
+
+
+// V30.5 — FIO online, fotos e histórico de versões
+let fioSelectedWork=null,fioCurrentVersion=null,fioPendingPhotos=[],fioGroupsLoaded=false;
+const fioFields=['status','referenceDate','responsible','physical','summary','executed','next','problems','actions','notes'];
+const fioEl=k=>$('fio'+k.charAt(0).toUpperCase()+k.slice(1));
+async function loadFioModule(){
+  if(!allWorks.length)await fetchAllWorks();
+  const select=$('fioWorkSelect'),current=select.value;
+  select.innerHTML='<option value="">Selecione uma obra</option>'+allWorks.map(w=>`<option value="${w.id}">${escapeHtml(w.opus)} · ${escapeHtml(w.contrato||'Sem contrato')} · ${escapeHtml(w.nome_obra||w.descricao||'Sem nome')}</option>`).join('');
+  if(current&&allWorks.some(w=>w.id===current))select.value=current;
+  await loadFioGroups();
+  if(select.value)await openFioWork(select.value);
+}
+async function loadFioGroups(){
+  const {data,error}=await supabase.from('grupos').select('id,nome,grupo_pai_id,arquivado').eq('arquivado',false).order('nome');
+  if(error)return;
+  const by=new Map((data||[]).map(g=>[g.id,g]));
+  const path=g=>{const a=[g.nome];let p=g.grupo_pai_id?by.get(g.grupo_pai_id):null;while(p){a.unshift(p.nome);p=p.grupo_pai_id?by.get(p.grupo_pai_id):null;}return a.join(' › ')};
+  $('fioGroupSelect').innerHTML='<option value="">Selecione um grupo</option>'+(data||[]).map(g=>`<option value="${g.id}">${escapeHtml(path(g))}</option>`).join('');fioGroupsLoaded=true;
+}
+$('fioWorkSelect')?.addEventListener('change',e=>openFioWork(e.target.value));
+$('fioReloadBtn')?.addEventListener('click',loadFioModule);
+async function openFioWork(id){
+  fioSelectedWork=allWorks.find(w=>w.id===id)||null;fioPendingPhotos=[];
+  $('fioEmpty').classList.toggle('hidden',!!fioSelectedWork);$('fioWorkspace').classList.toggle('hidden',!fioSelectedWork);
+  if(!fioSelectedWork)return;
+  $('fioOpus').textContent=fioSelectedWork.opus||'—';$('fioContract').textContent=fioSelectedWork.contrato||'—';$('fioWorkName').textContent=fioSelectedWork.nome_obra||fioSelectedWork.descricao||'—';$('fioCompany').textContent=fioSelectedWork.empresa||'—';$('fioRm').textContent=fioSelectedWork.rm||'—';
+  $('fioSaveBtn').classList.toggle('hidden',!canEdit());$('fioPhotos').disabled=!canEdit();
+  const {data,error}=await supabase.from('fio_edicoes').select('*,profiles:editado_por(nome)').eq('obra_id',id).order('versao',{ascending:false});
+  if(error){$('fioSaveStatus').textContent='Erro: '+error.message;return;}
+  renderFioHistory(data||[]);applyFioVersion((data||[])[0]||null);
+}
+function applyFioVersion(row){
+  fioCurrentVersion=row;const c=row?.conteudo||{};
+  fioEl('status').value=c.status||'Em andamento';fioEl('referenceDate').value=c.referenceDate||new Date().toISOString().slice(0,10);fioEl('responsible').value=c.responsible||currentProfile?.nome||'';fioEl('physical').value=c.physical??(fioSelectedWork?.percentual_medido!=null?(Math.abs(Number(fioSelectedWork.percentual_medido))<=1?Number(fioSelectedWork.percentual_medido)*100:Number(fioSelectedWork.percentual_medido)):'');
+  ['summary','executed','next','problems','actions','notes'].forEach(k=>fioEl(k).value=c[k]||'');
+  renderFioPhotos(c.photos||[]);$('fioSaveStatus').textContent=row?`Versão ${row.versao} · ${dateTime(row.editado_em)}`:'Ainda não há versão salva para esta obra.';
+}
+function renderFioHistory(rows){
+  $('fioHistoryList').innerHTML=rows.length?rows.map(r=>`<button class="fio-version ${r.id===fioCurrentVersion?.id?'active':''}" data-fio-version="${r.id}"><strong>Versão ${r.versao}</strong><span>${dateTime(r.editado_em)}</span><small>${escapeHtml(r.profiles?.nome||'Usuário')}</small></button>`).join(''):'<div class="muted">Nenhuma versão salva.</div>';
+  $('fioHistoryList').querySelectorAll('[data-fio-version]').forEach(b=>b.onclick=()=>applyFioVersion(rows.find(r=>r.id===b.dataset.fioVersion)));
+}
+function renderFioPhotos(photos){
+  $('fioPhotoGallery').innerHTML=(photos||[]).map((p,i)=>`<figure><img src="${escapeHtml(p.url||'')}" alt="Foto ${i+1}"><figcaption>${escapeHtml(p.caption||`Foto ${i+1}`)}</figcaption>${canEdit()?`<button type="button" data-remove-photo="${i}" class="danger">Remover</button>`:''}</figure>`).join('')||'<div class="muted">Nenhuma foto adicionada.</div>';
+  $('fioPhotoGallery').querySelectorAll('[data-remove-photo]').forEach(b=>b.onclick=()=>{const c={...(fioCurrentVersion?.conteudo||{})};c.photos=[...(c.photos||[])];c.photos.splice(Number(b.dataset.removePhoto),1);fioCurrentVersion={...(fioCurrentVersion||{}),conteudo:c};renderFioPhotos(c.photos);});
+}
+$('fioPhotos')?.addEventListener('change',e=>{fioPendingPhotos=[...e.target.files];$('fioSaveStatus').textContent=`${fioPendingPhotos.length} foto(s) aguardando envio.`;});
+async function uploadFioPhotos(){
+  const uploaded=[];
+  for(const file of fioPendingPhotos){
+    if(file.size>10*1024*1024)throw new Error(`${file.name}: arquivo maior que 10 MB.`);
+    const ext=(file.name.split('.').pop()||'jpg').toLowerCase();const path=`${fioSelectedWork.id}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+    const {error}=await supabase.storage.from('fio-fotos').upload(path,file,{contentType:file.type,upsert:false});if(error)throw error;
+    const {data}=await supabase.storage.from('fio-fotos').createSignedUrl(path,60*60*24*365*10);uploaded.push({path,url:data?.signedUrl||'',caption:file.name});
+  }
+  return uploaded;
+}
+$('fioForm')?.addEventListener('submit',async e=>{
+  e.preventDefault();if(!canEdit()||!fioSelectedWork)return;
+  $('fioSaveBtn').disabled=true;$('fioSaveStatus').textContent='Salvando nova versão...';
+  try{
+    const uploaded=await uploadFioPhotos();const oldPhotos=fioCurrentVersion?.conteudo?.photos||[];
+    const conteudo={};fioFields.forEach(k=>conteudo[k]=fioEl(k).value);conteudo.physical=Number(conteudo.physical)||0;conteudo.photos=[...oldPhotos,...uploaded];
+    const {data:maxRow,error:maxErr}=await supabase.from('fio_edicoes').select('versao').eq('obra_id',fioSelectedWork.id).order('versao',{ascending:false}).limit(1).maybeSingle();if(maxErr)throw maxErr;
+    const payload={obra_id:fioSelectedWork.id,conteudo,foto_path:conteudo.photos[0]?.path||null,versao:(maxRow?.versao||0)+1,editado_por:currentUser.id};
+    const {error}=await supabase.from('fio_edicoes').insert(payload);if(error)throw error;
+    fioPendingPhotos=[];$('fioPhotos').value='';await openFioWork(fioSelectedWork.id);await refreshAll();$('fioSaveStatus').textContent=`Versão ${payload.versao} salva com sucesso.`;
+  }catch(err){$('fioSaveStatus').textContent='Erro: '+err.message;alert(err.message);}finally{$('fioSaveBtn').disabled=false;}
+});
+function fioPrintable(work,content,version){
+  const photos=(content.photos||[]).map((p,i)=>`<figure><img src="${p.url||''}"><figcaption>${escapeHtml(p.caption||`Foto ${i+1}`)}</figcaption></figure>`).join('');
+  const field=(t,v)=>`<div class="field"><b>${t}</b><span>${escapeHtml(v||'—').replace(/\n/g,'<br>')}</span></div>`;
+  return `<article class="print-fio"><header><img src="${location.origin}/assets/logos/logo-dec.png"><div><h1>FICHA DE INFORMAÇÕES DA OBRA</h1><p>Sistema Integrado de Gestão de Obras Militares — SIGOM 2026</p></div><img src="${location.origin}/assets/logos/logo-dom.png"></header><section class="id">${field('Nº OPUS',work.opus)}${field('Contrato',work.contrato)}${field('Obra',work.nome_obra||work.descricao)}${field('Empresa',work.empresa)}${field('RM',work.rm)}</section><section class="fields">${field('Situação atual',content.status)}${field('Data de referência',content.referenceDate)}${field('Responsável',content.responsible)}${field('Percentual físico',content.physical!=null?content.physical+'%':'—')}${field('Resumo executivo',content.summary)}${field('Serviços executados',content.executed)}${field('Serviços em andamento / próximos passos',content.next)}${field('Problemas técnicos e orçamentários',content.problems)}${field('Providências adotadas',content.actions)}${field('Observações',content.notes)}</section><section class="photos">${photos}</section><footer>Versão ${version||'—'} · Gerado em ${new Date().toLocaleString('pt-BR')}</footer></article>`;
+}
+function openPrintWindow(body,title='FIO SIGOM 2026'){
+ const w=window.open('','_blank');if(!w)return alert('Permita pop-ups para exportar a FIO.');w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(title)}</title><style>@page{size:A4 landscape;margin:10mm}body{font-family:Arial;margin:0;color:#17324a}.print-fio{page-break-after:always}.print-fio:last-child{page-break-after:auto}header{display:grid;grid-template-columns:75px 1fr 75px;align-items:center;text-align:center;border-bottom:3px solid #174d78;padding-bottom:8px}header img{max-width:65px;max-height:70px;margin:auto}h1{font-size:19px;margin:0}header p{margin:4px}.id,.fields{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}.id .field:nth-child(3),.fields .field:nth-child(n+5){grid-column:span 2}.field{border:1px solid #9cb4c8;min-height:48px}.field b{display:block;background:#e6f0f8;padding:4px;font-size:10px;text-transform:uppercase}.field span{display:block;padding:6px;font-size:11px}.photos{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}.photos figure{margin:0;border:1px solid #aaa;padding:4px}.photos img{width:100%;height:150px;object-fit:cover}.photos figcaption{font-size:10px}footer{text-align:right;margin-top:8px;font-size:9px}@media print{button{display:none}}</style></head><body>${body}<script>setTimeout(()=>window.print(),700)<\/script></body></html>`);w.document.close();
+}
+$('fioPrintBtn')?.addEventListener('click',()=>{if(!fioSelectedWork)return alert('Selecione uma obra.');openPrintWindow(fioPrintable(fioSelectedWork,fioCurrentVersion?.conteudo||{},fioCurrentVersion?.versao),`FIO ${fioSelectedWork.opus}`);});
+$('fioGroupPrintBtn')?.addEventListener('click',async()=>{
+ const gid=$('fioGroupSelect').value;if(!gid)return alert('Selecione um grupo para exportação.');$('fioGroupPrintBtn').disabled=true;
+ try{const {data:links,error}=await supabase.from('grupo_obras').select('obras(*)').eq('grupo_id',gid);if(error)throw error;const works=(links||[]).map(x=>x.obras).filter(Boolean);if(!works.length)throw new Error('O grupo não possui obras.');let body='';for(const work of works){const {data}=await supabase.from('fio_edicoes').select('*').eq('obra_id',work.id).order('versao',{ascending:false}).limit(1).maybeSingle();body+=fioPrintable(work,data?.conteudo||{},data?.versao);}openPrintWindow(body,'FIO por grupo — SIGOM 2026');}catch(e){alert(e.message);}finally{$('fioGroupPrintBtn').disabled=false;}
 });

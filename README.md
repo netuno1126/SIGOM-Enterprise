@@ -1,3 +1,26 @@
+# SIGOM 2026 V30.5
+
+Sistema Integrado de Gestão de Obras Militares.
+
+## Atualização desta versão
+Execute no Supabase SQL Editor:
+
+```sql
+supabase/05_v30_5_fio_online.sql
+```
+
+Depois publique os arquivos no mesmo repositório conectado ao Netlify.
+
+## V30.5
+- FIO online por obra;
+- histórico de versões;
+- fotos no Supabase Storage;
+- exportação individual;
+- exportação por grupo;
+- auditoria automática.
+
+Consulte `docs/V30_5_FIO_ONLINE.md`.
+
 # SIGOM 2026 V30.4 — Obras e Importação Excel
 
 Esta entrega acrescenta à fundação V30.0:
