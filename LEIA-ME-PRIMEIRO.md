@@ -84,7 +84,50 @@ Limitações desta primeira adaptação:
   tabela `obras_paralisadas` pronta no schema) ainda não foram
   adaptados — ficam para uma próxima etapa.
 
-## V31.1 — Persistência de Portfólio, Saldos Alongados e Nomes de Obra
+## V31.2 — Dashboard clássico funcionando online (sem alterar nenhum HTML seu)
+
+Seus arquivos `index.html`, `objetivos.html`, `fio_slide_SIGOM.html` e
+`SIGOM_Mobile.html` (layout, FIO, geração de FIO, Objetivos e Metas — tudo
+igual ao que você já usa) agora ficam publicados em `public/legado/`,
+**sem nenhuma alteração no código deles**. Acesse pelo botão "Dashboard
+clássico" no topo do Painel (abre em nova aba) ou direto em `/legado/index.html`.
+
+Duas Netlify Functions novas fazem esses arquivos conversarem com o
+Supabase, respondendo exatamente como o servidor local sempre respondeu —
+**não precisa rodar nenhuma migração SQL nova**, elas usam as tabelas que
+já existem (`grupos`, `grupo_obras`, `obras`, `fio_edicoes`):
+
+- `netlify/functions/grupos.mjs` — atende `GET/POST /api/grupos` (e o
+  fallback `POST /api/grupos/salvar` que o próprio dashboard já tenta).
+  Reconstrói a mesma estrutura aninhada (grupos → subgrupos → obras por
+  Nº OPUS) que o dashboard sempre usou; ao salvar, sincroniza
+  criação/edição de grupos e vínculos de obras no Supabase.
+- `netlify/functions/fio-edicoes.mjs` — atende `GET/POST /api/fio-edicoes`.
+  Grava o HTML editado de cada FIO na tabela `fio_edicoes`, no campo
+  `conteudo.html` — uma chave própria, que não conflita com o formulário
+  de FIO do Painel (que usa `conteudo.status/summary/...`). As duas telas
+  compartilham a tabela e o histórico de versão, mas não se sobrescrevem.
+
+**O que continua funcionando sem precisar de nada extra** (o próprio
+dashboard já tinha isso pronto):
+- Login: se `/api/login` não responder, ele cai automaticamente no acesso
+  local `APGDOM` / `bemamigos` (perfil Administrador). Como o arquivo
+  agora fica público na internet, considere trocar essa senha padrão ou
+  me avisar para eu implementar `/api/login` de verdade contra o Supabase.
+- Planilha de obras: se `/api/xlsx?folder=` não responder (não implementei
+  essa função nesta etapa), o dashboard mostra o aviso já existente e
+  você escolhe o arquivo manualmente pelo botão "📂 Planilha de obras" —
+  nada quebra, só deixa de ser automático.
+
+**Não implementado nesta etapa** (endpoints que o dashboard usa mas que
+dependiam só do seu servidor local): `/api/users`, `/api/change-password`,
+`/api/xlsx`, `/api/shutdown`, `/api/session-heartbeat`. Se algum desses
+for importante para o uso online, me avise que eu crio as functions
+correspondentes.
+
+Importação de grupos gerados por fora continua no mesmo lugar de sempre:
+Administração → Importação de dados → "Importar grupos antigos" (lê
+`grupos_obras.json`, mesmo formato que `grupos.mjs` também entende).
 
 Execute no Supabase SQL Editor (depois de `01_schema_rls.sql`):
 
