@@ -1,0 +1,23 @@
+# Checklist de homologação — Fase 12
+
+- [ ] Backup realizado antes da migration.
+- [ ] `public.obras.id` confirmado como UUID.
+- [ ] Migration 09 executada sem erro.
+- [ ] 51 colunas reconhecidas no importador.
+- [ ] 557 linhas da aba Portfolio lidas.
+- [ ] Chave `Nr Solicitação + Nr Contrato` sem duplicidades não tratadas.
+- [ ] Datas importadas no padrão ISO.
+- [ ] Valores monetários preservados com centavos.
+- [ ] Percentuais preservados na escala 0–100.
+- [ ] IDP calculado como `% medido / % estimado`.
+- [ ] Saldo de empenho calculado como `Total NE - Total Notas Fiscais`.
+- [ ] Falta empenhar calculada como `Valor Atual - Total NE`.
+- [ ] Prazo total calculado como contratado + aditivo.
+- [ ] Vigência total calculada como contratada + aditivada.
+- [ ] Quatro medições históricas migradas para `obras_medicoes`.
+- [ ] Dashboard continua abrindo obras existentes.
+- [ ] FIO continua vinculada à mesma obra.
+- [ ] Grupos continuam vinculados.
+- [ ] Alertas e IA consultam os indicadores sem erro.
+- [ ] Script 10 não apresenta divergência de IDP acima da tolerância.
+- [ ] Nenhuma chave secreta foi publicada.

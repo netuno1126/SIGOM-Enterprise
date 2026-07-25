@@ -1,0 +1,14 @@
+# Checklist Fase 11
+- [ ] Login e MFA AAL2
+- [ ] Menu IA SIGOM
+- [ ] Contexto geral carregado
+- [ ] Escopo de obra individual
+- [ ] Briefing do Diretor
+- [ ] Resposta sem OPENAI_API_KEY (modo local)
+- [ ] Resposta com OPENAI_API_KEY
+- [ ] Token inválido bloqueado
+- [ ] Usuário inativo bloqueado
+- [ ] Consulta registrada em ia_consultas
+- [ ] Usuário consulta não vê histórico de outro usuário
+- [ ] Nenhuma tabela operacional alterada
+- [ ] Valores em formato pt-BR sem abreviação
