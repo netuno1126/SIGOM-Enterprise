@@ -374,6 +374,10 @@ function loadPort(buf,src){
   aplicarNomesObras(PORT);
   renderGeneric('tblPort',PORT);
   applyPort();
+  window.SIGOM?.savePortfolio(PORT).then(res=>{
+    if(res?.error) alert('Portfólio exibido localmente, mas não foi possível salvar no Supabase: '+res.error);
+    else if(res?.count) console.log('Portfólio salvo no Supabase:', res.count, 'obra(s).');
+  });
 }
 
 function loadSaldos(buf,src){
@@ -388,6 +392,10 @@ function loadSaldos(buf,src){
   SALDOS=rows.map(r=>{const o={};for(const[k,v]of Object.entries(r))o[String(k).trim()]=v;return o});
   document.getElementById('saldoInfo').textContent='— '+SALDOS.length+' OM(s)/registro(s) · fonte: '+src;
   renderSaldos();
+  window.SIGOM?.saveSaldos(SALDOS).then(res=>{
+    if(res?.error) alert('Saldos exibidos localmente, mas não foi possível salvar no Supabase: '+res.error);
+    else if(res?.count) console.log('Saldos alongados salvos no Supabase:', res.count, 'registro(s).');
+  });
 }
 
 function saldoYears(){
@@ -1123,6 +1131,24 @@ let SG_INITIALIZED = false;
    da planilha) e roda o mesmo pipeline de normalização/consolidação
    do dashboard antigo. */
 async function SG_setData(rows){
+  if(!SG_INITIALIZED && window.SIGOM){
+    try{
+      const [portRows, saldosWide, nomes] = await Promise.all([
+        window.SIGOM.loadPortfolio(), window.SIGOM.loadSaldos(), window.SIGOM.loadNomes()
+      ]);
+      if(portRows.length){
+        PORT = consolidarObras(normalizeRows(portRows));
+        renderGeneric('tblPort',PORT);
+        const pi=document.getElementById('portInfo'); if(pi)pi.textContent='— '+PORT.length+' obra(s) salvas no Supabase (Portfólio)';
+      }
+      if(saldosWide.length){
+        SALDOS = saldosWide;
+        const si=document.getElementById('saldoInfo'); if(si)si.textContent='— '+SALDOS.length+' OM(s)/registro(s) salvos no Supabase';
+        renderSaldos();
+      }
+      if(Object.keys(nomes).length){ NOME_OBRA_MAP = nomes; }
+    }catch(e){ console.warn('Painel: não foi possível pré-carregar Portfólio/Saldos/Nomes do Supabase.', e); }
+  }
   const brutas = (rows||[]).map(r=>({...(r.dados||{}), _uuid:r.id}));
   DATA = consolidarObras(normalizeRows(brutas));
   aplicarNomesObras(DATA); aplicarNomesObras(PORT);
@@ -1269,7 +1295,10 @@ function loadPrincipaisObras(buf,src){
   NOME_OBRA_MAP=mapa;
   aplicarNomesObras(DATA); aplicarNomesObras(PORT);
   if(DATA.length){render(); initObraSelect(); if(curTab==='analise')renderAnalise(); if(curTab==='planilha')renderPlanilha();}
-  alert('Nomes de obra aplicados: '+Object.keys(mapa).length+' ('+src+')');
+  window.SIGOM?.saveNomes(mapa).then(res=>{
+    if(res?.error) alert('Nomes aplicados localmente ('+Object.keys(mapa).length+'), mas não foi possível salvar no Supabase: '+res.error);
+    else alert('Nomes de obra aplicados e salvos no Supabase: '+Object.keys(mapa).length+' ('+src+')');
+  });
 }
 document.getElementById('principaisObrasInput')?.addEventListener('change', e=>{
   const f = e.target.files[0]; if(!f) return;

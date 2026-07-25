@@ -13,3 +13,4 @@
 
 -- 5. 07_v31_0_gold_1_security_hardening.sql
 -- 6. 08_verificar_seguranca_funcoes.sql (somente conferência)
+-- 7. 09_v31_1_portfolio_saldos_nomes.sql (Portfólio, Saldos Alongados, Nomes de Obra)

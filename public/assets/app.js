@@ -315,6 +315,122 @@ async function sgOpenFioForGroup(groupId){
   await loadFioModule();
   $('fioGroupSelect').value=groupId;
 }
+
+/* ============== V31.1 — Persistência de Portfólio, Saldos e Nomes ==============
+   Recebem os dados já normalizados pelo motor legado (dashboard-legacy.js,
+   nomes de coluna em português) e gravam no Supabase; e o inverso, para
+   popular o painel sem exigir novo upload a cada sessão/usuário. */
+
+function sgPortRowToSupabase(r){
+  const clean={};
+  for(const [k,v] of Object.entries(r)) if(!k.startsWith('__')) clean[k]=v;
+  return {
+    opus:String(r['Solicitação']??'').trim(),
+    contrato:String(r['Contrato']??'').trim(),
+    rm:r['RM']!=null?String(r['RM']):null,
+    contratante:r['Contratante']||null,
+    om_beneficiada:r['OM Beneficiada']||null,
+    descricao:r['Descrição']||null,
+    nome_obra:r['Nome da Obra']||null,
+    empresa:r['Empresa']||null,
+    valor_atual:Number.isFinite(r['Valor Atual'])?r['Valor Atual']:null,
+    total_ne:Number.isFinite(r['Total NE'])?r['Total NE']:null,
+    total_nf:Number.isFinite(r['Total Notas Fiscais'])?r['Total Notas Fiscais']:null,
+    percentual_medido:Number.isFinite(r['% medido'])?r['% medido']:null,
+    percentual_estimado:Number.isFinite(r['% estimado'])?r['% estimado']:null,
+    dados:clean,
+    atualizado_por:currentUser.id,
+    atualizado_em:new Date().toISOString(),
+  };
+}
+async function sgSavePortfolio(rows){
+  const validas=(rows||[]).filter(r=>String(r['Solicitação']??'').trim());
+  if(!validas.length)return {error:'Nenhuma obra com Nº OPUS encontrada na planilha.'};
+  const payload=validas.map(sgPortRowToSupabase);
+  const chunk=200;
+  for(let i=0;i<payload.length;i+=chunk){
+    const {error}=await supabase.from('portfolio_obras').upsert(payload.slice(i,i+chunk),{onConflict:'opus,contrato'});
+    if(error)return {error:error.message};
+  }
+  return {count:payload.length};
+}
+async function sgLoadPortfolio(){
+  const rows=[];let from=0;const page=1000;
+  while(true){
+    const {data,error}=await supabase.from('portfolio_obras').select('dados').range(from,from+page-1);
+    if(error)return [];
+    rows.push(...(data||[]).map(x=>x.dados||{}));
+    if(!data||data.length<page)break;
+    from+=page;
+  }
+  return rows;
+}
+
+async function sgSaveSaldos(saldosWide){
+  if(!saldosWide||!saldosWide.length)return {error:'Nenhum dado de saldo encontrado.'};
+  const omCol=Object.keys(saldosWide[0]).find(k=>k.trim().toLowerCase()==='om');
+  if(!omCol)return {error:'Coluna "OM" não encontrada na planilha.'};
+  const anos=Object.keys(saldosWide[0]).filter(k=>/^(19|20)\d{2}$/.test(k.trim()));
+  if(!anos.length)return {error:'Nenhuma coluna de ano (ex.: 2024) encontrada na planilha.'};
+  const payload=[];
+  saldosWide.forEach(r=>{
+    const om=String(r[omCol]??'').trim(); if(!om)return;
+    anos.forEach(a=>{
+      const v=Number(String(r[a]??'').toString().replace(/[^\d.,-]/g,'').replace(',','.'));
+      payload.push({om,ano:parseInt(a,10),valor:Number.isFinite(v)?v:0,atualizado_por:currentUser.id,atualizado_em:new Date().toISOString()});
+    });
+  });
+  const chunk=500;
+  for(let i=0;i<payload.length;i+=chunk){
+    const {error}=await supabase.from('saldos_alongados').upsert(payload.slice(i,i+chunk),{onConflict:'om,ano'});
+    if(error)return {error:error.message};
+  }
+  return {count:payload.length};
+}
+async function sgLoadSaldos(){
+  const rows=[];let from=0;const page=1000;
+  while(true){
+    const {data,error}=await supabase.from('saldos_alongados').select('om,ano,valor').range(from,from+page-1);
+    if(error)return [];
+    rows.push(...(data||[]));
+    if(!data||data.length<page)break;
+    from+=page;
+  }
+  if(!rows.length)return [];
+  const porOm=new Map();
+  rows.forEach(r=>{
+    if(!porOm.has(r.om))porOm.set(r.om,{OM:r.om});
+    porOm.get(r.om)[String(r.ano)]=Number(r.valor)||0;
+  });
+  const wide=[...porOm.values()];
+  wide.forEach(r=>{ r.total=Object.keys(r).filter(k=>/^(19|20)\d{2}$/.test(k)).reduce((s,k)=>s+(Number(r[k])||0),0); });
+  return wide;
+}
+
+async function sgSaveNomes(mapa){
+  const entradas=Object.entries(mapa||{}).filter(([opus,nome])=>opus&&nome);
+  if(!entradas.length)return {error:'Nenhum nome de obra encontrado na planilha.'};
+  const payload=entradas.map(([opus,nome])=>({opus,nome,atualizado_por:currentUser.id,atualizado_em:new Date().toISOString()}));
+  const chunk=500;
+  for(let i=0;i<payload.length;i+=chunk){
+    const {error}=await supabase.from('nomes_obras').upsert(payload.slice(i,i+chunk),{onConflict:'opus'});
+    if(error)return {error:error.message};
+  }
+  return {count:payload.length};
+}
+async function sgLoadNomes(){
+  const rows=[];let from=0;const page=1000;
+  while(true){
+    const {data,error}=await supabase.from('nomes_obras').select('opus,nome').range(from,from+page-1);
+    if(error)return {};
+    rows.push(...(data||[]));
+    if(!data||data.length<page)break;
+    from+=page;
+  }
+  const mapa={};rows.forEach(r=>mapa[r.opus]=r.nome);
+  return mapa;
+}
+
 window.SIGOM={
   showPage,
   getGroups:()=>groupsData,
@@ -324,4 +440,10 @@ window.SIGOM={
   openFioForObra:sgOpenFioForObra,
   openFioForGroup:sgOpenFioForGroup,
   canEdit,
+  savePortfolio:sgSavePortfolio,
+  loadPortfolio:sgLoadPortfolio,
+  saveSaldos:sgSaveSaldos,
+  loadSaldos:sgLoadSaldos,
+  saveNomes:sgSaveNomes,
+  loadNomes:sgLoadNomes,
 };

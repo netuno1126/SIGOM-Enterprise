@@ -62,9 +62,9 @@
         <input type="file" id="portInput" accept=".xlsx" style="display:none">
         <input type="file" id="saldoInput" accept=".xlsx" style="display:none">
         <input type="file" id="principaisObrasInput" accept=".xlsx" style="display:none">
-        <button class="btn gray sm" onclick="pick('portInput')" title="Carregar planilha de Portfólio (sessão atual)">📋 Portfólio (upload)</button>
-        <button class="btn gray sm" onclick="pick('saldoInput')" title="Carregar planilha de Saldos Alongados (sessão atual)">💰 Saldos (upload)</button>
-        <button class="btn gray sm" onclick="pick('principaisObrasInput')" title="Carregar planilha Principais Obras (nomes curtos por Nº OPUS, sessão atual)">🏷 Nomes de obra (upload)</button>
+        <button class="btn gray sm" onclick="pick('portInput')" title="Carregar/atualizar planilha de Portfólio (salva no Supabase)">📋 Portfólio (upload)</button>
+        <button class="btn gray sm" onclick="pick('saldoInput')" title="Carregar/atualizar planilha de Saldos Alongados (salva no Supabase)">💰 Saldos (upload)</button>
+        <button class="btn gray sm" onclick="pick('principaisObrasInput')" title="Carregar/atualizar planilha Principais Obras — nomes curtos por Nº OPUS (salva no Supabase)">🏷 Nomes de obra (upload)</button>
       </div>
     </div>
 
@@ -260,8 +260,8 @@
         <div class="card"><h3 id="hSaldoOM">Saldo por OM (R$ Mi)</h3><div class="chartbox sm"><canvas id="chSaldoOM"></canvas></div></div>
       </div>
       <div class="card">
-        <h3>Saldos Alongados <span class="note" id="saldoInfo">— nenhuma planilha carregada nesta sessão</span></h3>
-        <div class="note no-print" style="margin-bottom:8px">Fonte: upload manual nesta sessão (sem tabela própria no Supabase ainda). Use o botão "💰 Saldos (upload)" acima das abas para carregar a planilha (válido durante esta sessão do navegador).</div>
+        <h3>Saldos Alongados <span class="note" id="saldoInfo">— carregando do Supabase…</span></h3>
+        <div class="note no-print" style="margin-bottom:8px">Fonte: planilha enviada por upload e salva na tabela do Supabase (visível para todos os usuários). Use o botão "💰 Saldos (upload)" acima das abas para carregar/atualizar a planilha — fica salvo no Supabase para todos os usuários.</div>
         <div class="note" style="margin-bottom:6px">Valores em R$ Mi</div><div class="tblbox" style="max-height:560px"><table id="tblSaldos"><thead></thead><tbody></tbody></table></div>
       </div>
     </div>
@@ -269,8 +269,8 @@
     <!-- ===== PORTFÓLIO ===== -->
     <div id="portfolio" class="hidden">
       <div class="card">
-        <h3>Portfólio de Obras Selecionadas <span class="note" id="portInfo">— nenhuma planilha carregada nesta sessão</span></h3>
-        <div class="note no-print" style="margin-bottom:8px">Fonte: upload manual nesta sessão (sem tabela própria no Supabase ainda). Marque "Somente portfólio selecionado" na Visão Geral para que o dashboard use DIRETAMENTE estas obras como fonte (KPIs, gráficos e tabela). Requer coluna Valor Atual e demais campos na planilha. Use o botão "📋 Portfólio (upload)" acima das abas para carregar a planilha (válido durante esta sessão do navegador).</div>
+        <h3>Portfólio de Obras Selecionadas <span class="note" id="portInfo">— carregando do Supabase…</span></h3>
+        <div class="note no-print" style="margin-bottom:8px">Fonte: planilha enviada por upload e salva na tabela do Supabase (visível para todos os usuários). Marque "Somente portfólio selecionado" na Visão Geral para que o dashboard use DIRETAMENTE estas obras como fonte (KPIs, gráficos e tabela). Requer coluna Valor Atual e demais campos na planilha. Use o botão "📋 Portfólio (upload)" acima das abas para carregar/atualizar a planilha — fica salvo no Supabase para todos os usuários.</div>
         <div class="tblbox" style="max-height:640px"><table id="tblPort"><thead></thead><tbody></tbody></table></div>
       </div>
     </div>
