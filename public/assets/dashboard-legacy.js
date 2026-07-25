@@ -32,7 +32,7 @@ const NUMCOLS=['% estimado','% medido','Valor Solicitação','Valor Contratado',
 
 const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 
-let SEL=new Set(JSON.parse(store.get('go_sel')||'[]'));
+let SEL=new Set((()=>{try{return JSON.parse(store.get('go_sel')||'[]')}catch(e){return []}})());
 let GRPSEL=new Set();
 
 let sortK='Valor Atual',sortAsc=false;
@@ -57,7 +57,7 @@ const SECTION_PZ=['osdata','fimprazo','fimvigencia','termino','projmed','noprazo
 const SECTION_ID=['obra','opus','om','contrato','empresa','ao'];
 const SECTION_FIO=['caracteristicas','pa','idpfio','observacoes'];
 const DEFAULT_FIELDS=['opus','vatual','empenhado','liquidado','saldo','meses','falta','media3','pcts','idp','osdata','fimprazo','fimvigencia','termino','projmed','noprazo','semmedir','caracteristicas','pa','idpfio','observacoes'];
-let FIELDS=new Set(JSON.parse(store.get('go_fields')||'null')||DEFAULT_FIELDS);
+let FIELDS=new Set((()=>{try{return JSON.parse(store.get('go_fields')||'null')||DEFAULT_FIELDS}catch(e){return DEFAULT_FIELDS}})());
 function fmtContrato(v){
   if(v==null||v==='')return '';
   // SheetJS pode interpretar "MM/AAAA" ou "NNN/AAAA" como data: reconverter para mm/aaaa

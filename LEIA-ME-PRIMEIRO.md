@@ -84,6 +84,33 @@ Limitações desta primeira adaptação:
   tabela `obras_paralisadas` pronta no schema) ainda não foram
   adaptados — ficam para uma próxima etapa.
 
+## V31.4 — Correções: painel travando e dashboard clássico "não abre"
+
+**Painel (abas/botões/gráficos não respondiam):** causa encontrada —
+`localStorage` é compartilhado entre `/` (Painel) e `/legado/` (mesmo
+site). Se havia algum valor salvo em `go_sel` ou `go_fields` num formato
+que o `JSON.parse` do Painel não reconhecia, o script inteiro travava
+silenciosamente logo no início (sem erro visível), e nada mais funcionava
+depois — nem abas, nem gráficos, nem botões. Corrigido: essas duas
+leituras agora têm proteção própria e nunca mais travam o resto do
+script, mesmo com dado antigo/inesperado no navegador.
+
+**Dashboard clássico "não abre":** o arquivo estava salvo como
+`index.html` dentro de `public/legado/`, mas o próprio dashboard (e a
+tela de Obras Paralisadas) sempre linkam de volta para
+`dashboard_SIGOM.html` — nome que não existia na pasta, quebrando a
+navegação entre as telas. Renomeado para `public/legado/dashboard_SIGOM.html`
+(o nome de sempre); `public/legado/index.html` agora só redireciona para
+lá, então as duas URLs funcionam.
+
+**Importante sobre o login do dashboard clássico:** ele exige que você já
+esteja logado no Painel (`/index.html`) nesta mesma aba/navegador antes de
+abrir `/legado/dashboard_SIGOM.html` — é assim que ele reconhece sua conta
+Supabase sem pedir senha de novo. Se abrir a página clássica sem ter
+logado no Painel primeiro, ela mostra "Verificando sessão..." e te manda
+de volta para `/index.html` — não é um bug, é o comportamento esperado
+(antes pedia senha própria; agora usa sua conta do Painel).
+
 ## V31.3 — Login público removido do dashboard clássico + limpar dados
 
 **Login público removido.** `index.html`, `SIGOM_Mobile.html` e
