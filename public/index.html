@@ -337,6 +337,25 @@
       <button id="downloadMissingBtn" class="secondary hidden" type="button">Baixar obras não encontradas</button>
       <p class="muted">Faça primeiro a importação da planilha de obras. Sem obras cadastradas, os grupos serão criados, mas os vínculos não poderão ser concluídos.</p>
     </article>
+    <article class="admin-data-card" style="border-color:#e2b3ad;background:#fff8f7">
+      <h3 style="color:#b42318">🗑 Limpar dados (zona de risco)</h3>
+      <p>Apaga <b>todos os registros</b> da tabela escolhida. A estrutura da tabela continua existindo — só os dados são removidos. Não é possível desfazer.</p>
+      <label>Tabela<select id="clearTableSelect">
+        <option value="obras">Obras</option>
+        <option value="grupos">Grupos</option>
+        <option value="grupo_obras">Vínculos obra ↔ grupo</option>
+        <option value="fio_edicoes">Edições de FIO</option>
+        <option value="portfolio_obras">Portfólio</option>
+        <option value="saldos_alongados">Saldos Alongados</option>
+        <option value="nomes_obras">Nomes de Obra</option>
+        <option value="obras_paralisadas">Obras Paralisadas</option>
+        <option value="objetivos_auditoria">Auditoria de Objetivos</option>
+        <option value="importacoes_planilha">Histórico de importações</option>
+      </select></label>
+      <label>Para confirmar, digite <code>APAGAR</code> abaixo<input id="clearTableConfirm" placeholder="APAGAR" autocomplete="off"></label>
+      <button id="clearTableBtn" type="button" class="danger">Apagar todos os registros desta tabela</button>
+      <pre id="clearTableLog" class="log" style="min-height:60px">Nenhuma ação executada.</pre>
+    </article>
   </div>
 </div>
 <dialog id="userDialog"><form id="userForm" method="dialog"><h3>Novo usuário</h3><label>Nome<input id="userName" required></label><label>E-mail<input id="userEmail" type="email" required></label><label>Senha provisória<input id="userPassword" type="password" minlength="8" required></label><label>Perfil<select id="userRole"><option value="consulta">Consulta</option><option value="editor">Editor</option><option value="auditor">Auditor</option><option value="administrador">Administrador</option></select></label><div class="dialog-actions"><button type="button" class="secondary" data-close-dialog="userDialog">Cancelar</button><button type="submit">Criar usuário</button></div></form></dialog>
