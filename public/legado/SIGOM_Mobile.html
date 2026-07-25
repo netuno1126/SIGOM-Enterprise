@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>[Reunião] Sistema Integrado de Gestão de Obras Militar</title>
+<script src="/config.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pptxgenjs/3.12.0/pptxgen.bundle.js"></script>
@@ -1299,52 +1300,14 @@ function aplicarPerfilVisual(){
   if(box&&u)box.innerHTML=(u.nome?u.nome:u.login)+'<br><b>'+perfilLabelSIGOM()+'</b>';
 }
 async function alterarSenhaSIGOM(){
-  const u=getAuthInfo();
-  if(!u){alert('Faça login novamente.');return;}
-  const atual=prompt('Senha atual de '+u.login+':');
-  if(atual===null)return;
-  const nova=prompt('Nova senha:');
-  if(nova===null)return;
-  if(nova.length<4){alert('A nova senha deve ter pelo menos 4 caracteres.');return;}
-  const conf=prompt('Confirme a nova senha:');
-  if(conf===null)return;
-  if(nova!==conf){alert('A confirmação não confere.');return;}
-  try{
-    const res=await fetch('/api/change-password',{method:'POST',headers:authHeaders(),body:JSON.stringify({login:u.login,senhaAtual:atual,novaSenha:nova})});
-    const j=await res.json();
-    if(res.ok&&j.ok){alert('Senha alterada com sucesso.');return;}
-    alert(j.msg||'Não foi possível alterar a senha.');
-  }catch(e){
-    alert('Para alterar senha em arquivo, abra o SIGOM pelo ABRIR_DASHBOARD_SIGOM.bat atualizado.');
-  }
+  alert('Alteração de senha agora é feita pela sua própria conta (Supabase). Se esqueceu a senha, peça a um administrador para redefinir em Painel SIGOM → Administração → Usuários.');
 }
 async function cadastrarUsuarioSIGOM(){
-  if(!isAdminSIGOM()){alert('Apenas perfil Auditor/Administrador pode cadastrar usuário.');return;}
-  const admin=getAuthInfo();
-  const login=prompt('Login do novo usuário:');
-  if(login===null)return;
-  const l=login.trim();
-  if(!l){alert('Login obrigatório.');return;}
-  const nome=prompt('Nome completo/identificação:',l) || l;
-  let perfil=prompt('Perfil: Administrador, Auditor ou Usuário','Usuário');
-  if(perfil===null)return;
-  perfil=perfil.trim()||'Usuário';
-  if(!/^(Administrador|Auditor|Usuário|Usuario)$/i.test(perfil)){alert('Perfil inválido. Use Administrador, Auditor ou Usuário.');return;}
-  if(/^usuario$/i.test(perfil))perfil='Usuário';
-  if(/^administrador$/i.test(perfil))perfil='Administrador';
-  if(/^auditor$/i.test(perfil))perfil='Auditor';
-  const senha=prompt('Senha inicial para '+l+':','123456');
-  if(senha===null)return;
-  if(senha.length<4){alert('A senha deve ter pelo menos 4 caracteres.');return;}
-  try{
-    const res=await fetch('/api/users',{method:'POST',headers:authHeaders(),body:JSON.stringify({adminLogin:admin.login,login:l,nome,perfil,senha,ativo:true})});
-    const j=await res.json();
-    if(res.ok&&j.ok){alert('Usuário cadastrado/atualizado com sucesso.');return;}
-    alert(j.msg||'Não foi possível cadastrar usuário.');
-  }catch(e){
-    alert('Para cadastrar usuário, abra o SIGOM pelo ABRIR_DASHBOARD_SIGOM.bat atualizado.');
-  }
+  if(!isAdminSIGOM()){alert('Apenas Administrador pode cadastrar usuário.');return;}
+  alert('Cadastro de usuários agora é feito no Painel SIGOM (Supabase). Você será levado até lá.');
+  location.href='/index.html';
 }
+
 function abrirPainelLogosSIGOM(){
   if(!isAdminSIGOM()){alert('Apenas perfil Auditor/Administrador pode alterar logos.');return;}
   const tamAtual=parseInt(store.get('go_logoSize')||'78',10);
@@ -1461,65 +1424,52 @@ function renderPDA(){
 initPDA();
 
 
-/* ---------- LOGIN / AUDITORIA ---------- */
+/* ---------- LOGIN (Supabase — mesma conta do Painel SIGOM v31) ---------- */
 const AUTH_KEY='sigom_auth_user';
 let __sigomLoaded=false;
-function authHeaders(){return {'Content-Type':'application/json'}}
-async function registrarLogLocal(usuario,status,msg){
-  try{
-    const logs=JSON.parse(localStorage.getItem('sigom_logs_local')||'[]');
-    logs.push({quando:new Date().toISOString(),usuario,status,msg});
-    localStorage.setItem('sigom_logs_local',JSON.stringify(logs.slice(-200)));
-  }catch(e){}
+let __sbClient=null;
+async function sbClient(){
+  if(__sbClient)return __sbClient;
+  const {createClient}=await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+  const cfg=window.SIGOM_CONFIG||{};
+  __sbClient=createClient(cfg.supabaseUrl,cfg.supabasePublishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+  return __sbClient;
 }
-async function loginSIGOM(usuario,senha){
-  // Preferência: autenticação pelo servidor PowerShell, que grava em Usuarios/usuarios.json e Usuarios/logs_acesso.csv.
-  try{
-    const res=await fetch('/api/login',{method:'POST',headers:authHeaders(),body:JSON.stringify({login:usuario,senha})});
-    if(res.ok){
-      const j=await res.json();
-      if(j.ok)return {ok:true,user:j.user||usuario,nome:j.nome||j.user||usuario,perfil:j.perfil||'Usuário',server:true};
-      return {ok:false,msg:j.msg||'Login ou senha inválidos'};
-    }
-  }catch(e){}
-  // Fallback para abertura direta do HTML. Não grava log em arquivo, apenas no navegador.
-  if(usuario==='APGDOM' && senha==='bemamigos'){
-    await registrarLogLocal(usuario,'OK','Login em modo local, sem servidor');
-    return {ok:true,user:usuario,nome:'Assessoria de Planejamento e Gestão DOM',perfil:'Administrador',server:false};
-  }
-  await registrarLogLocal(usuario,'FALHA','Credenciais inválidas em modo local');
-  return {ok:false,msg:'Login ou senha inválidos'};
-}
-function liberarDashboard(user){
-  const info=(typeof user==='object')?user:{login:user||'APGDOM',nome:user||'APGDOM',perfil:(user==='APGDOM'?'Administrador':'Usuário')};
-  if(!info.login)info.login=info.user||'APGDOM';
-  if(!info.nome)info.nome=info.login;
-  if(!info.perfil)info.perfil='Usuário';
+function liberarDashboard(info){
   sessionStorage.setItem(AUTH_KEY,JSON.stringify(info));
   document.body.classList.add('auth-ok');
   aplicarPerfilVisual();
   if(!__sigomLoaded){__sigomLoaded=true;tryFetch();}
 }
-function initLogin(){
-  const saved=sessionStorage.getItem(AUTH_KEY);
-  if(saved){try{liberarDashboard(JSON.parse(saved));}catch(e){liberarDashboard(saved)};return;}
+async function initLogin(){
   const form=document.getElementById('loginForm');
   const msg=document.getElementById('loginMsg');
-  form.addEventListener('submit',async ev=>{
-    ev.preventDefault();
-    msg.textContent='Verificando acesso...';
-    const usuario=document.getElementById('loginUser').value.trim();
-    const senha=document.getElementById('loginPass').value;
-    const r=await loginSIGOM(usuario,senha);
-    if(r.ok){msg.textContent='';liberarDashboard({login:r.user,nome:r.nome||r.user,perfil:r.perfil||'Usuário'});}
-    else{msg.textContent=r.msg||'Login ou senha inválidos';document.getElementById('loginPass').value='';}
-  });
+  if(form)form.classList.add('hidden');
+  if(msg)msg.textContent='Verificando sessão do SIGOM...';
+  try{
+    const sb=await sbClient();
+    const {data:{session}}=await sb.auth.getSession();
+    if(!session){
+      if(msg)msg.innerHTML='Faça login pelo <a href="/index.html">Painel SIGOM</a> primeiro.';
+      setTimeout(()=>{location.href='/index.html';},1200);
+      return;
+    }
+    const {data:perfilRow}=await sb.from('profiles').select('nome,perfil').eq('id',session.user.id).single();
+    liberarDashboard({login:session.user.email,nome:(perfilRow&&perfilRow.nome)||session.user.email,perfil:(perfilRow&&perfilRow.perfil)||'consulta',sessionId:session.access_token.slice(0,16)});
+  }catch(e){
+    if(msg)msg.innerHTML='Não foi possível verificar a sessão. <a href="/index.html">Voltar ao Painel</a>.';
+  }
+  sb_auth_watch();
+}
+function sb_auth_watch(){
+  sbClient().then(sb=>sb.auth.onAuthStateChange((_ev,session)=>{
+    if(!session){sessionStorage.removeItem(AUTH_KEY);location.href='/index.html';}
+  }));
 }
 async function logoutSIGOM(){
-  const auth=getAuthInfo(); const usuario=(auth&&auth.login)||'';
-  try{await fetch('/api/logout',{method:'POST',headers:authHeaders(),body:JSON.stringify({login:usuario})});}catch(e){}
+  try{const sb=await sbClient();await sb.auth.signOut();}catch(e){}
   sessionStorage.removeItem(AUTH_KEY);
-  location.reload();
+  location.href='/index.html';
 }
 
 initLogin();
