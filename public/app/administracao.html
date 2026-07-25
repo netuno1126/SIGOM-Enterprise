@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SIGOM — Administração</title>
+  <link rel="stylesheet" href="/app/administracao.css">
+</head>
+<body>
+  <main class="admin-shell">
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">SIGOM 2026 · Fase 5</p>
+        <h1>Administração e importações online</h1>
+        <p>Importe, valide e registre dados diretamente no Supabase, com controle por perfil e auditoria.</p>
+      </div>
+      <div class="status-card">
+        <span id="profileBadge">Verificando perfil…</span>
+        <small id="sessionUser"></small>
+      </div>
+    </header>
+
+    <section id="accessDenied" class="alert danger hidden">
+      Esta área é restrita aos perfis <strong>administrador</strong> e <strong>editor</strong>. A gestão de usuários é exclusiva do administrador.
+    </section>
+
+    <nav class="tabs" aria-label="Módulos administrativos">
+      <button class="tab active" data-tab="imports">Importações</button>
+      <button class="tab" data-tab="groups">Grupos</button>
+      <button class="tab admin-only" data-tab="users">Usuários</button>
+      <button class="tab" data-tab="history">Histórico</button>
+      <button class="tab admin-only" data-tab="audit">Auditoria</button>
+    </nav>
+
+    <section class="panel active" data-panel="imports">
+      <div class="section-title">
+        <div><h2>Central de importações</h2><p>Fluxo: selecionar → validar → conferir → gravar → auditar.</p></div>
+        <button id="downloadTemplate" class="secondary">Baixar modelo CSV</button>
+      </div>
+
+      <div class="import-grid">
+        <article class="import-card">
+          <h3>Obras e contratos ativos</h3>
+          <p>Atualização por <strong>Nº OPUS + contrato</strong>. Preserva todas as colunas no campo JSON <code>dados</code>.</p>
+          <label>Arquivo XLSX, XLSM, XLS ou CSV<input id="fileObras" type="file" accept=".xlsx,.xlsm,.xls,.csv"></label>
+          <button data-import="obras">Validar arquivo</button>
+        </article>
+        <article class="import-card">
+          <h3>Portfólio</h3>
+          <p>Atualiza a tabela <code>portfolio_obras</code> sem excluir o histórico de obras.</p>
+          <label>Arquivo XLSX, XLSM, XLS ou CSV<input id="filePortfolio" type="file" accept=".xlsx,.xlsm,.xls,.csv"></label>
+          <button data-import="portfolio">Validar arquivo</button>
+        </article>
+        <article class="import-card">
+          <h3>Saldos alongados</h3>
+          <p>Importa OM, ano e valor para análises financeiras.</p>
+          <label>Arquivo XLSX, XLSM, XLS ou CSV<input id="fileSaldos" type="file" accept=".xlsx,.xlsm,.xls,.csv"></label>
+          <button data-import="saldos">Validar arquivo</button>
+        </article>
+        <article class="import-card">
+          <h3>Objetivos e metas</h3>
+          <p>Importa situação, observações e auditoria por chave operacional.</p>
+          <label>Arquivo XLSX, XLSM, XLS ou CSV<input id="fileObjetivos" type="file" accept=".xlsx,.xlsm,.xls,.csv"></label>
+          <button data-import="objetivos">Validar arquivo</button>
+        </article>
+      </div>
+
+      <section id="previewBox" class="preview hidden">
+        <div class="preview-header">
+          <div><h3>Prévia da importação</h3><p id="previewSummary"></p></div>
+          <div class="actions"><button id="cancelImport" class="secondary">Cancelar</button><button id="commitImport">Confirmar e gravar</button></div>
+        </div>
+        <div id="validationMessages"></div>
+        <div class="table-wrap"><table><thead id="previewHead"></thead><tbody id="previewBody"></tbody></table></div>
+      </section>
+      <div id="progressBox" class="progress-box hidden"><div class="progress-track"><div id="progressBar"></div></div><p id="progressText"></p></div>
+    </section>
+
+    <section class="panel" data-panel="groups">
+      <div class="section-title"><div><h2>Importação de grupos</h2><p>Substitui a necessidade de executar scripts Node no computador.</p></div></div>
+      <div class="two-col">
+        <article class="card">
+          <h3>Arquivo de grupos</h3>
+          <label>JSON de grupos e obras<input id="fileGroups" type="file" accept=".json"></label>
+          <label class="check"><input id="mergeGroups" type="checkbox" checked> Mesclar com grupos existentes</label>
+          <button id="validateGroups">Validar grupos</button>
+          <pre id="groupsResult">Nenhum arquivo selecionado.</pre>
+        </article>
+        <article class="card">
+          <h3>Regras da importação</h3>
+          <ul>
+            <li>Corrige espaços e caracteres Unicode.</li>
+            <li>Localiza obras por OPUS e contrato.</li>
+            <li>Cria grupos e subgrupos ausentes.</li>
+            <li>Não duplica vínculos já existentes.</li>
+            <li>Lista obras não encontradas.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel" data-panel="users">
+      <div class="section-title"><div><h2>Administração de usuários</h2><p>Operações executadas por Netlify Function protegida.</p></div><button id="refreshUsers" class="secondary">Atualizar lista</button></div>
+      <div class="two-col">
+        <form id="createUserForm" class="card">
+          <h3>Novo usuário</h3>
+          <label>Nome<input name="nome" required></label>
+          <label>E-mail<input name="email" type="email" required></label>
+          <label>Senha provisória<input name="password" type="password" minlength="8" required></label>
+          <label>Perfil<select name="perfil"><option value="consulta">Consulta</option><option value="editor">Editor</option><option value="auditor">Auditor</option><option value="administrador">Administrador</option></select></label>
+          <button type="submit">Criar usuário</button>
+          <p id="createUserStatus"></p>
+        </form>
+        <article class="card users-card">
+          <h3>Usuários cadastrados</h3>
+          <div class="table-wrap"><table><thead><tr><th>Usuário</th><th>Perfil</th><th>Ativo</th><th>Ação</th></tr></thead><tbody id="usersBody"></tbody></table></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel" data-panel="history">
+      <div class="section-title"><div><h2>Histórico de importações</h2><p>Arquivos, resultado, usuário e data.</p></div><button id="refreshHistory" class="secondary">Atualizar</button></div>
+      <div class="table-wrap"><table><thead><tr><th>Data</th><th>Arquivo</th><th>Status</th><th>Lidas</th><th>Processadas</th><th>Erros</th></tr></thead><tbody id="historyBody"></tbody></table></div>
+    </section>
+
+    <section class="panel" data-panel="audit">
+      <div class="section-title"><div><h2>Auditoria</h2><p>Últimos eventos registrados no SIGOM.</p></div><button id="refreshAudit" class="secondary">Atualizar</button></div>
+      <div class="table-wrap"><table><thead><tr><th>Data</th><th>Ação</th><th>Entidade</th><th>ID</th><th>Usuário</th></tr></thead><tbody id="auditBody"></tbody></table></div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="/config.js"></script>
+  <script src="/app/administracao.js"></script>
+</body>
+</html>

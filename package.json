@@ -1,8 +1,6 @@
 {
-  "name": "sigom-v2",
+  "name": "sigom-fase-7-objetivos-metas",
+  "version": "7.0.0",
   "private": true,
-  "version": "1.0.0",
-  "dependencies": {
-    "@supabase/supabase-js": "^2.45.0"
-  }
+  "type": "module"
 }

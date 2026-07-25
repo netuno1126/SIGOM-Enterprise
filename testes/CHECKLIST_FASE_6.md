@@ -1,0 +1,12 @@
+# Checklist — Fase 6
+- [ ] Login com MFA AAL2.
+- [ ] Perfil Consulta não salva FIO.
+- [ ] Perfil Editor salva nova versão.
+- [ ] Versão anterior permanece acessível.
+- [ ] Restauração cria nova versão, sem sobrescrever.
+- [ ] Upload JPEG/PNG/WEBP funciona.
+- [ ] Arquivo acima de 10 MB é recusado.
+- [ ] Fotos são privadas e abertas por URL assinada.
+- [ ] Exportação individual funciona.
+- [ ] Exportação por grupo respeita os vínculos.
+- [ ] Fases 1 a 5 continuam acessíveis.

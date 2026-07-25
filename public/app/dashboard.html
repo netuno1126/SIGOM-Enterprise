@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Dashboard SIGOM — Fase 3</title>
+  <link rel="stylesheet" href="/app/dashboard-supabase.css">
+  <link rel="stylesheet" href="/app/dashboard-fase3.css">
+  <link rel="stylesheet" href="/app/dashboard-fase4.css">
+</head>
+<body>
+  <main class="page-shell">
+    <section class="hero">
+      <div><p class="eyebrow">Sistema Integrado de Gestão de Obras Militares</p><h1>Dashboard SIGOM</h1><p id="dataStatus" class="subtle">Conectando ao Supabase...</p></div>
+      <div class="hero-actions"><button id="refreshBtn" class="primary">Atualizar dados</button><button id="exportBtn">Exportar CSV</button><button id="printBtn">Imprimir / PDF</button><a class="button-link" href="/app/legacy/dashboard_original.html">Abrir baseline original</a></div>
+    </section>
+
+    <nav class="view-tabs" aria-label="Módulos do dashboard">
+      <button class="view-tab active" data-view="geral">Visão Geral</button>
+      <button class="view-tab" data-view="obra">Visão da Obra</button>
+      <button class="view-tab" data-view="analises">Análises</button>
+      <button class="view-tab" data-view="grupos">Grupos e Portfólio</button>
+    </nav>
+
+    <section class="filters card" aria-label="Filtros do dashboard">
+      <label>Pesquisa global<input id="searchInput" type="search" placeholder="OPUS, contrato, obra, OM ou empresa"></label>
+      <label>Região Militar<select id="rmFilter"><option value="">Todas</option></select></label>
+      <label>Contratante<select id="contratanteFilter"><option value="">Todos</option></select></label>
+      <label>Empresa<select id="empresaFilter"><option value="">Todas</option></select></label>
+      <label>Grupo<select id="grupoFilter"><option value="">Todos</option></select></label>
+      <label>Execução física<select id="medicaoFilter"><option value="">Todas</option><option value="sem-medicao">Sem medição</option><option value="0-25">0% a 25%</option><option value="25-50">Acima de 25% até 50%</option><option value="50-75">Acima de 50% até 75%</option><option value="75-100">Acima de 75% até 100%</option></select></label>
+      <div class="filter-actions"><button id="clearFiltersBtn">Limpar filtros</button></div>
+    </section>
+
+    <section id="view-geral" class="view-panel active">
+      <section class="kpi-grid" aria-label="Indicadores principais">
+        <article class="kpi card"><span>Obras/contratos</span><strong id="kpiObras">—</strong><small id="kpiFilterCount">base carregada</small></article>
+        <article class="kpi card"><span>Valor atual</span><strong id="kpiValor">—</strong><small>valor completo</small></article>
+        <article class="kpi card"><span>Empenhado (NE)</span><strong id="kpiNE">—</strong><small id="kpiNEPct">—</small></article>
+        <article class="kpi card"><span>Executado (NF)</span><strong id="kpiNF">—</strong><small id="kpiNFPct">—</small></article>
+        <article class="kpi card"><span>% medido médio</span><strong id="kpiMedido">—</strong><small>média dos informados</small></article>
+        <article class="kpi card"><span>% estimado médio</span><strong id="kpiEstimado">—</strong><small>média dos informados</small></article>
+        <article class="kpi card"><span>IDP médio</span><strong id="kpiIDP">—</strong><small>% estimado ÷ % medido</small></article>
+        <article class="kpi card"><span>Sem medição</span><strong id="kpiSemMedicao">—</strong><small>não informado ou zero</small></article>
+      </section>
+      <section class="charts-grid">
+        <article class="card chart-card"><div class="section-title"><h2>Valor atual por contratante</h2><span>R$ completos nos tooltips</span></div><canvas id="chartContratante"></canvas></article>
+        <article class="card chart-card"><div class="section-title"><h2>Execução: % empenhado × % medido</h2><span>Empenhado primeiro</span></div><canvas id="chartExecucao"></canvas></article>
+        <article class="card chart-card"><div class="section-title"><h2>Obras por Região Militar</h2><span>Quantidade de registros</span></div><canvas id="chartRM"></canvas></article>
+        <article class="card chart-card"><div class="section-title"><h2>Maiores empresas por valor</h2><span>Top 10 da seleção</span></div><canvas id="chartEmpresas"></canvas></article>
+      </section>
+      <section class="card table-card">
+        <div class="section-title table-title"><div><h2>Base de obras</h2><span id="tableCount">0 registros</span></div><label>Linhas por página<select id="pageSize"><option>25</option><option selected>50</option><option>100</option><option>250</option></select></label></div>
+        <div class="table-wrap"><table><thead><tr><th data-sort="opus">Nº OPUS</th><th data-sort="contrato">Contrato</th><th data-sort="rm">RM</th><th data-sort="nome_obra">Obra</th><th data-sort="om_beneficiada">OM beneficiada</th><th data-sort="empresa">Empresa</th><th data-sort="valor_atual">Valor atual</th><th data-sort="total_ne">Empenhado</th><th data-sort="total_nf">Executado</th><th data-sort="percentual_medido">% Medido</th><th data-sort="percentual_estimado">% Estimado</th><th>IDP</th><th>Ação</th></tr></thead><tbody id="tableBody"></tbody></table></div>
+        <div class="pagination"><button id="prevPage">Anterior</button><span id="pageInfo">Página 1</span><button id="nextPage">Próxima</button></div>
+      </section>
+    </section>
+
+    <section id="view-obra" class="view-panel">
+      <section class="card obra-selector"><label>Selecionar obra<input id="obraSearch" type="search" placeholder="Buscar por OPUS, contrato, nome, empresa, OM ou RM"></label><label>Obra<select id="obraSelect"><option value="">Selecione uma obra</option></select></label></section>
+      <section id="obraEmpty" class="card empty-state">Selecione uma obra para abrir a visão completa.</section>
+      <div id="obraContent" hidden>
+        <section class="detail-heading card"><div><p class="eyebrow">Visão da Obra</p><h2 id="obraTitulo">—</h2><p id="obraSubtitulo" class="subtle">—</p></div><button id="printObraBtn">Imprimir detalhe</button></section>
+        <h3 class="row-heading">Situação financeira</h3><section id="financeCards" class="detail-cards"></section>
+        <h3 class="row-heading">Prazos e acompanhamento</h3><section id="deadlineCards" class="detail-cards"></section>
+        <h3 class="row-heading">Execução física e situação</h3><section id="physicalCards" class="detail-cards"></section>
+        <section class="charts-grid detail-charts">
+          <article class="card chart-card wide"><div class="section-title"><h2>Curva de execução — % medido</h2><span>Evolução conforme medições disponíveis</span></div><canvas id="chartCurvaObra"></canvas></article>
+          <article class="card chart-card"><div class="section-title"><h2>Execução financeira</h2><span>Valor atual, empenhado, executado e saldos</span></div><canvas id="chartFinanceiroObra"></canvas></article>
+          <article class="card chart-card"><div class="section-title"><h2>Execução física atual</h2><span>Medido × estimado</span></div><canvas id="chartFisicoObra"></canvas></article>
+        </section>
+        <section class="card technical-card"><div class="section-title"><h2>Informações complementares</h2><span>Campos preservados na origem da obra</span></div><div id="technicalGrid" class="technical-grid"></div></section>
+      </div>
+    </section>
+
+    <section id="view-analises" class="view-panel">
+      <section class="analysis-controls card"><div><h2>Análises avançadas</h2><p class="subtle">Todos os gráficos respeitam os filtros e o grupo selecionado.</p></div><div class="font-controls"><button id="fontMinus">A− gráficos</button><span id="fontValue">11 px</span><button id="fontPlus">A+ gráficos</button></div></section>
+      <section class="analysis-kpis kpi-grid"><article class="kpi card"><span>Obras críticas</span><strong id="kpiCriticas">—</strong><small>IDP &lt; 0,70 ou mais de 90 dias sem medir</small></article><article class="kpi card"><span>Valor crítico</span><strong id="kpiValorCritico">—</strong><small>valor atual das obras críticas</small></article><article class="kpi card"><span>Vigências próximas</span><strong id="kpiVigencias">—</strong><small>até 90 dias</small></article><article class="kpi card"><span>Saldo NE não liquidado</span><strong id="kpiSaldoNE">—</strong><small>NE menos NF</small></article></section>
+      <section class="charts-grid analysis-grid">
+        <article class="card chart-card wide"><div class="section-title"><h2>Dias sem medir — top 15 obras</h2><span>Nome completo no tooltip</span></div><canvas id="chartSemMedir"></canvas></article>
+        <article class="card chart-card"><div class="section-title"><h2>Distribuição do IDP</h2><span>Faixas operacionais</span></div><canvas id="chartIDP"></canvas></article>
+        <article class="card chart-card"><div class="section-title"><h2>Maiores obras por valor</h2><span>Top 15</span></div><canvas id="chartMaioresObras"></canvas></article>
+        <article class="card chart-card"><div class="section-title"><h2>Maiores empresas por valor</h2><span>Top 15</span></div><canvas id="chartMaioresEmpresas"></canvas></article>
+        <article class="card chart-card"><div class="section-title"><h2>Medido × estimado</h2><span>Relação por obra</span></div><canvas id="chartScatter"></canvas></article>
+        <article class="card chart-card"><div class="section-title"><h2>Situação das vigências</h2><span>Com data disponível</span></div><canvas id="chartVigencias"></canvas></article>
+      </section>
+      <section class="card table-card"><div class="section-title"><div><h2>Obras críticas</h2><span>IDP &lt; 0,70 ou mais de 90 dias sem medir</span></div></div><div class="table-wrap"><table><thead><tr><th>Obra</th><th>OPUS</th><th>Contrato</th><th>Empresa</th><th>IDP</th><th>Dias sem medir</th><th>Valor atual</th><th>Ação</th></tr></thead><tbody id="criticalBody"></tbody></table></div></section>
+    </section>
+
+    <section id="view-grupos" class="view-panel">
+      <section class="card group-toolbar">
+        <div><h2>Grupos, subgrupos e portfólio</h2><p class="subtle">Comparação gerencial sem alterar os vínculos existentes no Supabase.</p></div>
+        <div class="group-actions"><button id="exportGroupBtn">Exportar grupo selecionado</button><button id="exportPortfolioBtn">Exportar portfólio</button><button id="printGroupBtn">Imprimir análise</button></div>
+      </section>
+      <section class="group-selectors card">
+        <label>Grupo principal<select id="groupPrimary"><option value="">Selecione</option></select></label>
+        <label>Comparar com<select id="groupCompare"><option value="geral">Base geral</option><option value="portfolio">Portfólio</option></select></label>
+        <label>Critério de ranking<select id="groupRanking"><option value="valor">Valor atual</option><option value="medido">% medido</option><option value="idp">IDP</option><option value="dias">Dias sem medir</option></select></label>
+      </section>
+      <section class="group-kpis kpi-grid">
+        <article class="kpi card"><span>Obras no grupo</span><strong id="grpObras">—</strong><small id="grpObrasSub">grupo selecionado</small></article>
+        <article class="kpi card"><span>Valor atual</span><strong id="grpValor">—</strong><small>valor completo</small></article>
+        <article class="kpi card"><span>Executado</span><strong id="grpExecutado">—</strong><small id="grpExecPct">—</small></article>
+        <article class="kpi card"><span>% medido médio</span><strong id="grpMedido">—</strong><small>média informada</small></article>
+        <article class="kpi card"><span>IDP médio</span><strong id="grpIdp">—</strong><small>% estimado ÷ % medido</small></article>
+        <article class="kpi card"><span>Obras críticas</span><strong id="grpCriticas">—</strong><small>IDP baixo ou sem medição</small></article>
+      </section>
+      <section class="charts-grid group-charts">
+        <article class="card chart-card"><div class="section-title"><h2>Grupo × referência</h2><span>Indicadores normalizados</span></div><canvas id="chartGroupCompare"></canvas></article>
+        <article class="card chart-card"><div class="section-title"><h2>Distribuição por RM</h2><span>Obras do grupo</span></div><canvas id="chartGroupRM"></canvas></article>
+        <article class="card chart-card"><div class="section-title"><h2>Empresas do grupo</h2><span>Valor atual por empresa</span></div><canvas id="chartGroupCompanies"></canvas></article>
+        <article class="card chart-card"><div class="section-title"><h2>Execução física e financeira</h2><span>Medido, estimado, empenhado e executado</span></div><canvas id="chartGroupExecution"></canvas></article>
+      </section>
+      <section class="card group-catalog"><div class="section-title"><div><h2>Catálogo de grupos</h2><span id="groupCatalogCount">0 grupos</span></div></div><div id="groupCards" class="group-card-grid"></div></section>
+      <section class="card table-card"><div class="section-title"><div><h2>Obras do grupo selecionado</h2><span id="groupWorksCount">0 registros</span></div></div><div class="table-wrap"><table><thead><tr><th>OPUS</th><th>Contrato</th><th>Obra</th><th>RM</th><th>Empresa</th><th>Valor atual</th><th>% Medido</th><th>IDP</th><th>Ação</th></tr></thead><tbody id="groupWorksBody"></tbody></table></div></section>
+    </section>
+  </main>
+
+  <dialog id="detailDialog"><div class="dialog-head"><h2 id="detailTitle">Detalhe da obra</h2><button id="closeDetail" aria-label="Fechar">×</button></div><div id="detailContent" class="detail-grid"></div></dialog>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script><script src="/config.js"></script><script src="/app/dashboard-supabase.js"></script><script src="/app/dashboard-fase3.js"></script><script src="/app/dashboard-fase4.js"></script>
+</body></html>

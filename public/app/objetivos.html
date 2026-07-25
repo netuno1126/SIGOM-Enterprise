@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SIGOM — Objetivos e Metas</title>
+  <link rel="stylesheet" href="/app/objetivos-online.css">
+</head>
+<body>
+<header class="page-head">
+  <div>
+    <p class="eyebrow">SIGOM 2026 · Fase 7</p>
+    <h1>Objetivos e Metas</h1>
+    <p class="subtitle">Planejamento, acompanhamento, obras vinculadas, histórico e auditoria.</p>
+  </div>
+  <div class="head-actions">
+    <button id="btnNovo" class="primary">+ Novo objetivo</button>
+    <button id="btnExportar">Exportar CSV</button>
+    <button id="btnImprimir">Imprimir / PDF</button>
+    <a class="button-link" href="/app/legacy_objetivos_original.html" target="_blank">Baseline original</a>
+  </div>
+</header>
+
+<section class="filters card">
+  <label>Pesquisa<input id="fBusca" placeholder="Objetivo, meta, responsável ou obra"></label>
+  <label>Exercício<select id="fExercicio"><option value="">Todos</option></select></label>
+  <label>Situação<select id="fSituacao"><option value="">Todas</option><option>Planejado</option><option>Em andamento</option><option>Concluído</option><option>Suspenso</option><option>Cancelado</option></select></label>
+  <label>Prioridade<select id="fPrioridade"><option value="">Todas</option><option>Estratégica</option><option>Alta</option><option>Média</option><option>Baixa</option></select></label>
+  <label>Responsável<select id="fResponsavel"><option value="">Todos</option></select></label>
+  <label>Grupo<select id="fGrupo"><option value="">Todos</option></select></label>
+  <button id="btnLimpar">Limpar filtros</button>
+</section>
+
+<section id="kpis" class="kpi-grid"></section>
+
+<section class="charts-grid">
+  <article class="card"><h2>Objetivos por situação</h2><canvas id="chartSituacao"></canvas></article>
+  <article class="card"><h2>Progresso por objetivo</h2><canvas id="chartProgresso"></canvas></article>
+  <article class="card"><h2>Metas por exercício</h2><canvas id="chartExercicio"></canvas></article>
+</section>
+
+<section class="workspace">
+  <article class="card list-card">
+    <div class="section-title"><h2>Catálogo de objetivos</h2><span id="contador"></span></div>
+    <div id="listaObjetivos" class="objective-list"></div>
+  </article>
+  <article class="card detail-card">
+    <div id="emptyDetail" class="empty">Selecione um objetivo ou crie um novo.</div>
+    <div id="detail" hidden>
+      <div class="section-title">
+        <div><span id="detailCodigo" class="pill"></span><h2 id="detailTitulo"></h2></div>
+        <div class="row-actions"><button id="btnEditar">Editar</button><button id="btnHistorico">Histórico</button><button id="btnArquivar" class="danger-outline">Arquivar</button></div>
+      </div>
+      <div id="detailMeta" class="detail-meta"></div>
+      <p id="detailDescricao" class="description"></p>
+      <h3>Metas e entregas</h3>
+      <div id="metasTable"></div>
+      <h3>Obras vinculadas</h3>
+      <div id="obrasTable"></div>
+    </div>
+  </article>
+</section>
+
+<dialog id="editorDialog">
+<form id="editorForm" method="dialog">
+  <header><h2 id="editorTitle">Novo objetivo</h2><button type="button" class="icon" data-close>×</button></header>
+  <input id="objId" type="hidden">
+  <div class="form-grid">
+    <label>Código<input id="objCodigo" required placeholder="OBJ-01"></label>
+    <label>Exercício<input id="objExercicio" type="number" min="2020" max="2100" required></label>
+    <label class="span-2">Título<input id="objTitulo" required></label>
+    <label>Situação<select id="objSituacao"><option>Planejado</option><option>Em andamento</option><option>Concluído</option><option>Suspenso</option><option>Cancelado</option></select></label>
+    <label>Prioridade<select id="objPrioridade"><option>Estratégica</option><option>Alta</option><option>Média</option><option>Baixa</option></select></label>
+    <label>Responsável<input id="objResponsavel"></label>
+    <label>Prazo final<input id="objPrazo" type="date"></label>
+    <label class="span-2">Descrição<textarea id="objDescricao" rows="3"></textarea></label>
+  </div>
+  <div class="section-title"><h3>Metas</h3><button id="btnAddMeta" type="button">+ Adicionar meta</button></div>
+  <div id="metaEditor"></div>
+  <div class="section-title"><h3>Obras vinculadas</h3><button id="btnAddObra" type="button">+ Vincular obra</button></div>
+  <div id="obraEditor"></div>
+  <footer><button type="button" data-close>Cancelar</button><button id="btnSalvar" type="submit" class="primary">Salvar nova versão</button></footer>
+</form>
+</dialog>
+
+<dialog id="historyDialog"><div class="dialog-body"><header><h2>Histórico de versões</h2><button type="button" class="icon" data-close-history>×</button></header><div id="historyList"></div></div></dialog>
+<div id="toast" role="status"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="/config.js"></script>
+<script src="/app/objetivos-online.js"></script>
+</body></html>
