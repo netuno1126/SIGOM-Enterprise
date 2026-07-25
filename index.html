@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIGOM — Sistema Integrado de Gestão de Obras Militar</title>
+<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+:root{
+  --azul:#1e4e79; --azul2:#2e75b6; --azul3:#9dc3e6; --verde:#70ad47;
+  --vermelho:#c00000; --laranja:#e67e22; --cinza:#f2f5f9; --card:#ffffff; --txt:#1a2b3c;
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Arial,sans-serif}
+body{background:linear-gradient(160deg,#dfe9f3 0%,#f7fafc 100%);color:var(--txt);min-height:100vh}
+header{background:linear-gradient(90deg,var(--azul) 0%,var(--azul2) 100%);color:#fff;padding:10px 20px 8px;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.topRow{display:flex;align-items:center;gap:14px;justify-content:space-between}
+.brandRow{display:flex;align-items:center;gap:14px}
+.brandRow img{height:44px}
+.titleBox{text-align:center}
+header h1{font-size:20px;letter-spacing:1px;text-transform:uppercase}
+header .sub{font-size:12px;opacity:.85}
+.userBox{display:flex;align-items:center;gap:10px;font-size:13px}
+.userBox button{background:#fff;color:var(--azul);border:none;padding:6px 12px;border-radius:6px;font-weight:600;cursor:pointer;font-size:12px}
+.userBox button:hover{background:#e8f1fa}
+
+/* Login */
+#loginScreen{position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(135deg,#eaf1f8 0%,#dbe8f5 45%,#c2d8ec 100%)}
+.loginCard{background:#fff;border-radius:14px;box-shadow:0 12px 40px rgba(30,78,121,.25);padding:36px 40px;width:100%;max-width:380px;text-align:center}
+.loginCard img{height:64px;margin-bottom:10px}
+.loginCard h2{color:var(--azul);font-size:18px;margin-bottom:4px}
+.loginCard p.subtitle{font-size:12px;color:#5a6b7a;margin-bottom:20px}
+.loginCard input{width:100%;padding:11px 12px;margin-bottom:12px;border:1px solid #cfd9e3;border-radius:8px;font-size:14px}
+.loginCard input:focus{outline:2px solid var(--azul2)}
+.loginCard button{width:100%;padding:11px;background:var(--azul);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;letter-spacing:.4px}
+.loginCard button:hover{background:var(--azul2)}
+.loginCard button:disabled{opacity:.6;cursor:default}
+#loginMsg{min-height:20px;font-size:12.5px;color:var(--vermelho);margin-top:10px}
+.hidden{display:none !important}
+
+/* Dashboard */
+main{padding:18px 22px 40px;max-width:1400px;margin:0 auto}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px;background:#fff;padding:12px 16px;border-radius:10px;box-shadow:0 2px 6px rgba(30,78,121,.1)}
+.toolbar input, .toolbar select{padding:8px 10px;border:1px solid #cfd9e3;border-radius:6px;font-size:13px}
+.toolbar input[type=text]{flex:1;min-width:220px}
+.toolbar .count{margin-left:auto;font-size:12.5px;color:#5a6b7a;font-weight:600}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:18px}
+.card{background:var(--card);border-radius:10px;padding:14px 16px;box-shadow:0 2px 6px rgba(30,78,121,.1);border-left:5px solid var(--azul2)}
+.card .lbl{font-size:11.5px;color:#5a6b7a;text-transform:uppercase;letter-spacing:.4px;font-weight:700}
+.card .val{font-size:20px;font-weight:800;color:var(--azul);margin-top:4px}
+.card.verde{border-left-color:var(--verde)}
+.card.laranja{border-left-color:var(--laranja)}
+.card.vermelho{border-left-color:var(--vermelho)}
+
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 2px 6px rgba(30,78,121,.1)}
+thead th{background:var(--azul);color:#fff;font-size:11.5px;text-transform:uppercase;padding:10px 8px;text-align:left;letter-spacing:.3px;position:sticky;top:0}
+tbody td{padding:9px 8px;font-size:12.8px;border-bottom:1px solid #eef2f6}
+tbody tr:hover{background:#f3f8fd}
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;color:#fff}
+.badge.b-verde{background:var(--verde)}
+.badge.b-azul{background:var(--azul2)}
+.badge.b-laranja{background:var(--laranja)}
+.badge.b-vermelho{background:var(--vermelho)}
+.badge.b-cinza{background:#8a99a8}
+#tableWrap{max-height:62vh;overflow:auto;border-radius:10px}
+#loadingRow{text-align:center;padding:30px;color:#5a6b7a;font-size:13px}
+footer{text-align:center;font-size:11px;color:#7a8b99;padding:20px}
+</style>
+</head>
+<body>
+
+<!-- ===================== LOGIN ===================== -->
+<div id="loginScreen">
+  <div class="loginCard">
+    <img src="assets/img/SIGOM.png" alt="SIGOM" onerror="this.style.display='none'">
+    <h2>SIGOM</h2>
+    <p class="subtitle">Sistema Integrado de Gestão de Obras Militar</p>
+    <form id="loginForm">
+      <input type="email" id="loginEmail" placeholder="E-mail" autocomplete="username" required>
+      <input type="password" id="loginSenha" placeholder="Senha" autocomplete="current-password" required>
+      <button type="submit" id="loginBtn">Entrar</button>
+    </form>
+    <div id="loginMsg"></div>
+  </div>
+</div>
+
+<!-- ===================== DASHBOARD ===================== -->
+<div id="appScreen" class="hidden">
+  <header>
+    <div class="topRow">
+      <div class="brandRow">
+        <img src="assets/img/DOM.png" alt="DOM" onerror="this.style.display='none'">
+        <div class="titleBox">
+          <h1>SIGOM</h1>
+          <div class="sub">Sistema Integrado de Gestão de Obras Militar</div>
+        </div>
+        <img src="assets/img/DEC.png" alt="DEC" onerror="this.style.display='none'">
+      </div>
+      <div class="userBox">
+        <span id="userNome"></span>
+        <button id="btnLogout">Sair</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="cards" id="cardsSummary"></div>
+
+    <div class="toolbar">
+      <select id="filtroRM"><option value="">Todas as RM</option></select>
+      <select id="filtroIDP">
+        <option value="">Todos os status IDP</option>
+        <option value="adiantada">Adiantada</option>
+        <option value="planejado">Dentro do Planejado</option>
+        <option value="atencao">Atenção</option>
+        <option value="critico">Atraso Crítico</option>
+      </select>
+      <input type="text" id="busca" placeholder="Buscar por OPUS, contrato, empresa, OM beneficiada...">
+      <div class="count" id="contagem"></div>
+    </div>
+
+    <div id="tableWrap">
+      <table>
+        <thead>
+          <tr>
+            <th>OPUS</th><th>Contrato</th><th>RM</th><th>OM Beneficiada</th>
+            <th>Empresa</th><th>Valor Atual</th><th>% Medido</th><th>IDP</th><th>Situação</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyObras">
+          <tr><td colspan="9" id="loadingRow">Carregando obras…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <footer>SIGOM · DOM/DEC · dados servidos em tempo real via Supabase</footer>
+</div>
+
+<script src="assets/js/app.js"></script>
+</body>
+</html>
