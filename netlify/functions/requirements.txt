@@ -1,0 +1,2 @@
+# Esta function usa apenas a biblioteca padrão do Python (zipfile, re, urllib, json, base64).
+# Nenhuma dependência externa é necessária.
