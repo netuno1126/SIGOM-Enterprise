@@ -8,6 +8,7 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let OBRAS = [];       // cache local de todas as obras já carregadas
 let PERFIL = null;    // perfil do usuário logado (administrador | auditor | editor | consulta)
+let CURRENT_USER_ID = null;
 
 const $ = (sel) => document.querySelector(sel);
 
@@ -53,6 +54,7 @@ function showLogin() {
 async function onLoggedIn(session) {
   $("#loginScreen").classList.add("hidden");
   $("#appScreen").classList.remove("hidden");
+  CURRENT_USER_ID = session.user.id;
 
   // Busca o perfil do usuário (nome + perfil de acesso)
   const { data: perfilRow, error } = await sb
@@ -66,6 +68,7 @@ async function onLoggedIn(session) {
   } else {
     PERFIL = perfilRow.perfil;
     $("#userNome").textContent = `${perfilRow.nome || session.user.email} · ${perfilRow.perfil}`;
+    if (PERFIL === "administrador") $("#tabBtnAdmin").classList.remove("hidden");
   }
 
   await carregarObras();
@@ -220,6 +223,23 @@ function renderTabela() {
 
 ["filtroRM", "filtroIDP"].forEach((id) => $(`#${id}`).addEventListener("change", () => { renderResumo(); renderTabela(); }));
 $("#busca").addEventListener("input", () => { renderResumo(); renderTabela(); });
+
+// ============================================================
+// TABS (Obras / Grupos)
+// ============================================================
+document.querySelectorAll(".tabBtn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tabBtn").forEach((b) => b.classList.remove("active"));
+    document.querySelectorAll(".tabPane").forEach((p) => p.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById(btn.dataset.tab).classList.add("active");
+    if (btn.dataset.tab === "tabGrupos" && window.carregarGrupos) window.carregarGrupos();
+    if (btn.dataset.tab === "tabFio" && window.carregarFio) window.carregarFio();
+    if (btn.dataset.tab === "tabAdmin" && window.carregarAdmin) window.carregarAdmin();
+    if (btn.dataset.tab === "tabParalisadas" && window.carregarParalisadas) window.carregarParalisadas();
+    if (btn.dataset.tab === "tabObjetivos" && window.carregarObjetivos) window.carregarObjetivos();
+  });
+});
 
 // ============================================================
 initAuth();
