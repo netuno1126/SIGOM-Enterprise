@@ -447,3 +447,26 @@ window.SIGOM={
   saveNomes:sgSaveNomes,
   loadNomes:sgLoadNomes,
 };
+
+/* ============== V31.3 — Limpar dados (zona de risco) ============== */
+$('clearTableBtn')?.addEventListener('click', async () => {
+  const tabela = $('clearTableSelect').value;
+  const label = $('clearTableSelect').selectedOptions[0].textContent;
+  if ($('clearTableConfirm').value.trim().toUpperCase() !== 'APAGAR') {
+    alert('Digite APAGAR no campo de confirmação para prosseguir.');
+    return;
+  }
+  if (!confirm(`Tem certeza? Isso vai apagar TODOS os registros de "${label}" para todos os usuários. Não é possível desfazer.`)) return;
+  $('clearTableBtn').disabled = true;
+  $('clearTableLog').textContent = 'Apagando...';
+  try {
+    const result = await apiAdmin('admin-clear-table', { method: 'POST', body: JSON.stringify({ table: tabela }) });
+    $('clearTableLog').textContent = `Concluído: ${result.removidos ?? '?'} registro(s) removido(s) de "${label}" em ${dateTime(new Date().toISOString())}.`;
+    $('clearTableConfirm').value = '';
+    await refreshAll();
+  } catch (e) {
+    $('clearTableLog').textContent = 'Erro: ' + e.message;
+  } finally {
+    $('clearTableBtn').disabled = false;
+  }
+});
