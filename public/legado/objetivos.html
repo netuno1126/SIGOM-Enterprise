@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Objetivos e Metas 2026 — DOM</title>
+<script src="/config.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pptxgenjs/3.12.0/pptxgen.bundle.js"></script>
+<style>
+:root{
+  --azul:#1e4e79;--azul2:#2e75b6;--azul3:#9dc3e6;--verde:#70ad47;
+  --vermelho:#c00000;--laranja:#e67e22;--cinza:#8aa3bd;--card:#ffffff;--txt:#1a2b3c;
+  --logo-size:68px;
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Arial,sans-serif}
+body{background:linear-gradient(160deg,#dfe9f3,#f7fafc);color:var(--txt);min-height:100vh}
+
+/* === LOGIN === */
+body:not(.auth-ok) header,body:not(.auth-ok) .wrap,body:not(.auth-ok) footer{display:none!important}
+body.auth-ok #loginScreen{display:none!important}
+#loginScreen{position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(135deg,#eaf1f8,#dbe8f5 45%,#c2d8ec)}
+#loginScreen::before{content:"";position:absolute;inset:0;background:url('LOGO/fundo_login.jpg') center/cover no-repeat;opacity:.18;pointer-events:none}
+.loginBrasoes{position:absolute;top:22px;right:30px;display:flex;gap:14px;z-index:2}
+.loginBrasoes .brasao{width:72px;height:80px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#1e4e79;font-size:13px;overflow:hidden}
+.loginBrasoes .brasao img{width:100%;height:100%;object-fit:contain}
+.loginCard{position:relative;z-index:2;width:min(400px,94vw);background:rgba(255,255,255,.96);border-radius:18px;box-shadow:0 18px 42px rgba(0,0,0,.22);padding:30px 30px 24px;color:var(--txt);text-align:center}
+.loginLogo{display:flex;justify-content:center;margin-bottom:6px}
+.loginBadge{width:80px;height:80px;border-radius:50%;border:3px solid var(--azul);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;text-align:center;overflow:hidden;background:#fff;box-shadow:0 6px 18px rgba(30,78,121,.25)}
+.loginBadge img{width:100%;height:100%;object-fit:contain;border-radius:50%}
+.loginCard h2{font-size:22px;color:var(--azul);margin:8px 0 2px}
+.loginCard .loginSub{font-size:12px;color:#5b7a99;margin-bottom:8px}
+.loginCard label{display:block;text-align:left;font-size:12px;font-weight:700;color:var(--azul);margin:12px 0 4px}
+.loginCard input{width:100%;padding:11px;border:1px solid #c4d3e3;border-radius:10px;font-size:14px;outline:none}
+.loginCard input:focus{border-color:var(--azul2);box-shadow:0 0 0 3px rgba(46,117,182,.12)}
+.loginCard button{width:100%;margin-top:14px;padding:12px;border:0;border-radius:10px;background:var(--azul);color:#fff;font-weight:800;cursor:pointer;font-size:15px}
+.loginCard button:hover{background:var(--azul2)}
+.loginMsg{min-height:18px;margin-top:8px;font-size:12px;color:var(--vermelho);font-weight:700}
+.loginFoot{font-size:11px;color:#7a8da0;margin-top:12px;line-height:1.35}
+#authPanel{display:none}
+body.auth-ok #authPanel{display:flex;align-items:center;gap:8px}
+
+/* === HEADER === */
+header{background:linear-gradient(90deg,var(--azul),var(--azul2));color:#fff;padding:10px 20px 8px;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.topRow{display:flex;align-items:center;gap:12px}
+.mid{flex:1;display:flex;align-items:center;justify-content:center;gap:12px}
+.titleBox{text-align:center}
+header h1{font-size:21px;text-transform:uppercase;letter-spacing:1px;cursor:pointer}
+header h1:hover{text-decoration:underline dotted}
+header .sub{font-size:12px;opacity:.88}
+.logoSlot{width:var(--logo-size);height:var(--logo-size);border:2px dashed rgba(255,255,255,.6);border-radius:10px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:10px;color:#fff;cursor:pointer;overflow:hidden;flex-shrink:0;line-height:1.1}
+.logoSlot img{width:100%;height:100%;object-fit:contain;background:#fff;border-radius:8px}
+.logoSlot.filled{border-style:solid;border-color:transparent}
+.toolRow{display:flex;justify-content:flex-end;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.25)}
+.toolGroup{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.toolGroup button{background:#fff;color:var(--azul);border:none;padding:6px 11px;border-radius:6px;font-weight:600;cursor:pointer;font-size:12px}
+.toolGroup button:hover{background:#e8f1fa}
+.dropdown{position:relative;display:inline-block}
+.dropbtn{border:none;background:#fff;color:var(--azul);padding:6px 11px;border-radius:6px;font-weight:600;cursor:pointer;font-size:12px}
+.dropbtn:hover,.dropdown.open .dropbtn{background:var(--azul);color:#fff}
+.dropcontent{display:none;position:absolute;top:calc(100% + 4px);right:0;min-width:220px;background:#fff;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.22);padding:6px;z-index:1200}
+.dropdown.open .dropcontent{display:block}
+.dropcontent button{display:block;width:100%;text-align:left;border:none;background:none;color:var(--txt);padding:8px 12px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer}
+.dropcontent button:hover{background:#eaf1f8;color:var(--azul)}
+.dropcontent .drophead{padding:8px 12px 6px;font-size:12px;font-weight:700;color:var(--azul);border-bottom:1px solid #e4ecf4;margin-bottom:4px}
+.dropcontent .dropsec{padding:6px 12px 2px;font-size:10.5px;font-weight:700;color:#8aa3bd;text-transform:uppercase;letter-spacing:.4px}
+#authPanel .authUser{font-size:12px;font-weight:700}
+#authPanel button{background:#fff;color:var(--azul);border:none;padding:5px 10px;border-radius:6px;font-weight:700;cursor:pointer;font-size:11px}
+
+/* === LAYOUT === */
+.wrap{max-width:1440px;margin:0 auto;padding:14px}
+.tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.tabs button{border:none;background:#fff;color:var(--azul);padding:8px 12px;border-radius:8px;font-weight:600;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.12);font-size:12.5px}
+.tabs button.on{background:var(--azul);color:#fff}
+.tabs .right{margin-left:auto;display:flex;gap:6px}
+.btn{border:none;padding:8px 12px;border-radius:8px;font-weight:700;cursor:pointer;font-size:12.5px}
+.btn.blue{background:var(--azul2);color:#fff}.btn.gray{background:var(--cinza);color:#fff}
+.btn.green{background:var(--verde);color:#fff}.btn.orange{background:var(--laranja);color:#fff}
+.btn.sm{padding:5px 9px;font-size:12px}
+
+/* === CARDS === */
+.card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 6px rgba(30,78,121,.12);margin-bottom:14px}
+.card h2{font-size:15px;color:var(--azul);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.card h3{font-size:13px;color:var(--azul);margin-bottom:8px}
+.card.collapsible{position:relative}
+.card.collapsible h2,.card.collapsible h3{padding-left:34px}
+.winToggle{position:absolute;top:9px;left:10px;width:26px;height:20px;border:1px solid #9aa6b2;border-radius:3px;background:#d8dde3;color:#333;font-weight:800;font-size:14px;line-height:18px;cursor:pointer;text-align:center;z-index:5;box-shadow:inset 0 1px 0 rgba(255,255,255,.7)}
+.winToggle:hover{background:#c9d0d8}
+.card.collapsed .collapsibleBody{display:none!important}
+.card.collapsed{padding-bottom:14px}
+.card.collapsed h2,.card.collapsed h3{margin-bottom:0}
+
+/* === KPIs === */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:#fff;border-radius:12px;padding:12px;box-shadow:0 2px 6px rgba(30,78,121,.12);border-left:5px solid var(--azul2)}
+.kpi.v{border-color:var(--verde)}.kpi.a{border-color:var(--laranja)}.kpi.r{border-color:var(--vermelho)}.kpi.b{border-color:var(--azul2)}.kpi.c{border-color:var(--cinza)}
+.kpi .lbl{font-size:10.5px;text-transform:uppercase;color:#5b7a99;letter-spacing:.3px}
+.kpi .val{font-size:22px;font-weight:700;color:var(--azul);margin-top:3px}
+
+/* === TABELAS === */
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:var(--azul);color:#fff;padding:7px 6px;text-align:left;white-space:nowrap;position:sticky;top:0;cursor:pointer;z-index:1}
+td{padding:6px;border-bottom:1px solid #e4ecf4;vertical-align:top}
+tr:nth-child(even) td{background:#f6f9fd}
+tr:hover td{background:#eef5fc!important}
+tr.atrasada td{background:#fff3f0!important}
+.tblbox{max-height:520px;overflow:auto;border-radius:8px}
+.tblFilterRow th{background:#eef5fc!important;position:sticky;top:34px;z-index:2;padding:4px 3px}
+.tblFilterRow input{width:100%;min-width:60px;padding:4px 6px;border:1px solid #c4d3e3;border-radius:6px;font-size:11px}
+
+/* === FILTROS ATIVOS — AMARELO === */
+.filters select.sigom-filtro-ativo,.filters input.sigom-filtro-ativo,
+.tblFilterRow input.sigom-filtro-ativo{
+  background:#fff59d!important;border-color:#f2c94c!important;
+  box-shadow:0 0 0 2px rgba(242,201,76,.28)!important;font-weight:700;
+}
+.sigom-match{background:#fff59d;padding:0 2px;border-radius:2px;font-weight:700}
+
+/* === FILTERS === */
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
+.filters select,.filters input{padding:7px 9px;border:1px solid #c4d3e3;border-radius:8px;background:#fff;font-size:12.5px;min-width:140px}
+
+/* === TAGS E FARÓIS === */
+.tag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:700;color:#fff;white-space:nowrap}
+.t-ok{background:var(--verde)}.t-prazo{background:var(--azul2)}.t-atr{background:var(--vermelho)}
+.t-adi{background:#1e4e79}.t-aten{background:var(--laranja)}.t-na{background:var(--cinza)}
+.farol{width:13px;height:13px;border-radius:50%;display:inline-block;vertical-align:middle;margin-right:4px}
+.f-v{background:var(--verde)}.f-a{background:var(--laranja)}.f-r{background:var(--vermelho)}.f-b{background:var(--azul2)}.f-c{background:var(--cinza)}
+
+
+/* === OBSERVAÇÕES / AUDITORIA === */
+.obsAuditWrap{display:flex;gap:6px;align-items:center;min-width:280px}
+.obsAuditWrap textarea{width:210px;min-height:38px;max-height:90px;resize:vertical;padding:6px 8px;border:1px solid #c4d3e3;border-radius:8px;font-size:11.5px;background:#fff;color:var(--txt)}
+.obsAuditWrap textarea:focus{outline:none;border-color:var(--azul2);box-shadow:0 0 0 2px rgba(46,117,182,.12)}
+.auditBox{min-width:58px;height:32px;border:1px solid #b9c8d8;border-radius:8px;background:#eef3f8;color:#5b7a99;font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px}
+.auditBox:hover{border-color:var(--azul2)}
+.auditBox.ok{background:var(--verde);border-color:var(--verde);color:#fff}
+.auditBox.ok::before{content:'✓'}
+.auditBox:not(.ok)::before{content:'□'}
+
+.sitEditWrap{display:flex;gap:6px;align-items:center;min-width:190px;flex-wrap:wrap}
+.sitManualSelect{width:180px;padding:5px 7px;border:1px solid #c4d3e3;border-radius:8px;font-size:11.5px;background:#fff;color:var(--txt);font-weight:700}
+.sitManualSelect.manual{background:#fff59d!important;border-color:#f2c94c!important;box-shadow:0 0 0 2px rgba(242,201,76,.20)!important}
+.sitManualSelect:focus{outline:none;border-color:var(--azul2);box-shadow:0 0 0 2px rgba(46,117,182,.12)}
+.objStatusPanel{margin-top:12px;padding:10px;border:1px solid #d8e4f1;border-radius:10px;background:#f6f9fd;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.objStatusPanel label{font-size:12px;font-weight:800;color:var(--azul)}
+
+/* === OBJETIVOS GRID === */
+.objgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.obj{border-radius:12px;color:#fff;padding:14px;display:flex;flex-direction:column;gap:6px}
+.obj .num{font-size:11px;opacity:.85;text-transform:uppercase}
+.obj b{font-size:14px}.obj .meta{font-size:12.5px;background:rgba(255,255,255,.16);padding:8px;border-radius:8px}
+.obj .situ{font-size:13px;font-weight:700;margin-top:4px}
+.o1{background:var(--azul)}.o2{background:#3b7dbb}.o3{background:var(--azul2)}.o4{background:var(--verde)}.o5{background:#52647a}
+
+/* === OVERLAY (grupos) === */
+.ovl{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:3000}
+.ovl-card{background:#fff;border-radius:14px;width:min(700px,95vw);max-height:88vh;overflow:auto;padding:22px;box-shadow:0 18px 50px rgba(0,0,0,.3)}
+.ovl-head{display:flex;justify-content:space-between;align-items:center;font-size:17px;color:var(--azul);margin-bottom:12px}
+.ovl-x{border:none;background:#eee;border-radius:8px;width:30px;height:30px;cursor:pointer;font-weight:700}
+.grpList{border:1px solid #e4ecf4;border-radius:8px;background:#f6f9fd;max-height:320px;overflow:auto}
+.grpList .grpItem{padding:10px 12px;border-bottom:1px solid #e4ecf4;display:flex;align-items:center;gap:8px;font-size:13px}
+.grpList .grpItem:last-child{border-bottom:none}
+.grpItem .grpNome{font-weight:700;color:var(--azul);flex:1}
+.grpItem .grpQtd{font-size:11px;color:#8aa3bd}
+
+/* === MISC === */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+.chartbox{height:320px}
+.secTitle{font-size:13px;font-weight:700;color:var(--azul);margin:14px 0 6px}
+.note{font-size:11px;color:#5b7a99}
+.pend{background:#fff8ec;border:1px dashed var(--laranja);border-radius:10px;padding:14px;color:#7a5a20;font-size:13px}
+.hidden{display:none}
+footer{display:flex;justify-content:space-between;font-size:11px;color:#7a8da0;padding:14px 22px;flex-wrap:wrap;gap:8px}
+#devName{font-weight:700;color:var(--azul);cursor:pointer}
+@media print{header .logoSlot,.tabs,.filters,.btn,.no-print,#loginScreen{display:none!important}body{background:#fff}.card{box-shadow:none;border:1px solid #ccd}.tblbox{max-height:none;overflow:visible}}
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN ===== -->
+<div id="loginScreen">
+  <div class="loginBrasoes">
+    <div class="brasao" id="loginDEC"><img src="LOGO/DEC.png" onerror="this.style.display='none';this.parentNode.textContent='DEC'"></div>
+    <div class="brasao" id="loginDOM"><img src="LOGO/DOM.png" onerror="this.style.display='none';this.parentNode.textContent='DOM'"></div>
+  </div>
+  <div class="loginCard">
+    <div class="loginLogo">
+      <div class="loginBadge"><img src="LOGO/DOM.png" onerror="this.style.display='none';this.parentNode.textContent='OBJ'"></div>
+    </div>
+    <h2>Objetivos e Metas 2026</h2>
+    <div class="loginSub">DOM / DEC · Exército Brasileiro</div>
+    <form id="loginForm" autocomplete="off">
+      <label>Login</label>
+      <input id="loginUser" placeholder="Digite o login" autofocus autocomplete="username">
+      <label>Senha</label>
+      <input id="loginPass" type="password" placeholder="Digite a senha" autocomplete="current-password">
+      <button type="submit">Entrar</button>
+      <div class="loginMsg" id="loginMsg"></div>
+    </form>
+    <div class="loginFoot">Credenciais idênticas ao SIGOM. Contate o administrador para cadastro.</div>
+  </div>
+</div>
+
+<!-- ===== HEADER ===== -->
+<header>
+  <div class="topRow">
+    <div class="logoSlot" id="logoL" title="Logo DOM — clique para inserir">DOM</div>
+    <div class="mid">
+      <div class="logoSlot" id="logoM" title="Logo central — clique para inserir">PEEx</div>
+      <div class="titleBox">
+        <h1 id="appTitle" title="Clique para alterar">Objetivos e Metas 2026 — DOM/DEC</h1>
+        <div class="sub">PEEx 2024-2027 · <span id="fonteInfo">aguardando planilha…</span></div>
+      </div>
+    </div>
+    <div class="logoSlot" id="logoR" title="Logo DEC — clique para inserir">DEC</div>
+  </div>
+  <div class="toolRow no-print">
+    <input type="file" id="fileInput" accept=".xlsx,.xlsm" style="display:none">
+    <input type="file" id="logoInput" accept="image/*" style="display:none">
+    <div class="toolGroup" id="authPanel">
+      <span class="authUser" id="authUserBox">Usuário</span>
+      <div class="dropdown" id="menuDrop">
+        <button class="dropbtn" onclick="toggleDrop('menuDrop',event)">☰ Menu ▾</button>
+        <div class="dropcontent">
+          <div class="drophead">👤 <span id="menuUserLabel">—</span></div>
+          <div class="dropsec">Dados</div>
+          <button onclick="pick('fileInput');closeDrops()">📂 Inserir planilha de Obras</button>
+          <div class="dropsec">Gerar / Exportar</div>
+          <button onclick="exportarPPTX();closeDrops()">📊 Gerar PowerPoint (Obj 01)</button>
+          <button onclick="window.print();closeDrops()">🖨 Exportar PDF</button>
+          <div class="dropsec">Visualização</div>
+          <button onclick="abrirGrupos();closeDrops()">🗂 Gerenciar Grupos</button>
+          <button onclick="salvarConfig();closeDrops()">💾 Salvar configuração</button>
+          <div class="dropsec">Conta</div>
+          <button onclick="logoutOBJ()">🔒 Sair</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="tabs no-print">
+    <button class="on" data-t="visao" onclick="show('visao')">Visão Geral</button>
+    <button data-t="obj1" onclick="show('obj1')">Obj 01 — 17 Obras</button>
+    <button data-t="s1" onclick="show('s1')">1º Semestre</button>
+    <button data-t="s2" onclick="show('s2')">2º Semestre</button>
+    <button data-t="obj2" onclick="show('obj2')">Obj 02 — RP</button>
+    <button data-t="obj3" onclick="show('obj3')">Obj 03 — Créditos</button>
+    <button data-t="obj4" onclick="show('obj4')">Obj 04 — Fotovoltaicas</button>
+    <button data-t="obj5" onclick="show('obj5')">Obj 05 — Paralisadas</button>
+    <button data-t="exec" onclick="show('exec')">Painel Executivo</button>
+    <div class="right">
+      <button class="btn gray" onclick="pick('fileInput')">📂 Planilha</button>
+      <button class="btn blue" onclick="exportarPPTX()">📊 PPTX</button>
+      <button class="btn gray" onclick="window.print()">🖨 PDF</button>
+    </div>
+  </div>
+
+  <div id="visao"></div>
+  <div id="obj1" class="hidden"></div>
+  <div id="s1" class="hidden"></div>
+  <div id="s2" class="hidden"></div>
+  <div id="obj2" class="hidden"></div>
+  <div id="obj3" class="hidden"></div>
+  <div id="obj4" class="hidden"></div>
+  <div id="obj5" class="hidden"></div>
+  <div id="exec" class="hidden"></div>
+</div>
+
+<div id="ovlGrupos" class="ovl hidden"></div>
+
+<footer>
+  <span>Objetivos e Metas PEEx 2024-2027 · DOM / DEC · Exército Brasileiro</span>
+  <span id="devName" onclick="editarDev()">Desenvolvedor: clique para definir</span>
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// DADOS FIXOS
+// ═══════════════════════════════════════════════════════════
+const OBRAS17=[{"ord":1,"opus":"201902000040","contrato":"08/2022","acao":"9.2.6","iniciativa":"9.2.6.1 Adequar e implantar PNR.","semestre":1,"status":""},{"ord":2,"opus":"201602000101","contrato":"08/2023","acao":"1.2.1","iniciativa":"1.2.1.3 Prosseguir na adequação da infraestrutura do CAvEx (Taubaté/SP).","semestre":2,"status":""},{"ord":3,"opus":"201803000510","contrato":"021/2022","acao":"1.1.4","iniciativa":"1.1.4.3 Adequar a infraestrutura do 19º BI Mtz (São Leopoldo/RS).","semestre":1,"status":""},{"ord":4,"opus":"202106000039","contrato":"37/2021","acao":"9.2.2","iniciativa":"9.2.2.1 Adequar e revitalizar as instalações do HGS.","semestre":2,"status":""},{"ord":5,"opus":"201808000014","contrato":"07/2021","acao":"9.2.1","iniciativa":"9.2.1.4 Prosseguir na implantação do PMGu de Macapá.","semestre":2,"status":""},{"ord":6,"opus":"201808000106 / 202408000116","contrato":"04/2021","acao":"1.1.3","iniciativa":"1.1.3.10 Prosseguir na implantação do CMN (Belém/PA).","semestre":2,"status":""},{"ord":7,"opus":"201008000038","contrato":"12/2022","acao":"9.2.6","iniciativa":"9.2.6.1 Adequar e implantar PNR.","semestre":1,"status":""},{"ord":8,"opus":"202109000127","contrato":"09/2021","acao":"2.2.2","iniciativa":"2.2.2.1 Implantar fazendas de energia fotovoltaica no EB.","semestre":2,"status":""},{"ord":9,"opus":"201809000047","contrato":"09/2023","acao":"2.1.1","iniciativa":"2.1.1.8 Prosseguir na implantação do 9º B Com GE (Campo Grande/MS).","semestre":2,"status":""},{"ord":10,"opus":"202009000235","contrato":"09/2024","acao":"2.1.1","iniciativa":"2.1.1.6 Implantar a nova sede da 18ª Bda Inf Pan (Corumbá/MS).","semestre":2,"status":""},{"ord":11,"opus":"202311000267","contrato":"05/2024","acao":"6.2.1","iniciativa":"6.2.1.3 Concluir a implantação da nova Es Com (Brasília/DF).","semestre":1,"status":"Em Andamento"},{"ord":12,"opus":"202211000226","contrato":"26/2023","acao":"—","iniciativa":"1.1.4.1 Modernizar infraestruturas — geração de capacidades.","semestre":1,"status":"Em Andamento"},{"ord":13,"opus":"201212000408","contrato":"16/2020","acao":"9.2.6","iniciativa":"9.2.6.1 Adequar e implantar PNR.","semestre":2,"status":"Em Andamento"},{"ord":14,"opus":"201312000389","contrato":"26/2023","acao":"9.2.6","iniciativa":"9.2.6.1 Adequar e implantar PNR.","semestre":2,"status":"Em Andamento"},{"ord":15,"opus":"202212000154","contrato":"35/2021","acao":"9.2.6","iniciativa":"9.2.6.1 Adequar e implantar PNR.","semestre":1,"status":"Concluida"},{"ord":16,"opus":"202201000020","contrato":"96/2022","acao":"9.2.6","iniciativa":"9.2.6.1 Adequar e implantar PNR.","semestre":2,"status":"Concluida"},{"ord":17,"opus":"202001000273","contrato":"63/2023","acao":"8.1.5","iniciativa":"8.1.5.1 Reorganizar e revitalizar a infraestrutura da AMAN (Resende/RJ).","semestre":1,"status":""}];
+const PARALISADAS=[
+  {n:1,acao:'2.2.1.2',nome:'PALL da EsACosAAe',desc:'Construção / Posto de Lavagem e Lubrificação / EsACosAAe',opus:'201601000199',contratoObj5:'15/2019',statusObj5:''},
+  {n:2,acao:'1.1.6.5.1',nome:'Infraestrutura da EsACosAAe',desc:'Construção / Subestação / EsACosAAe',opus:'201701000170',contratoObj5:'15/2019',statusObj5:''},
+  {n:3,acao:'1.1.6.6.1',nome:'Auditório do 1º GAAAe',desc:'Adaptação / Pavilhão da Bateria de Comando e Serviços / 1º GAAAe',opus:'201801000222',contratoObj5:'fev/20',statusObj5:''},
+  {n:4,acao:'1.1.1.1.2',nome:'Infraestrutura do CIOPESP',desc:'Construção / Alameda Marechal Pessoa Leal / CIOpEsp',opus:'201401000452',contratoObj5:'24/2025',statusObj5:'Recontratado'},
+  {n:5,acao:'1.1.1.1.3',nome:'Casa Anti-Terror do CIOPESP',desc:'Construção / CASA ANTITERROR / CIOpEsp',opus:'201801000217',contratoObj5:'out/19',statusObj5:''},
+  {n:6,acao:'9.2.6.1.6',nome:'Construção / Bloco de PNR / Cmdo 22ª Bda Inf Sl',desc:'Construção / Bloco de PNR / Cmdo 22ª Bda Inf Sl',opus:'201908000115',contratoObj5:'17/2025',statusObj5:''},
+  {n:7,acao:'9.2.6.1.7',nome:'Construção / Bloco de PNR / Cmdo Fron AMAPA / 34º BIS',desc:'Construção / Bloco de PNR / Cmdo Fron AMAPA / 34º BIS',opus:'202008000065',contratoObj5:'',statusObj5:'Recontratado'},
+  {n:8,acao:'',nome:'Fotovoltaica do PEF de Guaporé',desc:'Construção / Construção da Rede Elétrica / PEF Guaporé / 2º B Fron',opus:'201609000332',contratoObj5:'fev/16',statusObj5:'Recontratada'},
+  {n:9,acao:'',nome:'Fotovoltaica do PEF de Porto Índio',desc:'Construção / Usina de Geração de Energia - Placa Fotovoltaica / PEF Porto Índio / 17º B Fron',opus:'',contratoObj5:'set/21',statusObj5:''},
+  {n:10,acao:'1.1.3.2.2',nome:'Garagens do 17º Bfron',desc:'Construção / Garagem / 17º B Fron',opus:'202109000275 / 202109000326',contratoObj5:'abr/22',statusObj5:''},
+  {n:11,acao:'1.2.2.1.3',nome:'Garagem de Embarcações do 66º BIMtz',desc:'Garagem de Embarcações do 66º BIMtz',opus:'',contratoObj5:'',statusObj5:''},
+  {n:12,acao:'1.2.2.1.3',nome:'Garagem e Pátio de Formatura da CRO/9',desc:'Construção / Estacionamento coberto / CRO/9ª RM',opus:'202509000072',contratoObj5:'23/2025',statusObj5:''},
+  {n:13,acao:'',nome:'Pavilhão Seção Técnica da CRO/9',desc:'Construção / Pavilhão chefia e seção técnica / CRO/9ª RM',opus:'202509000214',contratoObj5:'17/2025',statusObj5:''}
+];
+
+// ═══════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════
+const isNum=n=>typeof n==='number'&&isFinite(n);
+const num=v=>{if(v==null||v==='')return null;if(typeof v==='number')return isFinite(v)?v:null;
+  let s=String(v).replace(/R\$|\s|%/g,'');if(s===''||s==='-')return null;
+  if(/,/.test(s))s=s.replace(/\./g,'').replace(',','.');else if(/^\d{1,3}(\.\d{3})+$/.test(s))s=s.replace(/\./g,'');
+  const n=parseFloat(s);return isFinite(n)?n:null;};
+const digits=v=>String(v??'').replace(/\D/g,'');
+const fmtMi=n=>isNum(n)?'R$ '+(n/1e6).toLocaleString('pt-BR',{maximumFractionDigits:1})+' Mi':'—';
+const fmtR$=n=>isNum(n)?'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'—';
+const pctNum=v=>{const n=num(v);if(!isNum(n))return null;return Math.abs(n)<=1?n*100:n;};
+const pct=n=>{const p=pctNum(n);return isNum(p)?p.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%':'—';};
+function asDate(v){if(v==null||v==='')return null;if(v instanceof Date)return v;
+  if(typeof v==='number'){const d=XLSX.SSF.parse_date_code(v);return d?new Date(d.y,d.m-1,d.d):null}
+  const s=String(v);let m=s.match(/(\d{4})-(\d{2})-(\d{2})/);if(m)return new Date(+m[1],+m[2]-1,+m[3]);
+  m=s.match(/(\d{2})\/(\d{2})\/(\d{4})/);if(m)return new Date(+m[3],+m[2]-1,+m[1]);return null;}
+const dt=v=>{const d=asDate(v);return d?d.toLocaleDateString('pt-BR'):'—'};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+
+// ═══════════════════════════════════════════════════════════
+// LOGIN / AUTENTICAÇÃO (compatível com SIGOM)
+// ═══════════════════════════════════════════════════════════
+// Observação importante:
+// - Quando este HTML é aberto direto pelo navegador (file://), ele NÃO consegue
+//   consultar automaticamente a pasta Usuarios do Windows.
+// - Por isso, a autenticação abaixo tenta, nesta ordem:
+//   1) API /api/login, quando existir;
+//   2) usuários salvos no localStorage do SIGOM;
+//   3) arquivo Usuarios/usuarios.json, se o dashboard estiver servido por HTTP;
+//   4) usuários locais de emergência.
+const AUTH_KEYS_OBJ=['obj_auth','sigom_auth','sigom_user','auth_sigom'];
+let authUser=null;
+
+function getAuthInfo(){
+  // Compatibilidade: quando aberto a partir do index.html do SIGOM (mesma
+  // aba/sessão), o login Supabase já fica em sessionStorage.sigom_auth_user.
+  try{const su=JSON.parse(sessionStorage.getItem('sigom_auth_user')||'null');if(su&&(su.login||su.user)){return {login:su.login||su.user,nome:su.nome||su.name||su.login||su.user,perfil:su.perfil||su.role||'Usuário',sessionId:su.sessionId||su.sessao||''};}}catch(e){}
+  for(const k of AUTH_KEYS_OBJ){
+    try{const u=JSON.parse(store.get(k)||'null');if(u&&(u.login||u.user))return {login:u.login||u.user,nome:u.nome||u.name||u.login||u.user,perfil:u.perfil||u.role||'Usuário',sessionId:u.sessionId||u.sessao||''};}catch(e){}
+  }
+  return null;
+}
+function isAdmin(){const u=getAuthInfo();const p=String((u&&u.perfil)||'').toLowerCase();return p.includes('admin')||p.includes('auditor');}
+
+function doLogin(u){
+  authUser=u;
+  store.set('obj_auth',JSON.stringify(u));
+  store.set('sigom_auth',JSON.stringify(u));
+  document.getElementById('loginMsg').textContent='';
+  document.body.classList.add('auth-ok');
+  document.getElementById('authUserBox').textContent=u.nome||u.login;
+  document.getElementById('menuUserLabel').textContent=(u.nome||u.login)+' ('+(u.perfil||'usuario')+')';
+  autoCarregar();
+  initBranding();
+}
+function logoutOBJ(){
+  AUTH_KEYS_OBJ.forEach(k=>store.set(k,''));
+  document.body.classList.remove('auth-ok');
+  document.getElementById('loginMsg').textContent='';
+  (async()=>{try{const sb=await sbClientOBJ();await sb.auth.signOut();}catch(e){}location.href='/index.html';})();
+}
+
+/* ---------- Login via Supabase (mesma conta do Painel SIGOM v31) ---------- */
+let __sbClientOBJ=null;
+async function sbClientOBJ(){
+  if(__sbClientOBJ)return __sbClientOBJ;
+  const {createClient}=await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+  const cfg=window.SIGOM_CONFIG||{};
+  __sbClientOBJ=createClient(cfg.supabaseUrl,cfg.supabasePublishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+  return __sbClientOBJ;
+}
+async function initLoginOBJ(){
+  const jaLogado=getAuthInfo();
+  if(jaLogado&&jaLogado.login){doLogin(jaLogado);return;}
+  const msg=document.getElementById('loginMsg');
+  if(msg)msg.textContent='Verificando sessão do SIGOM...';
+  try{
+    const sb=await sbClientOBJ();
+    const {data:{session}}=await sb.auth.getSession();
+    if(!session){
+      if(msg)msg.innerHTML='Faça login pelo <a href="/index.html">Painel SIGOM</a> primeiro.';
+      setTimeout(()=>{location.href='/index.html';},1200);
+      return;
+    }
+    const {data:perfilRow}=await sb.from('profiles').select('nome,perfil').eq('id',session.user.id).single();
+    doLogin({login:session.user.email,nome:(perfilRow&&perfilRow.nome)||session.user.email,perfil:(perfilRow&&perfilRow.perfil)||'consulta'});
+  }catch(e){
+    if(msg)msg.innerHTML='Não foi possível verificar a sessão. <a href="/index.html">Voltar ao Painel</a>.';
+  }
+}
+initLoginOBJ();
+
+// ═══════════════════════════════════════════════════════════
+// BRANDING / LOGOS
+// ═══════════════════════════════════════════════════════════
+let logoTarget=null;
+function initBranding(){
+  // Carrega logos salvos
+  ['logoL','logoM','logoR'].forEach(id=>{
+    const data=store.get('obj_'+id);
+    if(data)setLogoData(id,data);
+  });
+  // Carrega logos do servidor
+  (async()=>{for(const[id,p]of [['logoL','LOGO/DOM.png'],['logoR','LOGO/DEC.png']]){
+    try{const r=await fetch(p);if(r.ok){const b=await r.blob();const u=URL.createObjectURL(b);
+      document.getElementById(id).innerHTML='<img src="'+u+'">';document.getElementById(id).classList.add('filled');}}catch(e){}
+  }})();
+  // Título
+  const t=store.get('obj_title');if(t)document.getElementById('appTitle').textContent=t;
+  const d=store.get('obj_dev');if(d)document.getElementById('devName').textContent='Desenvolvedor: '+d;
+  // Click logos
+  ['logoL','logoM','logoR'].forEach(id=>{
+    document.getElementById(id).onclick=()=>{logoTarget=id;pick('logoInput');}
+  });
+  document.getElementById('logoInput').onchange=e=>{
+    const f=e.target.files[0];if(!f||!logoTarget)return;
+    const r=new FileReader();r.onload=ev=>{store.set('obj_'+logoTarget,ev.target.result);setLogoData(logoTarget,ev.target.result);};
+    r.readAsDataURL(f);e.target.value='';
+  };
+  document.getElementById('appTitle').onclick=()=>{
+    const t=prompt('Nome do dashboard:',document.getElementById('appTitle').textContent);
+    if(t){document.getElementById('appTitle').textContent=t;store.set('obj_title',t);}
+  };
+}
+function setLogoData(id,dataUrl){
+  const el=document.getElementById(id);if(!el)return;
+  el.innerHTML='<img src="'+dataUrl+'">';el.classList.add('filled');
+}
+function editarDev(){
+  const v=prompt('Nome do desenvolvedor:',store.get('obj_dev')||'');
+  if(v!==null){store.set('obj_dev',v);document.getElementById('devName').textContent='Desenvolvedor: '+v;}
+}
+function salvarConfig(){
+  const cfg={obj_title:store.get('obj_title'),obj_dev:store.get('obj_dev'),
+    obj_logoL:store.get('obj_logoL'),obj_logoR:store.get('obj_logoR'),obj_logoM:store.get('obj_logoM')};
+  const txt=JSON.stringify(cfg);
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'application/json'}));
+  a.download='dash_obj_config.json';a.click();
+}
+
+// ═══════════════════════════════════════════════════════════
+// DROPDOWN / MENU
+// ═══════════════════════════════════════════════════════════
+function toggleDrop(id,ev){
+  if(ev)ev.stopPropagation();
+  const d=document.getElementById(id);
+  document.querySelectorAll('.dropdown.open').forEach(x=>{if(x!==d)x.classList.remove('open');});
+  d.classList.toggle('open');
+}
+function closeDrops(){document.querySelectorAll('.dropdown.open').forEach(x=>x.classList.remove('open'));}
+document.addEventListener('click',e=>{if(!e.target.closest('.dropdown'))closeDrops();});
+
+// ═══════════════════════════════════════════════════════════
+// COLLAPSIBLE CARDS
+// ═══════════════════════════════════════════════════════════
+function toggleCardCollapse(id,force){
+  const card=document.getElementById(id);if(!card)return;
+  const key='obj_card_'+id;
+  const collapsed=(typeof force==='boolean')?force:!card.classList.contains('collapsed');
+  card.classList.toggle('collapsed',collapsed);
+  const btn=card.querySelector('.winToggle');
+  if(btn){btn.textContent=collapsed?'□':'—';btn.title=collapsed?'Expandir':'Recolher';}
+  store.set(key,collapsed?'1':'0');
+}
+function initCollapsible(){
+  document.querySelectorAll('.card.collapsible').forEach(card=>{
+    const id=card.id;if(!id)return;
+    const saved=store.get('obj_card_'+id);
+    if(saved==='1')card.classList.add('collapsed');
+    const btn=card.querySelector('.winToggle');
+    if(btn){btn.textContent=card.classList.contains('collapsed')?'□':'—';}
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// FÓRMULAS SIGOM
+// ═══════════════════════════════════════════════════════════
+function saldoNE(o){return (num(o.ne)||0)-(num(o.nf)||0);}
+function mediaMensalGlobal(o){
+  const nf=num(o.nf),assina=asDate(o.assinatura);
+  if(isNum(nf)&&assina){const dias=(Date.now()-assina.getTime())/864e5;if(dias>0)return nf/dias*30;}
+  return null;
+}
+function estimativaRecursos(o){const m=mediaMensalGlobal(o);const s=saldoNE(o);
+  if(!isNum(m)||m<=0)return null;if(s<=0)return 0;return Math.floor(s/m);}
+function mediaLiq3(o){
+  const q=pctNum(o.pq),a=pctNum(o.pa),p=pctNum(o.pp),u=pctNum(o.pu),vi=num(o.vinicial);
+  const difs=[];if(isNum(a)&&isNum(q))difs.push(a-q);if(isNum(p)&&isNum(a))difs.push(p-a);if(isNum(u)&&isNum(p))difs.push(u-p);
+  if(!difs.length||!isNum(vi))return null;return difs.reduce((x,y)=>x+y,0)/difs.length*vi/100;
+}
+function temTereo(o){const t=o.tereo;if(t==null||t==='')return null;
+  return /sim|s|x|true|1|conclu|emitid/i.test(String(t));}
+function situacao(o){
+  if(!o._match)return{k:'na',txt:'NÃO LOCALIZADA',farol:'c'};
+  const pmed=pctNum(o.pmed),pest=pctNum(o.pest),idp=num(o.idp);
+  const fp=asDate(o.fimprazo),proj=asDate(o.proj),tereo=temTereo(o);
+  const nfPaga=(num(o.nf)||0)>0&&saldoNE(o)<=0;
+  if(isNum(pmed)&&pmed>=100){
+    if(tereo===true&&nfPaga)return{k:'ok',txt:'CONCLUÍDA',farol:'v'};
+    if(tereo===false)return{k:'aten',txt:'FÍSICO 100% — TEREO PENDENTE',farol:'a'};
+    return{k:'aten',txt:'FÍSICO 100% — NF/TEREO PENDENTE',farol:'a'};
+  }
+  const venceu=fp&&fp.getTime()<Date.now();
+  const projEstoura=fp&&proj&&proj.getTime()>fp.getTime();
+  const diasAt=num(o.dias);
+  if((isNum(diasAt)&&diasAt>0)||venceu||projEstoura)return{k:'atr',txt:'ATRASADA',farol:'r'};
+  const est=estimativaRecursos(o);
+  if((isNum(idp)&&idp>=0.70&&idp<0.85)||(est!==null&&est<3))return{k:'aten',txt:'EM ATENÇÃO',farol:'a'};
+  if((isNum(pmed)&&isNum(pest)&&pmed>pest)||(isNum(idp)&&idp>1))return{k:'adi',txt:'ADIANTADA',farol:'b'};
+  return{k:'prazo',txt:'DENTRO DO PRAZO',farol:'v'};
+}
+const TAGCLS={ok:'t-ok',prazo:'t-prazo',atr:'t-atr',adi:'t-adi',aten:'t-aten',na:'t-na'};
+
+// ═══════════════════════════════════════════════════════════
+// CARGA DE DADOS
+// ═══════════════════════════════════════════════════════════
+let DB=[],dbByOpus={},fonteTxt='';
+async function listar(folder){try{const r=await fetch('/api/xlsx?folder='+encodeURIComponent(folder));if(!r.ok)return[];const j=await r.json();return(j&&j.ok&&Array.isArray(j.files))?j.files.map(f=>f.path):[];}catch(e){return[];}}
+function normRow(r){const o={};for(const[k,v]of Object.entries(r))o[String(k).trim()]=v;return o;}
+function mapPlanilha(rows){
+  return rows.map(normRow).map(r=>({
+    opus:r['Solicitação']??r['Nr Solicitação']??r['Nº OPUS']??r['OPUS']??r['Nr Opus']??r['Código da Obra'],
+    contrato:r['Contrato']??r['Nr Contrato'],
+    desc:r['Descrição']??r['Descrição Solicitação']??r['Descrição da Obra'],
+    om:r['OM Beneficiada'],rm:r['RM']??r['Regiao Militar'],
+    empresa:r['Empresa']??r['Nome Fornecedor'],contratante:r['Contratante']??r['OM Executante'],
+    vatual:r['Valor Atual'],vinicial:r['Valor Inicial'],
+    ne:r['Total NE'],nf:r['Total Notas Fiscais'],
+    falta:r['Falta Empenhar']??r['Saldo a Descentralizar'],
+    pmed:r['% medido']??r['% Medido'],pest:r['% estimado'],pemp:r['% Empenhado'],
+    idp:r['IDP'],dias:r['dias atrasados']??r['Dias Atrasados'],proj:r['data projetada']??r['Data Projetada'],
+    assinatura:r['Data Assinatura']??r['Início (OS)']??r['Início da Obra'],
+    fimprazo:r['Fim Prazo']??r['Término de Prazo'],
+    fimvigencia:r['Fim Vigência']??r['Término de Vigência'],
+    ultima:r['Data Última']??r['Data da última medição'],
+    pq:r['% Quarta'],pa:r['% Antepenúltima'],pp:r['% Penúltima'],pu:r['% Última'],
+    tereo:r['TEREO']??r['Tereo']??r['tereo'],analise:r['analise']??r['Análise'],obs:r['Observações']??r['Obs']
+  }));
+}
+function pickSheet(wb){
+  for(const n of wb.SheetNames){const rows=XLSX.utils.sheet_to_json(wb.Sheets[n],{defval:null});
+    if(rows.length){const k=Object.keys(rows[0]).map(x=>String(x).toLowerCase());
+      if((k.some(c=>c.includes('contrato'))||k.some(c=>c.includes('codigo da obra')||c.includes('código da obra')))
+         &&k.some(c=>c.includes('valor atual')))return rows;}}
+  return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:null});
+}
+function setDB(rows,fonte){
+  DB=mapPlanilha(rows);dbByOpus={};
+  DB.forEach(o=>{const k=digits(o.opus);if(k)dbByOpus[k]=o;});
+  fonteTxt=fonte;document.getElementById('fonteInfo').textContent=DB.length+' obras · '+fonte;
+  renderAll();
+}
+function normalizarTexto(v){return String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();}
+function normalizarContrato(v){return String(v||'').toLowerCase().replace(/[\s"']/g,'').replace('º','').replace('nº','').trim();}
+function cruza(o){for(const part of String(o.opus||'').split(/[\/\n]/)){const k=digits(part);if(k&&dbByOpus[k])return dbByOpus[k];}return null;}
+function cruzaObj5(o){
+  const porOpus=cruza(o); if(porOpus)return porOpus;
+  const cont=normalizarContrato(o.contratoObj5||o.contrato);
+  if(cont){
+    const achou=DB.find(r=>{const rc=normalizarContrato(r.contrato); return rc && (rc===cont || rc.includes(cont) || cont.includes(rc));});
+    if(achou)return achou;
+  }
+  const alvo=normalizarTexto([o.desc,o.nome].join(' '));
+  if(alvo.length>12){
+    const achou=DB.find(r=>{const base=normalizarTexto([r.desc,r.om,r.contratante].join(' '));
+      const palavras=normalizarTexto(o.nome).split(' ').filter(w=>w.length>3);
+      return base && (base.includes(alvo.slice(0,28)) || alvo.includes(base.slice(0,28)) || palavras.some(w=>base.includes(w)));
+    });
+    if(achou)return achou;
+  }
+  return null;
+}
+function enrich(lista){return lista.map(o=>{const m=cruza(o);return{...o,...(m||{}),opus:o.opus,_match:!!m,_orig:o};});}
+function enrichObj5(lista){return lista.map(o=>{const m=cruzaObj5(o);return{...o,...(m||{}),opus:o.opus,nome:o.nome,acao:o.acao,contratoObj5:o.contratoObj5,statusObj5:o.statusObj5,_match:!!m,_orig:o};});}
+async function autoCarregar(){
+  // Prioridade: carregar a planilha consolidada PEEx do próprio servidor SIGOM.
+  // Evita usar dados antigos salvos no navegador antes de tentar o arquivo oficial.
+  const candidatos=[
+    'SIGOM_CONSOLIDADO_INDICADORES_PEEx.xlsx',
+    'Objetivos e Metas/SIGOM_CONSOLIDADO_INDICADORES_PEEx.xlsx',
+    'Indicadores/SIGOM_CONSOLIDADO_INDICADORES_PEEx.xlsx',
+    'Indicadores/Consolidada/SIGOM_CONSOLIDADO_INDICADORES_PEEx.xlsx',
+    'Indicadores/Consolidada/Planilha_Consolidada_Indicadores.xlsx',
+    'Objetivos e Metas/Relatorio_Gerencial.xlsx',
+    'Objetivos e Metas/Relatório_Gerencial.xlsx',
+    ...(await listar('.')),
+    ...(await listar('Objetivos e Metas')),
+    ...(await listar('Indicadores')),
+    ...(await listar('Indicadores/Consolidada')),
+    ...(await listar('1-Planilha de Obras_Dash'))
+  ];
+  const vistos=new Set();
+  for(const p0 of candidatos){
+    const p=String(p0||'').replace(/^\.\//,'');
+    if(!p||vistos.has(p)||!/\.xlsm?x?$/i.test(p))continue;
+    vistos.add(p);
+    try{
+      const r=await fetch(encodeURI(p),{cache:'no-store'});
+      if(!r.ok)continue;
+      const buf=await r.arrayBuffer();
+      const wb=XLSX.read(buf,{type:'array',cellDates:true});
+      const rows=pickSheet(wb);
+      if(rows&&rows.length){setDB(rows,p);return;}
+    }catch(e){console.warn('Falha ao carregar planilha:',p,e);}
+  }
+  // Fallback: usa dados salvos por outro dashboard SIGOM somente se a planilha não for localizada.
+  try{const ls=localStorage.getItem('sigom_obras');
+    if(ls){const arr=JSON.parse(ls);if(arr&&arr.length){
+      DB=arr;dbByOpus={};DB.forEach(o=>{const k=digits(o.opus);if(k)dbByOpus[k]=o;});
+      const dd=localStorage.getItem('sigom_obras_date');
+      fonteTxt='dados salvos do SIGOM'+(dd?' ('+new Date(dd).toLocaleDateString('pt-BR')+')':'');
+      document.getElementById('fonteInfo').textContent=DB.length+' obras · '+fonteTxt;renderAll();return;
+    }}}catch(e){}
+  if(!DB.length)document.getElementById('fonteInfo').textContent='sem dados — coloque SIGOM_CONSOLIDADO_INDICADORES_PEEx.xlsx na pasta do servidor ou use "Planilha"';
+}
+function pick(id){document.getElementById(id).click();}
+document.getElementById('fileInput').addEventListener('change',e=>{
+  const f=e.target.files[0];if(!f)return;
+  const rd=new FileReader();rd.onload=ev=>{const wb=XLSX.read(ev.target.result,{type:'array',cellDates:true});
+    setDB(pickSheet(wb),'arquivo: '+f.name);};rd.readAsArrayBuffer(f);
+});
+
+// ═══════════════════════════════════════════════════════════
+// FILTROS COM DESTAQUE AMARELO
+// ═══════════════════════════════════════════════════════════
+function atualizarFiltrosAtivos(containerId){
+  const container=document.getElementById(containerId);if(!container)return;
+  container.querySelectorAll('select,input').forEach(el=>{
+    const ativo=String(el.value||'').trim()!=='';
+    el.classList.toggle('sigom-filtro-ativo',ativo);
+  });
+  container.querySelectorAll('.tblFilterRow input').forEach(el=>{
+    el.classList.toggle('sigom-filtro-ativo',String(el.value||'').trim()!=='');
+  });
+}
+function realcar(v,termos){
+  let html=esc(String(v??''));
+  termos.filter(t=>t.length>=2).forEach(t=>{
+    const safe=t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    try{html=html.replace(new RegExp('('+safe+')','gi'),'<span class="sigom-match">$1</span>');}catch(e){}
+  });return html;
+}
+
+// ═══════════════════════════════════════════════════════════
+// NAVEGAÇÃO / RENDER
+// ═══════════════════════════════════════════════════════════
+let charts={};
+function mk(id,type,data,opts){if(charts[id])charts[id].destroy();const el=document.getElementById(id);if(!el)return;
+  charts[id]=new Chart(el,{type,data,options:Object.assign({responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11}}}}},opts||{})});}
+function show(id){
+  ['visao','obj1','s1','s2','obj2','obj3','obj4','obj5','exec'].forEach(t=>document.getElementById(t).classList.toggle('hidden',t!==id));
+  document.querySelectorAll('.tabs button[data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===id));
+}
+function renderAll(){renderVisao();renderObj1();renderObj5();renderExec();renderEstaticos();}
+
+
+// ═══════════════════════════════════════════════════════════
+// OBSERVAÇÕES / AUDITORIA — arquivo externo via servidor
+// Arquivo salvo: Dados/auditoria_objetivos.json
+// ═══════════════════════════════════════════════════════════
+let AUDIT_DATA={};
+let AUDIT_SAVE_TIMER=null;
+let AUDIT_API_OK=false;
+function chaveObraAudit(o){
+  const obj=String((o&&o.objetivoAudit)||'OBJ').replace(/[^A-Za-z0-9_-]/g,'');
+  const op=digits(o&&o.opus);
+  if(op)return obj+'_OPUS_'+op;
+  const c=String((o&&o.contratoObj5)||(o&&o.contrato)||'').replace(/[^A-Za-z0-9_-]/g,'');
+  const d=String((o&&o.nome)||(o&&o.desc)||(o&&o._orig&&o._orig.desc)||'obra').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Za-z0-9]+/g,'_').slice(0,55);
+  return obj+'_'+(c||'SEMCONTRATO')+'_'+d;
+}
+function getAuditItem(k){
+  if(!AUDIT_DATA[k]){
+    AUDIT_DATA[k]={obs:store.get('obj_obs_'+k)||'', auditado:store.get('obj_audit_'+k)==='1', atualizadoEm:null, atualizadoPor:null};
+  }
+  return AUDIT_DATA[k];
+}
+function getAuditObs(k){return getAuditItem(k).obs||'';}
+function getAuditOk(k){return !!getAuditItem(k).auditado;}
+async function carregarAuditoria(){
+  try{
+    const r=await fetch('/api/auditoria',{cache:'no-store'});
+    if(r.ok){const j=await r.json(); if(j&&j.ok){AUDIT_DATA=j.data||{}; AUDIT_API_OK=true; return;}}
+  }catch(e){}
+  AUDIT_API_OK=false;
+}
+function agendarSalvarAuditoria(){
+  if(AUDIT_SAVE_TIMER)clearTimeout(AUDIT_SAVE_TIMER);
+  AUDIT_SAVE_TIMER=setTimeout(salvarAuditoria,450);
+}
+async function salvarAuditoria(){
+  try{
+    const r=await fetch('/api/auditoria',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:AUDIT_DATA})});
+    if(r.ok){AUDIT_API_OK=true; return;}
+  }catch(e){}
+  AUDIT_API_OK=false;
+}
+function setAuditObs(k,v){
+  const it=getAuditItem(k); it.obs=v||''; it.atualizadoEm=new Date().toISOString();
+  const u=getAuthInfo(); it.atualizadoPor=(u&&u.login)||'local';
+  store.set('obj_obs_'+k,it.obs); agendarSalvarAuditoria();
+}
+function setAuditOk(k,v){
+  const it=getAuditItem(k); it.auditado=!!v; it.atualizadoEm=new Date().toISOString();
+  const u=getAuthInfo(); it.atualizadoPor=(u&&u.login)||'local';
+  store.set('obj_audit_'+k,it.auditado?'1':'0'); agendarSalvarAuditoria();
+}
+function toggleAuditOk(k,btn){
+  const ok=!getAuditOk(k);
+  setAuditOk(k,ok);
+  if(btn){btn.classList.toggle('ok',ok);btn.textContent=ok?'OK':'Auditar';btn.title=ok?'Item auditado':'Clique para marcar como auditado';}
+}
+function renderObsAudit(o){
+  const k=chaveObraAudit(o);
+  const obs=esc(getAuditObs(k));
+  const ok=getAuditOk(k);
+  return '<div class="obsAuditWrap">'
+    +'<textarea placeholder="Escrever observação..." oninput="setAuditObs(\''+esc(k)+'\',this.value)">'+obs+'</textarea>'
+    +'<button type="button" class="auditBox '+(ok?'ok':'')+'" onclick="toggleAuditOk(\''+esc(k)+'\',this)" title="'+(ok?'Item auditado':'Clique para marcar como auditado')+'">'+(ok?'OK':'Auditar')+'</button>'
+    +'</div>';
+}
+
+
+// Situação manual — salva no mesmo arquivo externo de auditoria.
+const STATUS_MANUAL_OPTS=[
+  ['', 'Automática'],
+  ['ok','Concluída / Recontratada'],
+  ['prazo','Dentro do prazo / Localizada'],
+  ['adi','Adiantada'],
+  ['aten','Em atenção'],
+  ['atr','Atrasada / Pendente'],
+  ['na','Não localizada']
+];
+const STATUS_LABELS={ok:'CONCLUÍDA',prazo:'DENTRO DO PRAZO',adi:'ADIANTADA',aten:'EM ATENÇÃO',atr:'ATRASADA',na:'NÃO LOCALIZADA'};
+const STATUS_FAROIS={ok:'v',prazo:'v',adi:'b',aten:'a',atr:'r',na:'c'};
+function getSituacaoManual(k){return String(getAuditItem(k).situacaoManual||'');}
+function setSituacaoManual(k,v){
+  const it=getAuditItem(k); it.situacaoManual=v||''; it.atualizadoEm=new Date().toISOString();
+  const u=getAuthInfo(); it.atualizadoPor=(u&&u.login)||'local';
+  store.set('obj_sit_'+k,it.situacaoManual); agendarSalvarAuditoria();
+}
+function carregarSituacaoLegada(k){
+  const it=getAuditItem(k);
+  if(!it.situacaoManual){const v=store.get('obj_sit_'+k); if(v)it.situacaoManual=v;}
+  return it.situacaoManual||'';
+}
+function aplicarSituacaoManual(auto,manual){
+  if(!manual)return auto;
+  return {k:manual,txt:STATUS_LABELS[manual]||auto.txt,farol:STATUS_FAROIS[manual]||auto.farol,manual:true};
+}
+function situacaoFinal(o){
+  const k=chaveObraAudit(o);
+  const manual=carregarSituacaoLegada(k);
+  return aplicarSituacaoManual(situacao(o),manual);
+}
+function renderStatusSelect(o, autoStatus){
+  const k=chaveObraAudit(o);
+  const manual=carregarSituacaoLegada(k);
+  const opts=STATUS_MANUAL_OPTS.map(([v,l])=>'<option value="'+v+'" '+(manual===v?'selected':'')+'>'+l+'</option>').join('');
+  const st=aplicarSituacaoManual(autoStatus,manual);
+  return '<div class="sitEditWrap">'
+    +'<span class="tag '+TAGCLS[st.k]+'">'+st.txt+(st.manual?' *':'')+'</span>'
+    +'<select class="sitManualSelect '+(manual?'manual':'')+'" title="Alterar situação manualmente. Automática usa a regra da planilha." onchange="setSituacaoManual(\''+esc(k)+'\',this.value);this.classList.toggle(\'manual\',!!this.value);renderAll()">'+opts+'</select>'
+    +'</div>';
+}
+function statusObj5Final(o){
+  const auto=statusObj5(o);
+  const k=chaveObraAudit({...o,objetivoAudit:'OBJ5'});
+  const manual=carregarSituacaoLegada(k);
+  if(!manual)return auto;
+  const map={ok:{k:'v',txt:'RECONTRATADA',manual:true},prazo:{k:'b',txt:'LOCALIZADA NA PLANILHA',manual:true},adi:{k:'b',txt:'ADIANTADA / LOCALIZADA',manual:true},aten:{k:'b',txt:'EM ATENÇÃO',manual:true},atr:{k:'r',txt:'PENDENTE / ATRASADA',manual:true},na:{k:'c',txt:'NÃO LOCALIZADA',manual:true}};
+  return map[manual]||auto;
+}
+function renderStatusSelectObj5(o, autoStatus){
+  const k=chaveObraAudit({...o,objetivoAudit:'OBJ5'});
+  const manual=carregarSituacaoLegada(k);
+  const opts=STATUS_MANUAL_OPTS.map(([v,l])=>'<option value="'+v+'" '+(manual===v?'selected':'')+'>'+l+'</option>').join('');
+  const st=statusObj5Final(o); const tag=st.k==='v'?'t-ok':st.k==='b'?'t-adi':st.k==='r'?'t-atr':'t-na';
+  return '<div class="sitEditWrap">'
+    +'<span class="farol f-'+st.k+'"></span><span class="tag '+tag+'">'+st.txt+(st.manual?' *':'')+'</span>'
+    +'<select class="sitManualSelect '+(manual?'manual':'')+'" title="Alterar situação manualmente. Automática usa a regra da planilha." onchange="setSituacaoManual(\''+esc(k)+'\',this.value);this.classList.toggle(\'manual\',!!this.value);renderAll()">'+opts+'</select>'
+    +'</div>';
+}
+function renderStatusObjetivoGlobal(objId, label){
+  const o={objetivoAudit:objId,opus:objId,nome:label};
+  const k=chaveObraAudit(o);
+  const manual=carregarSituacaoLegada(k);
+  const opts=STATUS_MANUAL_OPTS.map(([v,l])=>'<option value="'+v+'" '+(manual===v?'selected':'')+'>'+l+'</option>').join('');
+  return '<div class="objStatusPanel no-print"><label>Situação do '+esc(label)+':</label>'
+    +'<select class="sitManualSelect '+(manual?'manual':'')+'" onchange="setSituacaoManual(\''+esc(k)+'\',this.value);this.classList.toggle(\'manual\',!!this.value)">'+opts+'</select>'
+    +renderObsAudit(o)+'</div>';
+}
+
+// ═══════════════════════════════════════════════════════════
+// TABELA DE OBRAS — FORMATO PORTFÓLIO SIGOM
+// ═══════════════════════════════════════════════════════════
+function tabelaObras(lista, tableId){
+  const tid=tableId||'tbl_'+Math.random().toString(36).slice(2);
+  const head=['Farol','RM','Contratante','Nº OPUS','Obra','Contrato','Empresa','OM','Val. Atual','% Med','% Emp','Saldo NE','Est. rec.','Fim Prazo','Projetado','IDP','Situação','Observações / Auditado'];
+  const dataCols=['_farol','rm','contratante','opus','desc','contrato','empresa','om','vatual','pmed','pemp','saldo','estm','fimprazo','proj','idp','sit','obsAudit'];
+
+  const filterRow='<tr class="tblFilterRow no-print">'+
+    head.map((_,i)=>{
+      if(i===0)return '<th></th>';
+      const col=dataCols[i];
+      return '<th><input data-tbl="'+tid+'" data-dc="'+col+'" placeholder="…" oninput="filtrarTabela(\''+tid+'\')" style="width:100%"></th>';
+    }).join('')+'</tr>';
+
+  const thead='<thead><tr>'+head.map(h=>'<th>'+h+'</th>').join('')+'</tr>'+filterRow+'</thead>';
+
+  const body=lista.map(o=>{const s=situacaoFinal(o);const est=estimativaRecursos(o);const saldo=saldoNE(o);
+    return '<tr data-tblid="'+tid+'">'
+      +'<td><span class="farol f-'+s.farol+'"></span></td>'
+      +'<td>'+(o.rm||'—')+'</td>'
+      +'<td>'+(o.contratante||o.om||'—')+'</td>'
+      +'<td>'+(o.opus||'—')+'</td>'
+      +'<td style="max-width:200px">'+(o.desc||'')+'</td>'
+      +'<td>'+(o.contrato||'—')+'</td>'
+      +'<td>'+(o.empresa||'—')+'</td>'
+      +'<td>'+(o.om||'—')+'</td>'
+      +'<td>'+fmtMi(num(o.vatual))+'</td>'
+      +'<td>'+pct(num(o.pmed))+'</td>'
+      +'<td>'+pct(num(o.pemp))+'</td>'
+      +'<td>'+fmtMi(saldo)+'</td>'
+      +'<td>'+(est!==null?est+' m':'—')+'</td>'
+      +'<td>'+dt(o.fimprazo)+'</td>'
+      +'<td>'+dt(o.proj)+'</td>'
+      +'<td>'+(isNum(num(o.idp))?num(o.idp).toLocaleString('pt-BR',{maximumFractionDigits:2}):'—')+'</td>'
+      +'<td>'+renderStatusSelect(o,situacao(o))+'</td>'
+      +'<td>'+renderObsAudit(o)+'</td>'
+      +'</tr>';}).join('');
+  return'<div class="tblbox" id="'+tid+'_wrap"><table id="'+tid+'">'+thead+'<tbody>'+body+'</tbody></table></div>';
+}
+function filtrarTabela(tid){
+  const inputs=document.querySelectorAll('[data-tbl="'+tid+'"]');
+  const filters={};inputs.forEach(inp=>{const v=String(inp.value||'').toLowerCase().trim();if(v)filters[inp.dataset.dc]=v;});
+  const rows=document.querySelectorAll('[data-tblid="'+tid+'"]');
+  const dataCols=['_farol','rm','contratante','opus','desc','contrato','empresa','om','vatual','pmed','pemp','saldo','estm','fimprazo','proj','idp','sit','obsAudit'];
+  rows.forEach(tr=>{
+    const cells=[...tr.querySelectorAll('td')];
+    let show=true;
+    for(const[dc,q] of Object.entries(filters)){
+      const i=dataCols.indexOf(dc);if(i<0)continue;
+      const txt=cells[i]?cells[i].textContent.toLowerCase():'';
+      if(!txt.includes(q)){show=false;break;}
+    }
+    tr.style.display=show?'':'none';
+  });
+  // Amarelo nos inputs ativos
+  inputs.forEach(inp=>{inp.classList.toggle('sigom-filtro-ativo',String(inp.value||'').trim()!=='');});
+}
+
+function kpisSituacao(lista){
+  const c={ok:0,prazo:0,atr:0,adi:0,aten:0,na:0};lista.forEach(o=>c[situacaoFinal(o).k]++);
+  return [['Total',lista.length,'b'],['Concluídas',c.ok,'v'],['No prazo',c.prazo,'v'],
+    ['Adiantadas',c.adi,'b'],['Atenção',c.aten,'a'],['Atrasadas',c.atr,'r'],['Não loc.',c.na,'c']]
+    .map(([l,v,c2])=>'<div class="kpi '+c2+'"><div class="lbl">'+l+'</div><div class="val">'+v+'</div></div>').join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+// OBJ 01
+// ═══════════════════════════════════════════════════════════
+function renderObj1(){
+  const all=enrich(OBRAS17);
+  const filterId='o1_filtros';
+  document.getElementById('obj1').innerHTML=
+    '<div class="card collapsible" id="cardObj1KPI">'
+    +'<button class="winToggle no-print" onclick="toggleCardCollapse(\'cardObj1KPI\')">—</button>'
+    +'<h2>Objetivo 01 — 17 Obras a Concluir em 2026 (PEEx)</h2>'
+    +'<div class="collapsibleBody">'
+    +'<div class="kpis">'+kpisSituacao(all)+'</div>'
+    +'<div class="filters no-print" id="'+filterId+'">'
+    +'<select id="o1sit" onchange="renderObj1Tab()"><option value="">Situação — todas</option>'
+    +'<option value="ok">Concluída</option><option value="prazo">No prazo</option>'
+    +'<option value="adi">Adiantada</option><option value="aten">Atenção</option>'
+    +'<option value="atr">Atrasada</option><option value="na">Não localizada</option></select>'
+    +'<input id="o1q" placeholder="🔎 buscar OPUS, obra, empresa, contrato…" oninput="renderObj1Tab()">'
+    +'</div></div></div>'
+    +'<div class="card" id="cardObj1Tab"><div id="o1tab"></div></div>';
+  renderObj1Tab();
+}
+function renderObj1Tab(){
+  const all=enrich(OBRAS17);
+  const sit=document.getElementById('o1sit')?.value||'';
+  const q=(document.getElementById('o1q')?.value||'').toLowerCase();
+  const f=all.filter(o=>(!sit||situacaoFinal(o).k===sit)&&(!q||[o.opus,o.desc,o.empresa,o.contrato,o.om,o.rm].join(' ').toLowerCase().includes(q)));
+  document.getElementById('o1tab').innerHTML=tabelaObras(f,'tbl_obj1');
+  atualizarFiltrosAtivos('o1_filtros');
+}
+
+function renderSemestre(div,sem){
+  const all=enrich(OBRAS17.filter(o=>o.semestre===sem));
+  document.getElementById(div).innerHTML=
+    '<div class="card collapsible" id="card_'+div+'">'
+    +'<button class="winToggle no-print" onclick="toggleCardCollapse(\'card_'+div+'\')">—</button>'
+    +'<h2>Objetivo 01 — '+sem+'º Semestre de 2026 ('+all.length+' obras)</h2>'
+    +'<div class="collapsibleBody">'
+    +'<div class="kpis">'+kpisSituacao(all)+'</div>'
+    +tabelaObras(all,'tbl_sem'+sem)+'</div></div>';
+}
+
+// ═══════════════════════════════════════════════════════════
+// OBJ 05 — PARALISADAS
+// ═══════════════════════════════════════════════════════════
+function statusObj5(o){
+  const st=String(o.statusObj5||'');
+  const contratoNovo=/\/2025|\/2026/.test(String(o.contratoObj5||''));
+  if(/recontratad/i.test(st)||contratoNovo)return {k:'v',txt:'RECONTRATADA'};
+  if(o._match&&o.contrato)return {k:'b',txt:'LOCALIZADA NA PLANILHA'};
+  if(o._match)return {k:'b',txt:'LOCALIZADA — CONTRATO PENDENTE'};
+  if(!o.opus&&!o.contratoObj5)return {k:'c',txt:'PENDENTE (informar OPUS/contrato)'};
+  return {k:'r',txt:'NÃO LOCALIZADA NA PLANILHA'};
+}
+function renderObj5(){
+  const all=enrichObj5(PARALISADAS.map(p=>({...p,opus:p.opus||'',objetivoAudit:'OBJ5'})));
+  const body=all.map(o=>{
+    const st=statusObj5Final(o); const tag=st.k==='v'?'t-ok':st.k==='b'?'t-adi':st.k==='r'?'t-atr':'t-na';
+    return '<tr><td>'+o.n+'</td>'
+      +'<td style="min-width:115px">'+esc(o.acao||'—')+'</td>'
+      +'<td style="min-width:190px"><b>'+esc(o.nome||o._orig.nome||'—')+'</b><br><span class="note">'+esc(o._orig.desc||o.desc||'')+'</span></td>'
+      +'<td>'+(o.opus||'—')+'</td>'
+      +'<td>'+(o.contratoObj5||'—')+'</td>'
+      +'<td>'+(o.contrato||'—')+'</td>'
+      +'<td>'+(o.empresa||'—')+'</td>'
+      +'<td>'+fmtR$(num(o.vatual))+'</td>'
+      +'<td>'+pct(o.pmed)+'</td>'
+      +'<td>'+esc(o.statusObj5||'—')+'</td>'
+      +'<td>'+renderStatusSelectObj5(o,statusObj5(o))+'</td>'
+      +'<td>'+renderObsAudit({...o,objetivoAudit:'OBJ5'})+'</td></tr>';}).join('');
+  const total=all.length;
+  const rec=all.filter(o=>statusObj5Final(o).k==='v').length;
+  const loc=all.filter(o=>o._match).length;
+  const pend=all.filter(o=>statusObj5Final(o).k==='r'||statusObj5Final(o).k==='c').length;
+  document.getElementById('obj5').innerHTML=
+    '<div class="card collapsible" id="cardObj5">'
+    +'<button class="winToggle no-print" onclick="toggleCardCollapse(\'cardObj5\')">—</button>'
+    +'<h2>Objetivo 05 — Obras Paralisadas / Recontratação</h2>'
+    +'<div class="collapsibleBody">'
+    +'<div class="kpis">'
+    +'<div class="kpi b"><div class="lbl">Total na lista Obj 05</div><div class="val">'+total+'</div></div>'
+    +'<div class="kpi v"><div class="lbl">Recontratadas</div><div class="val">'+rec+'</div></div>'
+    +'<div class="kpi b"><div class="lbl">Localizadas na planilha</div><div class="val">'+loc+'</div></div>'
+    +'<div class="kpi a"><div class="lbl">Pendentes / revisar</div><div class="val">'+pend+'</div></div>'
+    +'<div class="kpi a"><div class="lbl">% Recontratação</div><div class="val">'+Math.round(rec/total*100)+'%</div></div>'
+    +'</div>'
+    +'<div class="note" style="margin-bottom:8px">Cruzamento: 1º OPUS, 2º contrato informado do Obj 05, 3º descrição/nome da obra. A planilha consolidada pode conter os Objetivos 1 e 5 juntos.</div>'
+    +'<div class="tblbox"><table><thead><tr>'
+    +'<th>Nr</th><th>Ação PEEx</th><th>Nome / Obra</th><th>Nº OPUS Obj 05</th><th>Contrato Obj 05</th><th>Contrato Planilha</th><th>Empresa</th><th>Valor Atual</th><th>% Med</th><th>Status informado</th><th>Situação</th><th>Observações / Auditado</th>'
+    +'</tr></thead><tbody>'+body+'</tbody></table></div></div></div>';
+}
+
+// ═══════════════════════════════════════════════════════════
+// VISÃO GERAL
+// ═══════════════════════════════════════════════════════════
+function renderVisao(){
+  const o1=enrich(OBRAS17);const c1=o1.filter(o=>situacaoFinal(o).k==='ok').length;
+  const s1=o1.filter(o=>o.semestre===1),s2=o1.filter(o=>o.semestre===2);
+  const c1s1=s1.filter(o=>situacaoFinal(o).k==='ok').length,c1s2=s2.filter(o=>situacaoFinal(o).k==='ok').length;
+  const p5=enrichObj5(PARALISADAS.map(p=>({...p,opus:p.opus||''})));const rec=p5.filter(o=>statusObj5Final(o).k==='v').length;
+  document.getElementById('visao').innerHTML=
+    '<div class="card collapsible" id="cardVisaoObjs">'
+    +'<button class="winToggle no-print" onclick="toggleCardCollapse(\'cardVisaoObjs\')">—</button>'
+    +'<h2>Visão Geral dos Objetivos e Metas 2026</h2>'
+    +'<div class="collapsibleBody">'
+    +'<div class="objgrid">'
+    +objCard('o1','Objetivo 01','Concluir 17 obras do PEEx',c1+'/17 concluídas',c1>=17?'v':c1>0?'a':'c')
+    +objCard('o2','Objetivo 02','Cancelar no máx. 5% dos RP','Dados pendentes','c')
+    +objCard('o3','Objetivo 03','Liquidar ≥ 75% dos créditos','Dados pendentes','c')
+    +objCard('o4','Objetivo 04','Projetar e licitar 38 usinas FV','Importar base FV','c')
+    +objCard('o5','Objetivo 05','Recontratar obras paralisadas',rec+'/'+p5.length+' recontratadas',rec>=p5.length?'v':rec>0?'a':'c')
+    +'</div></div></div>'
+    +'<div class="kpis">'
+    +kpi('Obj 01 concluídas',c1+' / 17','v')
+    +kpi('1º Sem. concluídas',c1s1+' / '+s1.length,'b')
+    +kpi('2º Sem. concluídas',c1s2+' / '+s2.length,'b')
+    +kpi('Atrasadas (Obj 01)',o1.filter(o=>situacaoFinal(o).k==='atr').length,'r')
+    +kpi('Em atenção (Obj 01)',o1.filter(o=>situacaoFinal(o).k==='aten').length,'a')
+    +kpi('Paralisadas recontr.',rec+' / '+p5.length,'b')
+    +'</div>';
+}
+function objCard(cls,num2,titulo,meta,farol){
+  return '<div class="obj '+cls+'"><span class="num">'+num2+'</span><b>'+titulo+'</b>'
+    +'<div class="meta">'+meta+'</div><div class="situ"><span class="farol f-'+farol+'"></span>'+(farol==='v'?'No alvo':farol==='a'?'Atenção':farol==='r'?'Crítico':'Aguardando dados')+'</div></div>';
+}
+function kpi(l,v,c){return '<div class="kpi '+c+'"><div class="lbl">'+l+'</div><div class="val">'+v+'</div></div>';}
+
+// ═══════════════════════════════════════════════════════════
+// PAINEL EXECUTIVO
+// ═══════════════════════════════════════════════════════════
+function renderExec(){
+  const o1=enrich(OBRAS17).filter(o=>o._match);
+  const comp=o1.slice().sort((a,b)=>(num(b.vatual)||0)-(num(a.vatual)||0));
+  document.getElementById('exec').innerHTML=
+    '<div class="card collapsible" id="cardExec">'
+    +'<button class="winToggle no-print" onclick="toggleCardCollapse(\'cardExec\')">—</button>'
+    +'<h2>Painel Executivo — Objetivo 01</h2>'
+    +'<div class="collapsibleBody">'
+    +'<div class="grid2">'
+    +'<div class="card" style="margin:0"><h3>Execução física (% medido)</h3><div class="chartbox"><canvas id="exMed"></canvas></div></div>'
+    +'<div class="card" style="margin:0"><h3>Distribuição do IDP</h3><div class="chartbox"><canvas id="exIDP"></canvas></div></div>'
+    +'</div>'
+    +'<div class="card" style="margin:14px 0 0"><h3>Financeiro — Valor Atual × NE × NF (R$ Mi)</h3><div class="chartbox"><canvas id="exFin"></canvas></div></div>'
+    +'</div></div>';
+  if(!o1.length)return;
+  const lbl=comp.map(o=>String(o.desc||o.opus||'').slice(0,22));
+  mk('exMed','bar',{labels:lbl,datasets:[{label:'% Medido',data:comp.map(o=>pctNum(o.pmed)),
+    backgroundColor:comp.map(o=>{const p=pctNum(o.pmed);return p>=100?'#70ad47':p>=50?'#2e75b6':'#e67e22'})}]},
+    {indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{max:100,ticks:{callback:v=>v+'%'}}}});
+  const b=[0,0,0,0];o1.forEach(o=>{const v=num(o.idp);if(!isNum(v))return;if(v<0.7)b[0]++;else if(v<0.85)b[1]++;else if(v<=1)b[2]++;else b[3]++;});
+  mk('exIDP','bar',{labels:['< 0,7','0,7–0,85','0,85–1','> 1'],datasets:[{data:b,backgroundColor:['#c00000','#e67e22','#70ad47','#2e75b6']}]},
+    {plugins:{legend:{display:false}},scales:{y:{ticks:{stepSize:1}}}});
+  mk('exFin','bar',{labels:lbl,datasets:[
+    {label:'Valor Atual',data:comp.map(o=>+((num(o.vatual)||0)/1e6).toFixed(2)),backgroundColor:'#1e4e79'},
+    {label:'NE',data:comp.map(o=>+((num(o.ne)||0)/1e6).toFixed(2)),backgroundColor:'#2e75b6'},
+    {label:'NF',data:comp.map(o=>+((num(o.nf)||0)/1e6).toFixed(2)),backgroundColor:'#70ad47'}]},
+    {scales:{x:{ticks:{display:false}}}});
+}
+
+// ═══════════════════════════════════════════════════════════
+// ESTÁTICOS (OBJ 02, 03, 04, SEMESTRES)
+// ═══════════════════════════════════════════════════════════
+function tipoFV(desc){const d=String(desc||'').toLowerCase();
+  if(/constru[çc][aã]o\s*\/\s*(usina|instala)/.test(d)||(/usina fotovolt/.test(d)&&/constru/.test(d)))return 'Construção / Usina';
+  if(/aquisi[çc][aã]o e instala/.test(d))return 'Aquisição e Instalação';
+  if(/adequa/.test(d))return 'Adequação';if(/aquisi/.test(d))return 'Aquisição';
+  if(/constru/.test(d))return 'Construção / Usina';return 'Outros';}
+const FV_CORES={'Construção / Usina':'#1e4e79','Aquisição e Instalação':'#2e75b6','Adequação':'#e67e22','Aquisição':'#70ad47','Outros':'#8aa3bd'};
+function listaFV(){return DB.filter(o=>/fotovolt|usina/i.test(String(o.desc||''))).map(o=>({...o,tipo:tipoFV(o.desc)}));}
+function renderObj4(){
+  const META=38,fv=listaFV();
+  const concl=fv.filter(o=>{const p=pctNum(o.pmed);return isNum(p)&&p>=100}).length;
+  const prog=Math.min(100,Math.round(fv.length/META*100));
+  let html='<div class="card collapsible" id="cardObj4">'
+    +'<button class="winToggle no-print" onclick="toggleCardCollapse(\'cardObj4\')">—</button>'
+    +'<h2>Objetivo 04 — Sistemas Fotovoltaicos do EB</h2>'
+    +'<div class="collapsibleBody">';
+  if(!DB.length){html+='<div class="pend">Sem dados. Abra pelo dashboard SIGOM ou anexe a planilha.</div></div></div>';
+    document.getElementById('obj4').innerHTML=html;return;}
+  if(!fv.length){html+='<div class="pend">Nenhuma obra fotovoltaica localizada na planilha.</div></div></div>';
+    document.getElementById('obj4').innerHTML=html;return;}
+  const porTipo={};fv.forEach(o=>porTipo[o.tipo]=(porTipo[o.tipo]||0)+1);
+  const invest=fv.reduce((a,o)=>a+(num(o.vatual)||0),0);
+  html+='<div class="kpis">'
+    +kpi('Meta 2026','38 usinas','b')+kpi('Identificadas',fv.length,fv.length>=META?'v':'a')
+    +kpi('Concluídas (100%)',concl,'v')+kpi('Em andamento',fv.length-concl,'a')
+    +kpi('Investimento (Val. Atual)',fmtMi(invest),'b')+'</div>'
+    +'<div class="card" style="margin:0 0 14px"><h3>Progresso — '+fv.length+'/'+META+' ('+prog+'%)</h3>'
+    +'<div style="background:#e4ecf4;border-radius:20px;height:24px;overflow:hidden">'
+    +'<div style="height:100%;width:'+prog+'%;background:'+(prog>=100?'#70ad47':prog>=60?'#2e75b6':'#e67e22')+';color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:12px">'+prog+'%</div>'
+    +'</div></div>'
+    +'<div class="grid2" style="margin-bottom:14px">'
+    +'<div class="card" style="margin:0"><h3>Por tipo</h3><div class="chartbox"><canvas id="fvTipo"></canvas></div></div>'
+    +'<div class="card" style="margin:0"><h3>Quantidade por tipo</h3><div class="tblbox" style="max-height:260px"><table><thead><tr><th>Tipo</th><th>Qtd</th><th>Valor Atual</th></tr></thead><tbody>';
+  Object.keys(FV_CORES).filter(t=>porTipo[t]).forEach(t=>{
+    const sub=fv.filter(o=>o.tipo===t),v=sub.reduce((a,o)=>a+(num(o.vatual)||0),0);
+    html+='<tr><td><span class="farol" style="background:'+FV_CORES[t]+'"></span>'+t+'</td><td>'+porTipo[t]+'</td><td>'+fmtMi(v)+'</td></tr>';});
+  html+='</tbody></table></div></div></div>'
+    +'<div class="card" style="margin:0"><h3>Detalhamento</h3>'
+    +'<div class="filters no-print"><select id="fvFiltro" onchange="renderObj4Tab()"><option value="">Tipo — todos</option>'
+    +Object.keys(FV_CORES).filter(t=>porTipo[t]).map(t=>'<option value="'+t+'">'+t+'</option>').join('')+'</select>'
+    +'<input id="fvBusca" placeholder="🔎 buscar…" oninput="renderObj4Tab()"></div>'
+    +'<div id="fvTab"></div></div></div>';
+  document.getElementById('obj4').innerHTML=html;
+  const tipos=Object.keys(FV_CORES).filter(t=>porTipo[t]);
+  mk('fvTipo','bar',{labels:tipos,datasets:[{label:'Usinas',data:tipos.map(t=>porTipo[t]),backgroundColor:tipos.map(t=>FV_CORES[t])}]},
+    {indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{stepSize:1}}}});
+  renderObj4Tab();
+}
+function renderObj4Tab(){
+  const fv=listaFV();
+  const ft=document.getElementById('fvFiltro')?.value||'',q=(document.getElementById('fvBusca')?.value||'').toLowerCase();
+  const f=fv.filter(o=>(!ft||o.tipo===ft)&&(!q||[o.desc,o.om,o.empresa].join(' ').toLowerCase().includes(q)));
+  const body=f.map(o=>{const oo={...o,objetivoAudit:'OBJ4'}; const p=pctNum(o.pmed); const auto=isNum(p)&&p>=100?{k:'ok',txt:'CONCLUÍDA',farol:'v'}:isNum(p)&&p>0?{k:'prazo',txt:'EM ANDAMENTO',farol:'v'}:{k:'na',txt:'INICIAL',farol:'c'};
+    return '<tr><td><span class="farol" style="background:'+FV_CORES[o.tipo]+'"></span>'+o.tipo+'</td><td>'+esc(o.desc||'—')+'</td><td>'+(o.om||'—')+'</td><td>'+(o.rm||'—')+'</td><td>'+(o.empresa||'—')+'</td><td>'+fmtMi(num(o.vatual))+'</td><td>'+pct(num(o.pmed))+'</td><td>'+renderStatusSelect(oo,auto)+'</td><td>'+renderObsAudit(oo)+'</td></tr>';}).join('');
+  document.getElementById('fvTab').innerHTML='<div class="tblbox" style="max-height:380px"><table><thead><tr><th>Tipo</th><th>Descrição</th><th>OM</th><th>RM</th><th>Empresa</th><th>Valor Atual</th><th>% Med</th><th>Situação</th><th>Observações / Auditado</th></tr></thead><tbody>'+(body||'<tr><td colspan=9 class="note" style="text-align:center;padding:14px">Nenhuma usina para o filtro.</td></tr>')+'</tbody></table></div>';
+}
+function renderEstaticos(){
+  renderSemestre('s1',1);renderSemestre('s2',2);
+  document.getElementById('obj2').innerHTML='<div class="card collapsible" id="cardObj2"><button class="winToggle no-print" onclick="toggleCardCollapse(\'cardObj2\')">—</button><h2>Objetivo 02 — Restos a Pagar</h2><div class="collapsibleBody"><div class="kpis">'+kpi('Meta de cancelamento','≤ 5%','b')+kpi('Total de RP','Pendente','c')+kpi('Valor cancelado','Pendente','c')+kpi('% Cancelado','—','c')+'</div><div class="pend"><b>Dados pendentes de integração com SG2, SIAFI/SIAFE e SAG.</b><br>Painel preparado para receber a base de RP. Quando importada, mostrará: total, valor cancelado, % cancelado (verde ≤5%, amarelo 4–5%, vermelho >5%), gráfico de evolução e tabela por ação orçamentária e OM.</div>'+renderStatusObjetivoGlobal('OBJ2','Objetivo 02')+'</div></div>';
+  document.getElementById('obj3').innerHTML='<div class="card collapsible" id="cardObj3"><button class="winToggle no-print" onclick="toggleCardCollapse(\'cardObj3\')">—</button><h2>Objetivo 03 — Liquidação de Créditos Recebidos</h2><div class="collapsibleBody"><div class="kpis">'+kpi('Meta de liquidação','≥ 75%','b')+kpi('Créditos recebidos','Pendente','c')+kpi('Créditos liquidados','Pendente','c')+kpi('% Liquidado','—','c')+'</div><div class="pend"><b>Dados pendentes de integração com SG2, SIAFI/SIAFE e SAG.</b><br>Painel preparado para: créditos recebidos, empenhados e liquidados, % liquidado com farol. Casar SG2 com SIAFE e SAG na importação.</div>'+renderStatusObjetivoGlobal('OBJ3','Objetivo 03')+'</div></div>';
+  renderObj4();
+  initCollapsible();
+}
+
+// ═══════════════════════════════════════════════════════════
+// GRUPOS DE OBRAS
+// ═══════════════════════════════════════════════════════════
+let GRUPOS=(()=>{try{return JSON.parse(store.get('obj_grupos')||'{}')}catch(e){return{}}})();
+function salvarGrupos(){store.set('obj_grupos',JSON.stringify(GRUPOS));}
+function abrirGrupos(){
+  const nomes=Object.keys(GRUPOS).sort();
+  let html='<div class="ovl-head"><span>🗂 Grupos de Obras</span><button class="ovl-x" onclick="fecharOverlay()">✕</button></div>';
+  if(!isAdmin()){
+    html+='<div class="note" style="margin-bottom:10px">Apenas administradores podem criar/excluir grupos. Você pode visualizar os grupos existentes.</div>';
+  } else {
+    html+='<div style="display:flex;gap:8px;margin-bottom:12px">'
+      +'<input id="novoGrpNome" placeholder="Nome do novo grupo" style="flex:1;padding:8px;border:1px solid #c4d3e3;border-radius:8px">'
+      +'<input id="novoGrpDesc" placeholder="Descrição (opcional)" style="flex:1;padding:8px;border:1px solid #c4d3e3;border-radius:8px">'
+      +'<button class="btn green sm" onclick="criarGrupoOBJ()">+ Criar</button></div>';
+  }
+  if(nomes.length){
+    html+='<div class="grpList">';
+    nomes.forEach(n=>{const g=GRUPOS[n];const qtd=(g.obras||[]).length;
+      html+='<div class="grpItem"><div><div class="grpNome">'+esc(n)+'</div>'
+        +(g.descricao?'<div class="grpQtd">'+esc(g.descricao)+'</div>':'')
+        +'</div><div class="grpQtd">'+qtd+' obras</div>'
+        +(isAdmin()?'<button class="btn gray sm" onclick="excluirGrupo(\''+esc(n)+'\')">🗑</button>':'')
+        +'</div>';});
+    html+='</div>';
+  } else {
+    html+='<div class="pend">Nenhum grupo criado ainda.</div>';
+  }
+  document.getElementById('ovlGrupos').innerHTML='<div class="ovl-card">'+html+'</div>';
+  document.getElementById('ovlGrupos').classList.remove('hidden');
+}
+function fecharOverlay(){document.getElementById('ovlGrupos').classList.add('hidden');}
+document.getElementById('ovlGrupos').addEventListener('click',e=>{if(e.target===document.getElementById('ovlGrupos'))fecharOverlay();});
+function criarGrupoOBJ(){
+  const nome=document.getElementById('novoGrpNome').value.trim();
+  if(!nome){alert('Informe o nome do grupo.');return;}
+  if(GRUPOS[nome]){alert('Já existe um grupo com esse nome.');return;}
+  const desc=document.getElementById('novoGrpDesc').value.trim();
+  const u=getAuthInfo();
+  GRUPOS[nome]={descricao:desc,criadoEm:new Date().toISOString(),criadoPor:(u&&u.login)||'—',obras:[]};
+  salvarGrupos();abrirGrupos();
+}
+function excluirGrupo(nome){
+  if(!confirm('Excluir grupo "'+nome+'"?'))return;
+  delete GRUPOS[nome];salvarGrupos();abrirGrupos();
+}
+
+// ═══════════════════════════════════════════════════════════
+// EXPORTAR PPTX
+// ═══════════════════════════════════════════════════════════
+function exportarPPTX(){
+  if(typeof PptxGenJS==='undefined'){alert('Biblioteca PPTX não carregada.');return;}
+  const all=enrich(OBRAS17);
+  const prs=new PptxGenJS();
+  prs.layout='LAYOUT_WIDE';
+
+  // Slide capa
+  const capa=prs.addSlide();
+  capa.background={fill:'1E4E79'};
+  capa.addText('Objetivos e Metas 2026 — DOM/DEC',{x:0.5,y:1.2,w:12,h:1,fontSize:32,bold:true,color:'FFFFFF',align:'center'});
+  capa.addText('PEEx 2024-2027 · Exército Brasileiro',{x:0.5,y:2.4,w:12,h:0.6,fontSize:18,color:'9DC3E6',align:'center'});
+  capa.addText(new Date().toLocaleDateString('pt-BR'),{x:0.5,y:6.8,w:12,h:0.4,fontSize:12,color:'9DC3E6',align:'center'});
+
+  // Slide sumário
+  const sts={ok:0,prazo:0,atr:0,adi:0,aten:0,na:0};
+  all.forEach(o=>sts[situacaoFinal(o).k]++);
+  const sum=prs.addSlide();
+  sum.background={fill:'F7FAFC'};
+  sum.addText('Objetivo 01 — 17 Obras — Sumário',{x:0.4,y:0.3,w:12,h:0.6,fontSize:20,bold:true,color:'1E4E79'});
+  const kd=[['Concluídas',sts.ok,'70AD47'],['No prazo',sts.prazo,'2E75B6'],
+    ['Adiantadas',sts.adi,'1E4E79'],['Atenção',sts.aten,'E67E22'],['Atrasadas',sts.atr,'C00000'],['Não loc.',sts.na,'8AA3BD']];
+  kd.forEach((k,i)=>{
+    sum.addShape(prs.ShapeType.roundRect,{x:0.4+i*2.1,y:1.1,w:1.9,h:1.1,fill:{color:k[2]},radius:8});
+    sum.addText(String(k[1]),{x:0.4+i*2.1,y:1.2,w:1.9,h:0.5,fontSize:24,bold:true,color:'FFFFFF',align:'center'});
+    sum.addText(k[0],{x:0.4+i*2.1,y:1.7,w:1.9,h:0.4,fontSize:9,color:'FFFFFF',align:'center'});
+  });
+
+  // Tabela de obras
+  const tbl=prs.addSlide();
+  tbl.background={fill:'F7FAFC'};
+  tbl.addText('Objetivo 01 — Situação das 17 Obras ('+new Date().toLocaleDateString('pt-BR')+')',{x:0.4,y:0.2,w:12,h:0.5,fontSize:14,bold:true,color:'1E4E79'});
+  const rows=[
+    [{text:'Ord',options:{bold:true,fill:'1E4E79',color:'FFFFFF',fontSize:9}},
+     {text:'OPUS',options:{bold:true,fill:'1E4E79',color:'FFFFFF',fontSize:9}},
+     {text:'Iniciativa',options:{bold:true,fill:'1E4E79',color:'FFFFFF',fontSize:9}},
+     {text:'% Med',options:{bold:true,fill:'1E4E79',color:'FFFFFF',fontSize:9}},
+     {text:'Val. Atual',options:{bold:true,fill:'1E4E79',color:'FFFFFF',fontSize:9}},
+     {text:'Fim Prazo',options:{bold:true,fill:'1E4E79',color:'FFFFFF',fontSize:9}},
+     {text:'Situação',options:{bold:true,fill:'1E4E79',color:'FFFFFF',fontSize:9}}]
+  ];
+  all.forEach(o=>{const s=situacaoFinal(o);const cor=s.k==='ok'?'70AD47':s.k==='atr'?'C00000':s.k==='aten'?'E67E22':s.k==='adi'?'1E4E79':'2E75B6';
+    rows.push([
+      {text:String(o.ord||''),options:{fontSize:8}},
+      {text:String(o.opus||'—'),options:{fontSize:8}},
+      {text:String(o._orig.iniciativa||'').slice(0,60),options:{fontSize:7}},
+      {text:pct(num(o.pmed)),options:{fontSize:8,align:'center'}},
+      {text:fmtMi(num(o.vatual)),options:{fontSize:8}},
+      {text:dt(o.fimprazo),options:{fontSize:8}},
+      {text:s.txt,options:{fontSize:8,color:'FFFFFF',fill:cor,align:'center'}}
+    ]);
+  });
+  tbl.addTable(rows,{x:0.3,y:0.9,w:12.7,colW:[0.4,1.2,4.2,0.7,1.1,0.9,1.2],border:{pt:0.5,color:'C4D3E3'}});
+
+  // Slide por semestre
+  [1,2].forEach(sem=>{
+    const sl=prs.addSlide();sl.background={fill:'F7FAFC'};
+    sl.addText(sem+'º Semestre 2026',{x:0.4,y:0.2,w:12,h:0.5,fontSize:18,bold:true,color:'1E4E79'});
+    const lst=all.filter(o=>o._orig.semestre===sem);
+    const rows2=[[
+      {text:'OPUS',options:{bold:true,fill:'1E4E79',color:'FFFFFF',fontSize:9}},
+      {text:'Iniciativa',options:{bold:true,fill:'1E4E79',color:'FFFFFF',fontSize:9}},
+      {text:'% Med',options:{bold:true,fill:'1E4E79',color:'FFFFFF',fontSize:9}},
+      {text:'Situação',options:{bold:true,fill:'1E4E79',color:'FFFFFF',fontSize:9}}
+    ]];
+    lst.forEach(o=>{const s=situacaoFinal(o);const cor=s.k==='ok'?'70AD47':s.k==='atr'?'C00000':s.k==='aten'?'E67E22':'2E75B6';
+      rows2.push([
+        {text:String(o.opus||''),options:{fontSize:9}},
+        {text:String(o._orig.iniciativa||'').slice(0,70),options:{fontSize:8}},
+        {text:pct(num(o.pmed)),options:{fontSize:9,align:'center'}},
+        {text:s.txt,options:{fontSize:9,color:'FFFFFF',fill:cor,align:'center'}}
+      ]);});
+    sl.addTable(rows2,{x:0.4,y:0.9,w:12.5,colW:[1.2,7.8,1.0,2.5],border:{pt:0.5,color:'C4D3E3'}});
+  });
+
+  prs.writeFile({fileName:'OBJ_Metas_2026_'+new Date().toISOString().slice(0,10)+'.pptx'});
+}
+
+// ═══════════════════════════════════════════════════════════
+// LOGOS DO SERVIDOR
+// ═══════════════════════════════════════════════════════════
+(async function iniciarDashboardOBJ(){
+  await carregarAuditoria();
+  renderEstaticos();renderVisao();renderObj1();renderObj5();renderExec();
+  autoCarregar();
+})();
+</script>
+</body>
+</html>
