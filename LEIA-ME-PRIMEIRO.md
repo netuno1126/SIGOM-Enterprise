@@ -84,13 +84,39 @@ Limitações desta primeira adaptação:
   tabela `obras_paralisadas` pronta no schema) ainda não foram
   adaptados — ficam para uma próxima etapa.
 
+## V31.3 — Login público removido do dashboard clássico + limpar dados
+
+**Login público removido.** `index.html`, `SIGOM_Mobile.html` e
+`objetivos.html` (em `public/legado/`) não têm mais login próprio nem a
+senha padrão embutida no código (`APGDOM`/`bemamigos`, `admin`/`sigom2024`
+etc.). Agora eles verificam a sessão do Supabase (a mesma conta usada no
+Painel v31): se você já está logado, entram direto; se não, mandam para
+`/index.html` para fazer login por lá (com MFA quando você ativar).
+Cadastro de usuário e troca de senha nesses arquivos também foram
+redirecionados para a página Administração do Painel — é lá que continua
+sendo feito, exatamente como você pediu.
+
+**Novo: apagar dados de uma tabela.** Painel → Administração →
+Importação de dados → card "🗑 Limpar dados". Escolha a tabela, digite
+`APAGAR` para confirmar e um administrador pode zerar os registros de
+qualquer uma das tabelas do SIGOM (obras, grupos, FIO, portfólio, saldos,
+nomes de obra, obras paralisadas, auditoria, importações). Apaga só os
+dados — a tabela continua existindo. Fica registrado em
+`auditoria_logs`. Backend: `netlify/functions/admin-clear-table.mjs`
+(lista fechada de tabelas permitidas, exige token de administrador).
+
+**MFA (autenticação em dois fatores):** já existe pronto no Painel v31
+(tela de login → "Configurar autenticador"). Quando quiser ativar para
+todo mundo, é só cada usuário habilitar na própria conta.
+
 ## V31.2 — Dashboard clássico funcionando online (sem alterar nenhum HTML seu)
 
 Seus arquivos `index.html`, `objetivos.html`, `fio_slide_SIGOM.html` e
 `SIGOM_Mobile.html` (layout, FIO, geração de FIO, Objetivos e Metas — tudo
 igual ao que você já usa) agora ficam publicados em `public/legado/`,
-**sem nenhuma alteração no código deles**. Acesse pelo botão "Dashboard
-clássico" no topo do Painel (abre em nova aba) ou direto em `/legado/index.html`.
+**sem nenhuma alteração no código deles** (exceto o login, corrigido na
+V31.3 acima). Acesse pelo botão "Dashboard clássico" no topo do Painel
+(abre em nova aba) ou direto em `/legado/index.html`.
 
 Duas Netlify Functions novas fazem esses arquivos conversarem com o
 Supabase, respondendo exatamente como o servidor local sempre respondeu —
@@ -108,26 +134,20 @@ já existem (`grupos`, `grupo_obras`, `obras`, `fio_edicoes`):
   de FIO do Painel (que usa `conteudo.status/summary/...`). As duas telas
   compartilham a tabela e o histórico de versão, mas não se sobrescrevem.
 
-**O que continua funcionando sem precisar de nada extra** (o próprio
-dashboard já tinha isso pronto):
-- Login: se `/api/login` não responder, ele cai automaticamente no acesso
-  local `APGDOM` / `bemamigos` (perfil Administrador). Como o arquivo
-  agora fica público na internet, considere trocar essa senha padrão ou
-  me avisar para eu implementar `/api/login` de verdade contra o Supabase.
-- Planilha de obras: se `/api/xlsx?folder=` não responder (não implementei
-  essa função nesta etapa), o dashboard mostra o aviso já existente e
-  você escolhe o arquivo manualmente pelo botão "📂 Planilha de obras" —
-  nada quebra, só deixa de ser automático.
+**Planilha de obras**: se `/api/xlsx?folder=` não responder (não
+implementei essa função), o dashboard mostra o aviso já existente e você
+escolhe o arquivo manualmente pelo botão "📂 Planilha de obras" — nada
+quebra, só deixa de ser automático.
 
-**Não implementado nesta etapa** (endpoints que o dashboard usa mas que
-dependiam só do seu servidor local): `/api/users`, `/api/change-password`,
-`/api/xlsx`, `/api/shutdown`, `/api/session-heartbeat`. Se algum desses
-for importante para o uso online, me avise que eu crio as functions
-correspondentes.
+**Não implementado** (endpoints que dependiam só do servidor local, sem
+relação com grupos/FIO/login): `/api/xlsx`, `/api/shutdown`,
+`/api/session-heartbeat`. Avise se algum for importante para o uso online.
 
 Importação de grupos gerados por fora continua no mesmo lugar de sempre:
 Administração → Importação de dados → "Importar grupos antigos" (lê
 `grupos_obras.json`, mesmo formato que `grupos.mjs` também entende).
+
+## V31.1 — Persistência de Portfólio, Saldos Alongados e Nomes de Obra
 
 Execute no Supabase SQL Editor (depois de `01_schema_rls.sql`):
 
