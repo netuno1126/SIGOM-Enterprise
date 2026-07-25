@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Objetivos e Metas 2026 — DOM</title>
+<script src="/config.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pptxgenjs/3.12.0/pptxgen.bundle.js"></script>
@@ -330,96 +331,22 @@ const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},se
 //   2) usuários salvos no localStorage do SIGOM;
 //   3) arquivo Usuarios/usuarios.json, se o dashboard estiver servido por HTTP;
 //   4) usuários locais de emergência.
-const USERS_OBJ=[
-  {login:'admin',senha:'sigom2024',nome:'Administrador',perfil:'admin'},
-  {login:'dom',senha:'dom2024',nome:'DOM',perfil:'usuario'},
-  {login:'dec',senha:'dec2024',nome:'DEC',perfil:'usuario'},
-  {login:'viewer',senha:'viewer',nome:'Visualizador',perfil:'viewer'}
-];
 const AUTH_KEYS_OBJ=['obj_auth','sigom_auth','sigom_user','auth_sigom'];
-const USER_KEYS_SIGOM=['sigom_users','sigom_usuarios','usuarios_sigom','SIGOM_USERS','users','usuarios'];
 let authUser=null;
 
 function getAuthInfo(){
-  // Compatibilidade com o SIGOM: quando aberto a partir do dashboard_SIGOM.html,
-  // o usuário logado é copiado para localStorage; em alguns navegadores também
-  // pode existir em sessionStorage.
+  // Compatibilidade: quando aberto a partir do index.html do SIGOM (mesma
+  // aba/sessão), o login Supabase já fica em sessionStorage.sigom_auth_user.
   try{const su=JSON.parse(sessionStorage.getItem('sigom_auth_user')||'null');if(su&&(su.login||su.user)){return {login:su.login||su.user,nome:su.nome||su.name||su.login||su.user,perfil:su.perfil||su.role||'Usuário',sessionId:su.sessionId||su.sessao||''};}}catch(e){}
   for(const k of AUTH_KEYS_OBJ){
     try{const u=JSON.parse(store.get(k)||'null');if(u&&(u.login||u.user))return {login:u.login||u.user,nome:u.nome||u.name||u.login||u.user,perfil:u.perfil||u.role||'Usuário',sessionId:u.sessionId||u.sessao||''};}catch(e){}
   }
   return null;
 }
-function isAdmin(){const u=getAuthInfo();return u&&(u.perfil==='admin'||u.perfil==='auditor'||u.role==='admin');}
-function normalizaUsuario(u){
-  if(!u)return null;
-  const login=String(u.login||u.usuario||u.user||u.email||'').trim().toLowerCase();
-  const senha=String(u.senha||u.password||u.pass||'');
-  if(!login)return null;
-  return {login,senha,nome:u.nome||u.name||u.displayName||login,perfil:u.perfil||u.role||u.tipo||'usuario'};
-}
-function extrairListaUsuarios(obj){
-  if(!obj)return [];
-  if(Array.isArray(obj))return obj;
-  if(Array.isArray(obj.usuarios))return obj.usuarios;
-  if(Array.isArray(obj.users))return obj.users;
-  if(typeof obj==='object')return Object.keys(obj).map(k=>({login:k,...obj[k]}));
-  return [];
-}
-function usuariosDoLocalStorage(){
-  let out=[];
-  for(const k of USER_KEYS_SIGOM){
-    try{out=out.concat(extrairListaUsuarios(JSON.parse(store.get(k)||'null')).map(normalizaUsuario).filter(Boolean));}catch(e){}
-  }
-  return out;
-}
-async function usuariosDoArquivoSIGOM(){
-  const candidatos=['Usuarios/usuarios.json','Usuarios/users.json','usuarios.json','users.json'];
-  for(const p of candidatos){
-    try{
-      const r=await fetch(p,{cache:'no-store'});
-      if(!r.ok)continue;
-      const j=await r.json();
-      const lista=extrairListaUsuarios(j).map(normalizaUsuario).filter(Boolean);
-      if(lista.length)return lista;
-    }catch(e){}
-  }
-  return [];
-}
+function isAdmin(){const u=getAuthInfo();const p=String((u&&u.perfil)||'').toLowerCase();return p.includes('admin')||p.includes('auditor');}
 
-async function tentarLoginAPI(login,senha){
-  try{
-    const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({login,senha})});
-    if(!r.ok)return null;
-    const j=await r.json();
-    if(j&&j.ok)return {login,nome:j.nome||login,perfil:j.perfil||'usuario'};
-  }catch(e){}
-  return null;
-}
-
-document.getElementById('loginForm').addEventListener('submit',async e=>{
-  e.preventDefault();
-  const login=document.getElementById('loginUser').value.trim().toLowerCase();
-  const senha=document.getElementById('loginPass').value;
-  document.getElementById('loginMsg').textContent='Verificando credenciais...';
-
-  const apiUser=await tentarLoginAPI(login,senha);
-  if(apiUser){doLogin(apiUser);return;}
-
-  const ok=await tentarLoginLocal(login,senha);
-  if(!ok){
-    document.getElementById('loginMsg').textContent='Login ou senha incorretos. Se usa os usuários do SIGOM, abra este arquivo pelo servidor/localizador do SIGOM ou cadastre o usuário no próprio painel.';
-  }
-});
-async function tentarLoginLocal(login,senha){
-  const listas=[...usuariosDoLocalStorage(),...(await usuariosDoArquivoSIGOM()),...USERS_OBJ.map(normalizaUsuario)].filter(Boolean);
-  const u=listas.find(x=>x.login===login&&String(x.senha)===String(senha));
-  if(u){doLogin(u);return true;}
-  return false;
-}
 function doLogin(u){
   authUser=u;
-  // Grava nas duas chaves para manter compatibilidade com o SIGOM e com este dashboard.
   store.set('obj_auth',JSON.stringify(u));
   store.set('sigom_auth',JSON.stringify(u));
   document.getElementById('loginMsg').textContent='';
@@ -432,13 +359,39 @@ function doLogin(u){
 function logoutOBJ(){
   AUTH_KEYS_OBJ.forEach(k=>store.set(k,''));
   document.body.classList.remove('auth-ok');
-  document.getElementById('loginUser').value='';document.getElementById('loginPass').value='';
   document.getElementById('loginMsg').textContent='';
+  (async()=>{try{const sb=await sbClientOBJ();await sb.auth.signOut();}catch(e){}location.href='/index.html';})();
 }
-(function(){
-  const u=getAuthInfo();
-  if(u&&u.login){doLogin(u);}
-})();
+
+/* ---------- Login via Supabase (mesma conta do Painel SIGOM v31) ---------- */
+let __sbClientOBJ=null;
+async function sbClientOBJ(){
+  if(__sbClientOBJ)return __sbClientOBJ;
+  const {createClient}=await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+  const cfg=window.SIGOM_CONFIG||{};
+  __sbClientOBJ=createClient(cfg.supabaseUrl,cfg.supabasePublishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+  return __sbClientOBJ;
+}
+async function initLoginOBJ(){
+  const jaLogado=getAuthInfo();
+  if(jaLogado&&jaLogado.login){doLogin(jaLogado);return;}
+  const msg=document.getElementById('loginMsg');
+  if(msg)msg.textContent='Verificando sessão do SIGOM...';
+  try{
+    const sb=await sbClientOBJ();
+    const {data:{session}}=await sb.auth.getSession();
+    if(!session){
+      if(msg)msg.innerHTML='Faça login pelo <a href="/index.html">Painel SIGOM</a> primeiro.';
+      setTimeout(()=>{location.href='/index.html';},1200);
+      return;
+    }
+    const {data:perfilRow}=await sb.from('profiles').select('nome,perfil').eq('id',session.user.id).single();
+    doLogin({login:session.user.email,nome:(perfilRow&&perfilRow.nome)||session.user.email,perfil:(perfilRow&&perfilRow.perfil)||'consulta'});
+  }catch(e){
+    if(msg)msg.innerHTML='Não foi possível verificar a sessão. <a href="/index.html">Voltar ao Painel</a>.';
+  }
+}
+initLoginOBJ();
 
 // ═══════════════════════════════════════════════════════════
 // BRANDING / LOGOS
