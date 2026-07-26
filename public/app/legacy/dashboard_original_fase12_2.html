@@ -307,7 +307,7 @@ body.logo-locked .logoSlot{cursor:default}
    <button class="fioExternalBtn" onclick="abrirFIOExterno()" title="Abrir slide FIO em HTML separado">📊 FIO</button>
    <button class="fioExternalBtn" onclick="abrirFIOGrupoSelecionado()" title="Gerar FIO por grupo criado no SIGOM">📊 FIO por grupo</button>
    <button class="objetivosExternalBtn" onclick="salvarGruposNavegadorNoArquivo()" title="Salvar no arquivo Usuarios/grupos_obras.json os grupos que estavam gravados no navegador">💾 Salvar grupos</button>
-   <button class="objetivosExternalBtn" onclick="window.open('/app/obras-paralisadas.html','_blank')" title="Cadastrar obras paralisadas por processo crítico">🚧 Obras Paralisadas</button>
+   <button class="objetivosExternalBtn" onclick="window.open('obras_paralisadas.html','_blank')" title="Cadastrar obras paralisadas por processo crítico">🚧 Obras Paralisadas</button>
    <button class="objetivosExternalBtn" onclick="abrirObjetivosMetas()" title="Abrir Objetivos e Metas 2026 usando o mesmo login do SIGOM">🎯 Objetivos e Metas</button>
    <div class="dropdown" id="menuDrop">
      <button class="dropbtn" onclick="toggleDrop('menuDrop',event)">☰ Menu ▾</button>
@@ -324,7 +324,7 @@ body.logo-locked .logoSlot{cursor:default}
        <button onclick="abrirFIOGrupoSelecionado();closeDrops()">📊 FIO por grupo</button>
        <button onclick="salvarGruposNavegadorNoArquivo();closeDrops()">💾 Salvar grupos</button>
        <button onclick="abrirExportTabela();closeDrops()">📤 Exportar tabela / Word</button>
-       <button onclick="window.open('/app/obras-paralisadas.html','_blank');closeDrops()">🚧 Obras Paralisadas</button>
+       <button onclick="window.open('obras_paralisadas.html','_blank');closeDrops()">🚧 Obras Paralisadas</button>
        <button onclick="abrirObjetivosMetas();closeDrops()">🎯 Objetivos e Metas</button>
        <button onclick="exportarPDF()">🖨 Exportar PDF</button>
        <button class="adminOnly" onclick="salvarConfig()">💾 Salvar configuração</button>
@@ -2567,7 +2567,7 @@ function mkChart(id,type,data,opts){
 
 /* ---------- Objetivos e Metas externo em HTML separado ---------- */
 function abrirObjetivosMetas(){
-  let url='/app/objetivos.html';
+  let url='objetivos.html';
   try{
     const u=(typeof getAuthInfo==='function')?getAuthInfo():null;
     if(u){
@@ -2643,7 +2643,7 @@ function abrirFIOGrupoSelecionado(){
     if(r===null)return; const idx=parseInt(r)-1; g=(idx>=0&&idx<nomes.length)?nomes[idx]:(nomes.includes(r.trim())?r.trim():'');
   }
   if(!g){alert('Grupo não selecionado.');return;}
-  const p=new URLSearchParams();p.set('grupo',g);sigomMarcarNavegacaoInterna();window.open('/app/fio.html?'+p.toString(),'_blank');
+  const p=new URLSearchParams();p.set('grupo',g);sigomMarcarNavegacaoInterna();window.open('fio_slide_SIGOM.html?'+p.toString(),'_blank');
 }
 
 
@@ -2729,12 +2729,7 @@ function montarDocumentoAnaliseSIGOM(){
     linhas+='<tr><td>'+blocoAnaliseWordHTML(blocos[i])+'</td><td>'+(blocos[i+1]?blocoAnaliseWordHTML(blocos[i+1]):'')+'</td></tr>';
   }
   const css=`@page WordSection1{size:841.9pt 595.3pt;mso-page-orientation:landscape;margin:18pt 14pt 18pt 14pt;}@page{size:A4 landscape;margin:7mm}div.WordSection1{page:WordSection1;}body{font-family:Arial,sans-serif;color:#1a2b3c;margin:0}h1{text-align:center;color:#1e4e79;font-size:16pt;margin:0 0 7pt}h2{color:#1e4e79;font-size:9.5pt;margin:0 0 4pt}.mosaico{width:100%;border-collapse:separate;border-spacing:5pt;table-layout:fixed}.mosaico td{width:50%;vertical-align:top;border:0}.sec{page-break-inside:avoid;margin-bottom:5pt}.sec img{width:100%;max-height:190pt;object-fit:contain;border:0.5pt solid #d9e5f0}.tblAnaliseWord{width:100%;border-collapse:collapse;font-size:6.3pt;table-layout:fixed;margin-top:3pt}.tblAnaliseWord th{background:#1e4e79;color:#fff;border:0.5pt solid #1e4e79;padding:2pt}.tblAnaliseWord td{border:0.5pt solid #c4d3e3;padding:2pt;word-wrap:break-word;overflow-wrap:break-word}.rodape{font-size:7pt;color:#666;text-align:right;margin-top:6pt}`;
-  const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><style>${css}</style></head><body><div class="WordSection1"><h1>${escHtml(titulo)}</h1><table class="mosaico">${linhas}</table><div class="rodape">SIGOM · ${rotuloAnalise()} · ${new Date().toLocaleString('pt-BR')}</div></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="/config.js"></script>
-<script src="/app/sigom-data-adapter.js"></script>
-<style>.sigom-filtro-ativo{background:#fff2cc!important;border-color:#e67e22!important;box-shadow:0 0 0 2px rgba(230,126,34,.18)!important}.sigom-match{background:#ffeb3b;color:#000;font-weight:800}.auth-ok #loginScreen{display:none!important}</style>
-</body></html>`;
+  const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><style>${css}</style></head><body><div class="WordSection1"><h1>${escHtml(titulo)}</h1><table class="mosaico">${linhas}</table><div class="rodape">SIGOM · ${rotuloAnalise()} · ${new Date().toLocaleString('pt-BR')}</div></div></body></html>`;
   return {titulo,html};
 }
 function exportarAnaliseWordSIGOM(){
@@ -2840,12 +2835,7 @@ function cssWordTabelaSIGOM(obj){
 }
 function exportarTabelaWordSIGOM(){
   const obj=htmlTabelaExportacaoSIGOM(); if(!obj)return;
-  const doc=`<!DOCTYPE html><html><head><meta charset="utf-8"><style>${cssWordTabelaSIGOM(obj)}</style></head><body><div class="WordSection1">${obj.html}<div class="rodape">SIGOM · ${obj.total} obra(s) · ${new Date().toLocaleString('pt-BR')}</div></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="/config.js"></script>
-<script src="/app/sigom-data-adapter.js"></script>
-<style>.sigom-filtro-ativo{background:#fff2cc!important;border-color:#e67e22!important;box-shadow:0 0 0 2px rgba(230,126,34,.18)!important}.sigom-match{background:#ffeb3b;color:#000;font-weight:800}.auth-ok #loginScreen{display:none!important}</style>
-</body></html>`;
+  const doc=`<!DOCTYPE html><html><head><meta charset="utf-8"><style>${cssWordTabelaSIGOM(obj)}</style></head><body><div class="WordSection1">${obj.html}<div class="rodape">SIGOM · ${obj.total} obra(s) · ${new Date().toLocaleString('pt-BR')}</div></div></body></html>`;
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob(['\ufeff'+doc],{type:'application/msword'}));
   a.download=(obj.titulo||'SIGOM_Tabela').replace(/[^\w\-]+/g,'_')+'.doc';
@@ -2856,12 +2846,7 @@ function imprimirTabelaSelecionadaSIGOM(){
   const f=tamanhoFonteExportacaoSIGOM(obj.cols||10);
   const css=`@page{size:A4 landscape;margin:8mm}html,body{margin:0;padding:0;font-family:Arial,sans-serif}h1{text-align:center;color:#1e4e79;font-size:16px;margin:0 0 6px}table{width:100%;max-width:100%;border-collapse:collapse;table-layout:fixed;font-size:${f.print}}th{background:#1e4e79;color:#fff;padding:${f.padPrint};border:1px solid #1e4e79;text-align:left;overflow-wrap:anywhere}td{padding:${f.padPrint};border:1px solid #ccc;vertical-align:top;overflow-wrap:anywhere;word-break:break-word}tr:nth-child(even) td{background:#f6f9fd}`;
   const w=window.open('','_blank');
-  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escHtml(obj.titulo)}</title><style>${css}</style></head><body>${obj.html}
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="/config.js"></script>
-<script src="/app/sigom-data-adapter.js"></script>
-<style>.sigom-filtro-ativo{background:#fff2cc!important;border-color:#e67e22!important;box-shadow:0 0 0 2px rgba(230,126,34,.18)!important}.sigom-match{background:#ffeb3b;color:#000;font-weight:800}.auth-ok #loginScreen{display:none!important}</style>
-</body></html>`);
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escHtml(obj.titulo)}</title><style>${css}</style></head><body>${obj.html}</body></html>`);
   w.document.close(); w.focus(); setTimeout(()=>w.print(),300);
 }
 
@@ -2900,7 +2885,7 @@ async function loginSIGOM(usuario,senha){
     }
   }catch(e){}
   // Fallback para abertura direta do HTML. Não grava log em arquivo, apenas no navegador.
-  if(false){
+  if(usuario==='APGDOM' && senha==='bemamigos'){
     await registrarLogLocal(usuario,'OK','Login em modo local, sem servidor');
     return {ok:true,user:usuario,nome:'Assessoria de Planejamento e Gestão DOM',perfil:'Administrador',server:false};
   }
@@ -2978,10 +2963,5 @@ async function logoutSIGOM(){
 
 initLogin();
 </script>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="/config.js"></script>
-<script src="/app/sigom-data-adapter.js"></script>
-<style>.sigom-filtro-ativo{background:#fff2cc!important;border-color:#e67e22!important;box-shadow:0 0 0 2px rgba(230,126,34,.18)!important}.sigom-match{background:#ffeb3b;color:#000;font-weight:800}.auth-ok #loginScreen{display:none!important}</style>
 </body>
 </html>

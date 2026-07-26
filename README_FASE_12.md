@@ -21,3 +21,13 @@ A migration complementa a tabela existente. Não apaga obras, FIO, grupos, objet
 ## Atenção
 
 A migration pressupõe que `public.obras.id` seja UUID. Confirme antes da execução em produção.
+
+## Complemento Fase 12.1
+
+A estrutura oficial do Portfólio, Principais Obras e Saldos Alongados foi acrescentada pelos arquivos:
+
+- `supabase/11_fase_12_1_portfolio_saldos_principais.sql`
+- `supabase/12_fase_12_1_validacao_portfolio_saldos.sql`
+- `mapeamentos/portfolio_saldos_principais.json`
+
+A importação online passa a reconhecer diretamente os três formatos oficiais.

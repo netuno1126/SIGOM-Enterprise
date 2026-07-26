@@ -577,9 +577,5 @@ function voltarDashboard(){try{if(history.length>1)history.back();else location.
 function escapeHtml(s){return String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))}
 tryLoad();
 </script>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="/config.js"></script>
-<script src="/app/fio-supabase-adapter.js"></script>
 </body>
 </html>

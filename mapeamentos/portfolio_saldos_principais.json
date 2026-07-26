@@ -1,0 +1,29 @@
+{
+  "versao": "12.1",
+  "fontes_oficiais": {
+    "portfolio": {
+      "arquivo": "Planilha portfólio_Dash.xlsx",
+      "aba": "Portfolio",
+      "linhas_dados": 97,
+      "colunas": 51,
+      "tabela": "public.portfolio_obras",
+      "chave": ["Nr Solicitação", "Nr Contrato"],
+      "regra_idp": "% medido / % estimado"
+    },
+    "principais_obras": {
+      "arquivo": "Principais Obras(2).xlsx",
+      "aba": "final",
+      "colunas": ["Nr Solicitação", "Descrição", "RM"],
+      "categorias": ["OBRAS EM ANDAMENTO", "FUTURAS OBRAS"],
+      "tabela": "public.principais_obras"
+    },
+    "saldos_alongados": {
+      "arquivo": "Saldos_alongados_Dash.xlsx",
+      "aba": "Consolidado",
+      "colunas": ["OM", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025", "2026", "total"],
+      "tabela_consolidada": "public.saldos_alongados_consolidado",
+      "tabela_detalhada": "public.saldos_alongados",
+      "view": "public.saldos_alongados_oficial"
+    }
+  }
+}

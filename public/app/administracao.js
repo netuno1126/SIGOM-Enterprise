@@ -29,7 +29,7 @@ function bind(){
   window.addEventListener('message',e=>{if(e.data?.type==='SIGOM_REFRESH_HISTORY')loadHistory()});
 }
 
-function inputFor(type){return {obras:'#fileObras',portfolio:'#filePortfolio',saldos:'#fileSaldos',objetivos:'#fileObjetivos'}[type]}
+function inputFor(type){return {obras:'#fileObras',portfolio:'#filePortfolio',principais:'#filePrincipais',saldos:'#fileSaldos',objetivos:'#fileObjetivos'}[type]}
 async function readSheet(file){const buf=await file.arrayBuffer();const wb=XLSX.read(buf,{type:'array',cellDates:true});const ws=wb.Sheets[wb.SheetNames[0]];return XLSX.utils.sheet_to_json(ws,{defval:'',raw:false,dateNF:'dd/mm/yyyy'})}
 function get(row,names){const map=Object.fromEntries(Object.entries(row).map(([k,v])=>[key(k),v]));for(const n of names){const v=map[key(n)];if(v!==undefined&&norm(v)!=='')return v}return ''}
 function isoDate(v){if(v instanceof Date&&!Number.isNaN(v.valueOf()))return v.toISOString().slice(0,10);const s=norm(v);if(!s)return null;let m=s.match(/^(\d{2})[\/.-](\d{2})[\/.-](\d{4})$/);if(m)return `${m[3]}-${m[2]}-${m[1]}`;m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);return m?`${m[1]}-${m[2]}-${m[3]}`:null}
@@ -74,13 +74,34 @@ function mapObra(r){
     dados:r,dados_origem:r
   }
 }
-function mapSaldo(r){return {om:norm(get(r,['OM','Organização Militar'])),ano:Number(get(r,['Ano','Exercício'])),valor:num(get(r,['Valor','Saldo','Saldo Alongado']))||0}}
+async function readPrincipais(file){
+  const buf=await file.arrayBuffer();const wb=XLSX.read(buf,{type:'array',cellDates:true});const ws=wb.Sheets[wb.SheetNames[0]];
+  const grid=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:false,dateNF:'dd/mm/yyyy'});
+  const out=[];let categoria='';let ordem=0;let rmAtual='';
+  for(const row of grid){const a=norm(row[0]),b=norm(row[1]),c=norm(row[2]);
+    if(a==='OBRAS EM ANDAMENTO'||a==='FUTURAS OBRAS'){categoria=a;ordem=0;rmAtual='';continue}
+    if(!categoria||a==='Nr Solicitação'||(!a&&!b&&!c))continue;
+    if(c)rmAtual=c;ordem++;
+    const nr=/^\d+$/.test(a)?a:'';const descricao=b;if(!descricao)continue;
+    const chave=[categoria,nr||descricao,rmAtual].join('|');
+    out.push({chave,categoria,nr_solicitacao:nr||null,descricao,rm:rmAtual||null,ordem,dados_origem:{'Nr Solicitação':nr,'Descrição':descricao,'RM':rmAtual}})
+  }
+  return out;
+}
+function mapSaldoConsolidado(r){
+  const out={om:norm(get(r,['OM','Organização Militar'])),dados_origem:r};
+  for(let ano=2016;ano<=2026;ano++)out[`saldo_${ano}`]=num(get(r,[String(ano)]))||0;
+  out.total=num(get(r,['total','Total']))||Object.keys(out).filter(k=>/^saldo_\d{4}$/.test(k)).reduce((a,k)=>a+(out[k]||0),0);
+  return out;
+}
+function saldoLongRows(r){const rows=[];for(let ano=2016;ano<=2026;ano++)rows.push({om:r.om,ano,valor:r[`saldo_${ano}`]||0,dados:r.dados_origem});return rows}
+
 function mapObjetivo(r){const objetivo=norm(get(r,['Objetivo','Meta'])),opus=norm(get(r,['Nr OPUS','OPUS'])),contrato=norm(get(r,['Contrato']));return {chave:norm(get(r,['Chave','Nr Solicitação']))||[objetivo,opus,contrato].join('|'),objetivo,opus,contrato,situacao:norm(get(r,['Situação','Status'])),observacao:norm(get(r,['Observação','Observações'])),auditado:/^(sim|true|1)$/i.test(norm(get(r,['Auditado'])))}}
 
 async function validateSpreadsheet(type){
   const file=$(inputFor(type)).files[0];if(!file)return alert('Selecione um arquivo.');
-  try{const raw=await readSheet(file);let rows=[];if(type==='obras'||type==='portfolio')rows=raw.map(mapObra);if(type==='saldos')rows=raw.map(mapSaldo);if(type==='objetivos')rows=raw.map(mapObjetivo);
-    const errors=[];rows.forEach((r,i)=>{if((type==='obras'||type==='portfolio')&&!r.opus)errors.push(`Linha ${i+2}: Nº OPUS ausente.`);if(type==='saldos'&&(!r.om||!r.ano))errors.push(`Linha ${i+2}: OM ou ano ausente.`);if(type==='objetivos'&&!r.chave)errors.push(`Linha ${i+2}: chave ausente.`)});
+  try{const raw=type==='principais'?null:await readSheet(file);let rows=[];if(type==='obras'||type==='portfolio')rows=raw.map(mapObra);if(type==='principais')rows=await readPrincipais(file);if(type==='saldos')rows=raw.map(mapSaldoConsolidado);if(type==='objetivos')rows=raw.map(mapObjetivo);
+    const errors=[];rows.forEach((r,i)=>{if((type==='obras'||type==='portfolio')&&!r.opus)errors.push(`Linha ${i+2}: Nº OPUS ausente.`);if(type==='principais'&&(!r.categoria||!r.descricao))errors.push(`Registro ${i+1}: categoria ou descrição ausente.`);if(type==='saldos'&&!r.om)errors.push(`Linha ${i+2}: OM ausente.`);if(type==='objetivos'&&!r.chave)errors.push(`Linha ${i+2}: chave ausente.`)});
     state.pending={type,file,rows:rows.filter((r,i)=>!errors.some(e=>e.startsWith(`Linha ${i+2}:`))),errors};renderPreview();
   }catch(e){alert(`Não foi possível ler o arquivo: ${e.message}`)}
 }
@@ -89,10 +110,10 @@ function renderPreview(){const p=state.pending;$('#previewBox').classList.remove
   const sample=p.rows.slice(0,20),cols=[...new Set(sample.flatMap(r=>Object.keys(r).filter(k=>k!=='dados')))].slice(0,12);$('#previewHead').innerHTML=`<tr>${cols.map(c=>`<th>${esc(c)}</th>`).join('')}</tr>`;$('#previewBody').innerHTML=sample.map(r=>`<tr>${cols.map(c=>`<td>${esc(r[c])}</td>`).join('')}</tr>`).join('')}
 function clearPreview(){state.pending=null;$('#previewBox').classList.add('hidden')}
 function setProgress(done,total,text){$('#progressBox').classList.remove('hidden');$('#progressBar').style.width=`${total?Math.round(done/total*100):0}%`;$('#progressText').textContent=text}
-async function commitImport(){const p=state.pending;if(!p||!p.rows.length)return;const table={obras:'obras',portfolio:'portfolio_obras',saldos:'saldos_alongados',objetivos:'objetivos_auditoria'}[p.type];
+async function commitImport(){const p=state.pending;if(!p||!p.rows.length)return;const table={obras:'obras',portfolio:'portfolio_obras',principais:'principais_obras',saldos:'saldos_alongados_consolidado',objetivos:'objetivos_auditoria'}[p.type];
   const {data:imp,error:ie}=await db.from('importacoes_planilha').insert({nome_arquivo:p.file.name,tamanho_bytes:p.file.size,linhas_lidas:p.rows.length+p.errors.length,status:'processando',detalhes:{tipo:p.type,erros_validacao:p.errors},importado_por:state.session.user.id}).select('id').single();if(ie)return alert(ie.message);
   let ok=0,fail=0,details=[];const batch=100;for(let i=0;i<p.rows.length;i+=batch){const chunk=p.rows.slice(i,i+batch).map(r=>({...r,atualizado_por:state.session.user.id,...((p.type==='obras')?{origem_importacao_id:imp.id}:{})}));
-    const conflict=p.type==='saldos'?'om,ano':p.type==='objetivos'?'chave':'opus,contrato';const {error}=await db.from(table).upsert(chunk,{onConflict:conflict});if(error){fail+=chunk.length;details.push({inicio:i+1,erro:error.message})}else ok+=chunk.length;setProgress(Math.min(i+batch,p.rows.length),p.rows.length,`Processados ${Math.min(i+batch,p.rows.length)} de ${p.rows.length}`)}
+    const conflict=p.type==='saldos'?'om':p.type==='principais'?'chave':p.type==='objetivos'?'chave':p.type==='portfolio'?'nr_solicitacao,nr_contrato':'opus,contrato';const {error}=await db.from(table).upsert(chunk,{onConflict:conflict});if(error){fail+=chunk.length;details.push({inicio:i+1,erro:error.message})}else{ok+=chunk.length;if(p.type==='saldos'){const longRows=chunk.flatMap(saldoLongRows).map(r=>({...r,atualizado_por:state.session.user.id}));const lr=await db.from('saldos_alongados').upsert(longRows,{onConflict:'om,ano'});if(lr.error)details.push({inicio:i+1,erro:`Detalhamento anual: ${lr.error.message}`})}}setProgress(Math.min(i+batch,p.rows.length),p.rows.length,`Processados ${Math.min(i+batch,p.rows.length)} de ${p.rows.length}`)}
   await db.from('importacoes_planilha').update({obras_processadas:ok,obras_com_erro:fail,status:fail?'concluida_com_erros':'concluida',detalhes:{tipo:p.type,erros_validacao:p.errors,lotes_com_erro:details},concluido_em:new Date().toISOString()}).eq('id',imp.id);
   setProgress(p.rows.length,p.rows.length,`Concluído: ${ok} registros gravados; ${fail} erros.`);clearPreview();await loadHistory();
 }

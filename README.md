@@ -1,3 +1,13 @@
+# SIGOM — Fase 12.2
+
+Interface principal homologada pelo Dashboard SIGOM e FIO verdadeira integrada ao Supabase.
+
+Execute, após as migrations anteriores:
+
+`supabase/13_fase_12_2_dashboard_fio_verdadeira.sql`
+
+O `index.html` continua responsável pelo login/MFA. Após autenticação, `app.html` abre diretamente o dashboard homologado em tela cheia.
+
 # SIGOM — Fase 11 IA e Briefings Inteligentes
 
 Esta entrega preserva as Fases 1 a 10 e adiciona a IA SIGOM assistiva.

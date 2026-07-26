@@ -1,0 +1,14 @@
+# Checklist Fase 12.2
+- [ ] Login Supabase e MFA abrem o sistema.
+- [ ] Dashboard possui as mesmas abas e botões do HTML homologado.
+- [ ] Cartões Resumo por Contrato, Valor por Contratante, Execução e Informações exibidas minimizam e expandem.
+- [ ] Estado de minimização permanece após recarregar.
+- [ ] Filtros ativos mudam de cor.
+- [ ] Termos encontrados ficam destacados.
+- [ ] Dados vêm do Supabase, sem exigir XLSX local.
+- [ ] Portfólio e Saldos Alongados aparecem nas abas originais.
+- [ ] Botão FIO abre a FIO verdadeira.
+- [ ] FIO mantém cores, layout, campos e proporções do HTML homologado.
+- [ ] IDP usa % medido / % estimado.
+- [ ] Data projetada e entrega usam medições da base.
+- [ ] Salvar edição cria nova versão em fio_edicoes.
