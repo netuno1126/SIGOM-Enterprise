@@ -1,480 +1,98 @@
 {
-  "versao": "12.2.0",
-  "arquivos": [
-    {
-      "arquivo": ".env.example",
-      "sha256": "2c6d7199fed8ad783ed2c1a08098b9bdab6f3bb64731f760729f78654026d80d",
-      "bytes": 213
-    },
-    {
-      "arquivo": ".gitignore",
-      "sha256": "4562f9ab31325df8a6875c80c7a0c12806aa80a173921d6952b3df5e2d92be41",
-      "bytes": 50
-    },
-    {
-      "arquivo": "README.md",
-      "sha256": "d06d95b2a330997ac2378ec2603786c3a0762eb907ae2114426d574054076f34",
-      "bytes": 1749
-    },
-    {
-      "arquivo": "README_FASE_12.md",
-      "sha256": "b7adfbcb6d9379f200370e8c5dd762e253bc7316acf20d6de1c166bf24f0d5c1",
-      "bytes": 1020
-    },
-    {
-      "arquivo": "docs/MARCO_FASE_1.md",
-      "sha256": "3549f9450411625fe3b4d77bc4b145014b936f895775d1e71b7ed3cbd0a137ec",
-      "bytes": 457
-    },
-    {
-      "arquivo": "docs/MARCO_FASE_10.md",
-      "sha256": "9ad970744e2386184fd4f57016dd866296e74a58b6aa53bdaec8bd84dc359ed6",
-      "bytes": 548
-    },
-    {
-      "arquivo": "docs/MARCO_FASE_11.md",
-      "sha256": "ccd4b10d2b44db3b38b46f9bab4f3c7b0bb1bcf3d4e3ef81eadc57c94a305ac5",
-      "bytes": 819
-    },
-    {
-      "arquivo": "docs/MARCO_FASE_12.md",
-      "sha256": "dde1063f2fb44497dd27d21feac2f805c6b1ed46acd5c825cb01a582010b5b9d",
-      "bytes": 1313
-    },
-    {
-      "arquivo": "docs/MARCO_FASE_12_1.md",
-      "sha256": "bdf3bccbf579e668742be586c79c8181977bb7eedfedae79bb675e9a9b00a24a",
-      "bytes": 1070
-    },
-    {
-      "arquivo": "docs/MARCO_FASE_12_2.md",
-      "sha256": "1818eab5f2a1439a1a1f5c7a46ae19e40a547d4f7c040af3be52f76f20a77893",
-      "bytes": 797
-    },
-    {
-      "arquivo": "docs/MARCO_FASE_2.md",
-      "sha256": "97d49aabb20dd056fcb049a477084a72ba4706fbe3a424283d26148efc123971",
-      "bytes": 1061
-    },
-    {
-      "arquivo": "docs/MARCO_FASE_3.md",
-      "sha256": "cb83099337a466f2934002d6b68407506f00579d25e4a4cfecc4992cad37c8a1",
-      "bytes": 1102
-    },
-    {
-      "arquivo": "docs/MARCO_FASE_4.md",
-      "sha256": "0902faab1288699e953859a915c342152b7d0eeebcc74b9b6f86f43a470dad59",
-      "bytes": 405
-    },
-    {
-      "arquivo": "docs/MARCO_FASE_5.md",
-      "sha256": "b559fb50fbb8922a9ec2544613f1ba0ef81243e199e98e58a2a276fe3553cff1",
-      "bytes": 1317
-    },
-    {
-      "arquivo": "docs/MARCO_FASE_6.md",
-      "sha256": "b3f6efeaf64f4714eb43b00b73df74584dc20c693449fc922bd8cfd1aaf439e9",
-      "bytes": 630
-    },
-    {
-      "arquivo": "docs/MARCO_FASE_7.md",
-      "sha256": "fe86cb1caad29e4dbde5f9eeb6f5db112a612c7d9dd6b86a69d7a9e8fa884e19",
-      "bytes": 687
-    },
-    {
-      "arquivo": "docs/MARCO_FASE_8.md",
-      "sha256": "9e543807f4f89346f6d2326211c2108a7b98cd680e7fecb58dcb40cf19353414",
-      "bytes": 585
-    },
-    {
-      "arquivo": "docs/MARCO_FASE_9.md",
-      "sha256": "b930b40968f1d1fcf35720d9811217f14a0ab4b562edaf3cc4e19dbd211152c0",
-      "bytes": 946
-    },
-    {
-      "arquivo": "mapeamentos/portfolio_51_colunas.json",
-      "sha256": "66ef3796dad9a4689922ceb637d46344597a63b0b3a104598a35347d68d3bc35",
-      "bytes": 2234
-    },
-    {
-      "arquivo": "mapeamentos/portfolio_saldos_principais.json",
-      "sha256": "c4aa7f6d0ac1350c275de91cd1b63050185fedd49eb0c67c1f6b3701620c2cdc",
-      "bytes": 997
-    },
-    {
-      "arquivo": "netlify/functions/admin-users.mjs",
-      "sha256": "28befa7e7f69f7a0d05efca5ee285f8b6d18cd4049c03e4f9b45924de6b9b5c1",
-      "bytes": 2975
-    },
-    {
-      "arquivo": "netlify/functions/ai-sigom.mjs",
-      "sha256": "6e27c9377603b6086930a11dc6ff68ad342e4d810578552869eb81479754c93e",
-      "bytes": 3723
-    },
-    {
-      "arquivo": "netlify.toml",
-      "sha256": "15b81582c059cc5ef3cc9260ad722f3240493acf02e2a08ac6c4d488bfe136c8",
-      "bytes": 619
-    },
-    {
-      "arquivo": "package.json",
-      "sha256": "e6f13d9c44abb21b5c481f4b86f536501912dd0d6b81da08bb5daf5d3e50e69e",
-      "bytes": 113
-    },
-    {
-      "arquivo": "public/app/administracao.css",
-      "sha256": "5051b515570e73a9e4c20d743c5585bbdd89aea4d9275e0551e5c110b236aa59",
-      "bytes": 3090
-    },
-    {
-      "arquivo": "public/app/administracao.html",
-      "sha256": "31fab8494f200bbff7d39756f94e94fda4e3535db9f119d7eeff7d054f5cbee2",
-      "bytes": 7856
-    },
-    {
-      "arquivo": "public/app/administracao.js",
-      "sha256": "42881bdef398c2adb67b1f26e5587287df3bc6631e720273208eef4f4a5c826c",
-      "bytes": 18157
-    },
-    {
-      "arquivo": "public/app/dashboard-fase3.css",
-      "sha256": "25f6ccb37d2def11ce5dec6ef35958d389740aedf3710047f253e85ce13cf32d",
-      "bytes": 2722
-    },
-    {
-      "arquivo": "public/app/dashboard-fase3.js",
-      "sha256": "1ec4f247292c762be3d9063a149e836a3334b20235fcfde7f1fcccc51b2f76f5",
-      "bytes": 16897
-    },
-    {
-      "arquivo": "public/app/dashboard-fase4.css",
-      "sha256": "f8684dfb2e3371e0696f9ff129b1787107f148406b12bb3f115d97869be095e2",
-      "bytes": 1086
-    },
-    {
-      "arquivo": "public/app/dashboard-fase4.js",
-      "sha256": "6a6bca810f0b9d69bf56117fc77f5ba21ead9b50095258fa27d716d7211b5cb6",
-      "bytes": 8082
-    },
-    {
-      "arquivo": "public/app/dashboard-supabase.css",
-      "sha256": "51a9699b9e9bab3b6e426fb0c2c3455d0d328bee346ee65921c36ffef65ab398",
-      "bytes": 4591
-    },
-    {
-      "arquivo": "public/app/dashboard-supabase.js",
-      "sha256": "d780cd643fda6a9582c59a61499f04c1734d7a466bf4aa8ab6126115d48b7c03",
-      "bytes": 12336
-    },
-    {
-      "arquivo": "public/app/dashboard.html",
-      "sha256": "fe50b0a6eb829673c094145cf732e6c9610709f519705e39437000860c9a8350",
-      "bytes": 182998
-    },
-    {
-      "arquivo": "public/app/fio-online.css",
-      "sha256": "49d3b3aaeffac2bdedbfaddfee57fcdfd584f4f68c1a0d3e6c122581d244dc79",
-      "bytes": 4062
-    },
-    {
-      "arquivo": "public/app/fio-online.js",
-      "sha256": "b087b17ef7e1d3a7d190fdfa20555849266a0aaeb1344c017257f412f01a39c3",
-      "bytes": 8657
-    },
-    {
-      "arquivo": "public/app/fio-supabase-adapter.js",
-      "sha256": "7d9f9c408122f2d4d1b935fa50e7f6e4270ad63d9630979c87202b80da8015f6",
-      "bytes": 5466
-    },
-    {
-      "arquivo": "public/app/fio.html",
-      "sha256": "4815879c4aa3ee8f171bd0c5ead4e6a35430d3c27df62dc60ef911b2f6260a98",
-      "bytes": 47196
-    },
-    {
-      "arquivo": "public/app/ia-sigom.css",
-      "sha256": "7969ced2c26d9d8f31cf0ecba1333afda8b937f4bfd980cccc0db0f79453dbc9",
-      "bytes": 2318
-    },
-    {
-      "arquivo": "public/app/ia-sigom.html",
-      "sha256": "1f524768607318be8e6dd6cfb8619b9fcfcb2cbea9367faf7db514438007889c",
-      "bytes": 2871
-    },
-    {
-      "arquivo": "public/app/ia-sigom.js",
-      "sha256": "e28a59f3926c723fcf5b83bf706975aadbd783c780f5b345916c77cc790a1a28",
-      "bytes": 6630
-    },
-    {
-      "arquivo": "public/app/inteligencia.css",
-      "sha256": "2be05d9203b7e9c0447991bdd815197ddfb3fe3d385be214aa794e07396f8f44",
-      "bytes": 3284
-    },
-    {
-      "arquivo": "public/app/inteligencia.html",
-      "sha256": "abc0d5026b8f84fa30cae6d55696efb24b5facb275dcab7f314228b99e388014",
-      "bytes": 3437
-    },
-    {
-      "arquivo": "public/app/inteligencia.js",
-      "sha256": "b4a58697d1db83726a2189669dbd1b942dca0a29bf7177fe6e4c934766eebed2",
-      "bytes": 14973
-    },
-    {
-      "arquivo": "public/app/legacy/dashboard_original.html",
-      "sha256": "028a3e6ebee4bf3b9c033db3c68ceaaa2bd62154e8470bfbd919c9a968495326",
-      "bytes": 181362
-    },
-    {
-      "arquivo": "public/app/legacy/dashboard_original_fase12_2.html",
-      "sha256": "028a3e6ebee4bf3b9c033db3c68ceaaa2bd62154e8470bfbd919c9a968495326",
-      "bytes": 181362
-    },
-    {
-      "arquivo": "public/app/legacy_fio_verdadeira_original.html",
-      "sha256": "7d39d97679b6e067ae5e7ecc5d36c72373914733f0d5abc50365f6f882926ef5",
-      "bytes": 47030
-    },
-    {
-      "arquivo": "public/app/legacy_objetivos_original.html",
-      "sha256": "1184d9228fb5de6b96bc8ac50d093258a7df024f3d2362d0c6a92257c3689186",
-      "bytes": 85086
-    },
-    {
-      "arquivo": "public/app/legacy_obras_paralisadas_original.html",
-      "sha256": "ad57fa56e5fdf858530d9f8f7d5b50d752bc39ab00c501d488ca429711958f1a",
-      "bytes": 3100
-    },
-    {
-      "arquivo": "public/app/mobile.html",
-      "sha256": "f4ccad3ab3d1825221208c76dc7150e2f1616d15456994b12f3fafc22dde7550",
-      "bytes": 85503
-    },
-    {
-      "arquivo": "public/app/objetivos-online.css",
-      "sha256": "82e1e6d4ad7f07e82e76b0f4b5ddb78b29e456104debd538ce7472a8646a4996",
-      "bytes": 4122
-    },
-    {
-      "arquivo": "public/app/objetivos-online.js",
-      "sha256": "d60a567810cfd953ff854ac6bdb43e1549ff8de15a9952d1cbb3a41ec18da580",
-      "bytes": 15589
-    },
-    {
-      "arquivo": "public/app/objetivos.html",
-      "sha256": "329ca140e574326d7a55c558f043aff91e8a01047f7e06b924f7410b28e009c3",
-      "bytes": 5119
-    },
-    {
-      "arquivo": "public/app/obras-paralisadas-online.css",
-      "sha256": "0e435f30406cde8f3bfa38afc262f4f5193fb0470eb2dbbc1d62520d289759f4",
-      "bytes": 4704
-    },
-    {
-      "arquivo": "public/app/obras-paralisadas-online.js",
-      "sha256": "a2c764c74f56eaa0e6fb86bb94ddf878b2c59331a9e5bb3820619f32e84fc047",
-      "bytes": 15686
-    },
-    {
-      "arquivo": "public/app/obras-paralisadas.html",
-      "sha256": "ad1af52eb2fd3bba8f6e99a394ab2251ad9832444941fcd30cd36083004b875d",
-      "bytes": 6577
-    },
-    {
-      "arquivo": "public/app/painel-diretor.css",
-      "sha256": "c338a614b8a003df7175423626248998589a7cea045a5ca2a95ab09d6d1baf53",
-      "bytes": 3459
-    },
-    {
-      "arquivo": "public/app/painel-diretor.html",
-      "sha256": "75e486641741956711feeb65ad89769e35459ba0ff071bab00e5c96c715b35c9",
-      "bytes": 4190
-    },
-    {
-      "arquivo": "public/app/painel-diretor.js",
-      "sha256": "636e746101d1c52f172dcd37f1560d80c9e539e66d9d632e8544dc5df9fd2df6",
-      "bytes": 14419
-    },
-    {
-      "arquivo": "public/app/sigom-data-adapter.js",
-      "sha256": "c80cef55c86de3348fb1802abadd2973f6b5ffb1c941755b4ac177fbbb3b5ec6",
-      "bytes": 7294
-    },
-    {
-      "arquivo": "public/app.html",
-      "sha256": "79d3ad8e2e9fba795ec8576364e8d6828569194b91362e8fc62f589df5d5e61b",
-      "bytes": 414
-    },
-    {
-      "arquivo": "public/assets/logos/dec.png",
-      "sha256": "02337490cfdb803479edfff570a6bd9e1458c3a718542b51fe2ca18482613e37",
-      "bytes": 1824159
-    },
-    {
-      "arquivo": "public/assets/logos/dom.png",
-      "sha256": "a1ef4ebe847da2b5504c82e80d79f7de4d82d448ccb882bbff2c7e623d54f731",
-      "bytes": 16858
-    },
-    {
-      "arquivo": "public/assets/logos/sigom.png",
-      "sha256": "e5f6f29d69c0291684dfb7c1d2affb7864b3303334738c816fbe7fec79f72739",
-      "bytes": 1593502
-    },
-    {
-      "arquivo": "public/auth.js",
-      "sha256": "c79c8e36e3ffdcc4a15f17c7b16a40e510881eba2fa2a5b813adc0f098b288af",
-      "bytes": 1978
-    },
-    {
-      "arquivo": "public/config.js",
-      "sha256": "9e4a681ebc429fc211649c95d0d0a0e094fe5f356efa3a189885d87029a6171b",
-      "bytes": 253
-    },
-    {
-      "arquivo": "public/index.html",
-      "sha256": "c93547de013118f3acfb061a12b54baebaccde7bd15d03608643106c2be8df52",
-      "bytes": 1332
-    },
-    {
-      "arquivo": "public/shell.js",
-      "sha256": "f68b5dc45af871963fd3c24b30a2d5052a2a1c979fd0e2b15eac5e29d98c612c",
-      "bytes": 1265
-    },
-    {
-      "arquivo": "public/styles.css",
-      "sha256": "63c427302db765bc7763b1e9c7d5adb566634700b9a25373f58d032058ad1d6e",
-      "bytes": 1658
-    },
-    {
-      "arquivo": "supabase/01_verificacao_mfa_perfis.sql",
-      "sha256": "dddf4c4857e13608a514df3230a62ec50705a6acc5a338528973ae590c6a13ca",
-      "bytes": 405
-    },
-    {
-      "arquivo": "supabase/02_fase_5_admin_importacoes.sql",
-      "sha256": "e4e30ad04d39e8e0280f1accbf043650f342b5b2b26752f4eaa99232121edeb6",
-      "bytes": 5257
-    },
-    {
-      "arquivo": "supabase/03_fase_6_fio_online.sql",
-      "sha256": "d124d5e5cac8eef0807fef8685822d3879d8593417610fae3ce7e568838bec20",
-      "bytes": 3024
-    },
-    {
-      "arquivo": "supabase/04_fase_7_objetivos_metas.sql",
-      "sha256": "674df062204b112e93219f520cd42d2e460c55c8375abd6a392c48a47544c251",
-      "bytes": 4891
-    },
-    {
-      "arquivo": "supabase/05_fase_8_obras_paralisadas_recontratacoes.sql",
-      "sha256": "f3862d44fc8119a4d178dda970d829ab9fd8a45c104e335a2199fe49952f0e04",
-      "bytes": 4750
-    },
-    {
-      "arquivo": "supabase/06_fase_9_relatorios_executivos.sql",
-      "sha256": "bd050a1fea442bd1de2c3e0cf7c492f3959904c456a899e1263765a619278950",
-      "bytes": 1245
-    },
-    {
-      "arquivo": "supabase/07_fase_10_pesquisa_timeline_alertas.sql",
-      "sha256": "47a1976568937078beeee99aec1c82556c8088d17e6dc0e2310a2b7556d28d7a",
-      "bytes": 3500
-    },
-    {
-      "arquivo": "supabase/08_fase_11_ia_sigom.sql",
-      "sha256": "812d76fae979215210c0ffbfb0d2da440f8e9621d52e5e6cc73ec5e450275a40",
-      "bytes": 1645
-    },
-    {
-      "arquivo": "supabase/09_fase_12_modelo_dados_formulas.sql",
-      "sha256": "f1f66b60d9348b81abfe2de6969ca0a51008a42767c7408731df39ebc4c4e830",
-      "bytes": 10943
-    },
-    {
-      "arquivo": "supabase/10_fase_12_validacao_dados.sql",
-      "sha256": "39b8767a04421f363ecb21b73aa8d00fd49dea64c356a608446a3a0c73d0e8e3",
-      "bytes": 1979
-    },
-    {
-      "arquivo": "supabase/11_fase_12_1_portfolio_saldos_principais.sql",
-      "sha256": "70597a0b8af1e431c0f854ca50fe8e835beae78b3c41f37317e0a2c0d2fafeb8",
-      "bytes": 12999
-    },
-    {
-      "arquivo": "supabase/12_fase_12_1_validacao_portfolio_saldos.sql",
-      "sha256": "e109e7105ccf33f6bff15878c2e72e2371eca61881d3e191acbe46598feb6abe",
-      "bytes": 1173
-    },
-    {
-      "arquivo": "supabase/13_fase_12_2_dashboard_fio_verdadeira.sql",
-      "sha256": "4d2fcd9a6905fe1bc92dcb51dfe12686975e80029caa622e8cee854b460469fc",
-      "bytes": 476
-    },
-    {
-      "arquivo": "testes/CHECKLIST_FASE_10.md",
-      "sha256": "6fd1520a8fe92ac95426aaa8b1b0452e5cf1308cc1fa950086caa96fdc0f1090",
-      "bytes": 824
-    },
-    {
-      "arquivo": "testes/CHECKLIST_FASE_11.md",
-      "sha256": "c027fcdbb3d6d21ab9aa6d079beb123fac9966c5a1919569e0f7cc73fffa9c8c",
-      "bytes": 492
-    },
-    {
-      "arquivo": "testes/CHECKLIST_FASE_12.md",
-      "sha256": "9ed608e99c3579a5266a2c21b8a3a39cc5e4b7ef35dcfee0059162aee9f1dfbc",
-      "bytes": 1141
-    },
-    {
-      "arquivo": "testes/CHECKLIST_FASE_12_1.md",
-      "sha256": "383828c0ead8cbfabf7d03cd29a507187365e8c498ae7dbbc1ce14b630a2d691",
-      "bytes": 846
-    },
-    {
-      "arquivo": "testes/CHECKLIST_FASE_12_2.md",
-      "sha256": "31c1dcc4784169f73b2bbd9ac09bac0dc4232e116551d2ed267ba3c1932b35eb",
-      "bytes": 769
-    },
-    {
-      "arquivo": "testes/CHECKLIST_FASE_2.md",
-      "sha256": "68efe7b2688400a42d2178d55c495f8620bf7a48ace60552e0c7b506eb83e2ed",
-      "bytes": 753
-    },
-    {
-      "arquivo": "testes/CHECKLIST_FASE_3.md",
-      "sha256": "fb8efa9e766052df7263e1a31f690a965a172e2aae70cdb7e853507343c3605d",
-      "bytes": 1525
-    },
-    {
-      "arquivo": "testes/CHECKLIST_FASE_4.md",
-      "sha256": "4ab5b0f9743470946808fa72ae6d529a5ac6c59f1006d56f70369d4efa766fff",
-      "bytes": 364
-    },
-    {
-      "arquivo": "testes/CHECKLIST_FASE_5.md",
-      "sha256": "3e1d05e901a262f302e36b7db972a7eb4142795fcc0e73aedfada1cdc9bdbbc0",
-      "bytes": 1405
-    },
-    {
-      "arquivo": "testes/CHECKLIST_FASE_6.md",
-      "sha256": "86a6b4525bcbfcb663219a50c2a37191da8f03d424068bb349a2bc37590e353b",
-      "bytes": 495
-    },
-    {
-      "arquivo": "testes/CHECKLIST_FASE_7.md",
-      "sha256": "a5d7e6d33abc1ed5965592726586654da62693733490dfbd9d1af23fbc10bdc2",
-      "bytes": 615
-    },
-    {
-      "arquivo": "testes/CHECKLIST_FASE_8.md",
-      "sha256": "bf78e3ebed9d8ce382596d243e71ba614d329c9a0ebe02497052d0b6448948cd",
-      "bytes": 688
-    },
-    {
-      "arquivo": "testes/CHECKLIST_FASE_9.md",
-      "sha256": "526619e3c7e5d5c8892fa516e9b02b6fbd60d1d2be2592632167e7470b1360e6",
-      "bytes": 840
-    }
-  ]
+  ".env.example": "2c6d7199fed8ad783ed2c1a08098b9bdab6f3bb64731f760729f78654026d80d",
+  ".gitignore": "4562f9ab31325df8a6875c80c7a0c12806aa80a173921d6952b3df5e2d92be41",
+  "README.md": "d06d95b2a330997ac2378ec2603786c3a0762eb907ae2114426d574054076f34",
+  "README_FASE_12.md": "b7adfbcb6d9379f200370e8c5dd762e253bc7316acf20d6de1c166bf24f0d5c1",
+  "docs/CORRECAO_FASE_12_2_1.md": "6ff34e12a1ed1694e38959946a8fae52787e6dfb170cc53ff12a0463fcf22248",
+  "docs/MARCO_FASE_1.md": "3549f9450411625fe3b4d77bc4b145014b936f895775d1e71b7ed3cbd0a137ec",
+  "docs/MARCO_FASE_10.md": "9ad970744e2386184fd4f57016dd866296e74a58b6aa53bdaec8bd84dc359ed6",
+  "docs/MARCO_FASE_11.md": "ccd4b10d2b44db3b38b46f9bab4f3c7b0bb1bcf3d4e3ef81eadc57c94a305ac5",
+  "docs/MARCO_FASE_12.md": "dde1063f2fb44497dd27d21feac2f805c6b1ed46acd5c825cb01a582010b5b9d",
+  "docs/MARCO_FASE_12_1.md": "bdf3bccbf579e668742be586c79c8181977bb7eedfedae79bb675e9a9b00a24a",
+  "docs/MARCO_FASE_12_2.md": "1818eab5f2a1439a1a1f5c7a46ae19e40a547d4f7c040af3be52f76f20a77893",
+  "docs/MARCO_FASE_2.md": "97d49aabb20dd056fcb049a477084a72ba4706fbe3a424283d26148efc123971",
+  "docs/MARCO_FASE_3.md": "cb83099337a466f2934002d6b68407506f00579d25e4a4cfecc4992cad37c8a1",
+  "docs/MARCO_FASE_4.md": "0902faab1288699e953859a915c342152b7d0eeebcc74b9b6f86f43a470dad59",
+  "docs/MARCO_FASE_5.md": "b559fb50fbb8922a9ec2544613f1ba0ef81243e199e98e58a2a276fe3553cff1",
+  "docs/MARCO_FASE_6.md": "b3f6efeaf64f4714eb43b00b73df74584dc20c693449fc922bd8cfd1aaf439e9",
+  "docs/MARCO_FASE_7.md": "fe86cb1caad29e4dbde5f9eeb6f5db112a612c7d9dd6b86a69d7a9e8fa884e19",
+  "docs/MARCO_FASE_8.md": "9e543807f4f89346f6d2326211c2108a7b98cd680e7fecb58dcb40cf19353414",
+  "docs/MARCO_FASE_9.md": "b930b40968f1d1fcf35720d9811217f14a0ab4b562edaf3cc4e19dbd211152c0",
+  "mapeamentos/portfolio_51_colunas.json": "66ef3796dad9a4689922ceb637d46344597a63b0b3a104598a35347d68d3bc35",
+  "mapeamentos/portfolio_saldos_principais.json": "c4aa7f6d0ac1350c275de91cd1b63050185fedd49eb0c67c1f6b3701620c2cdc",
+  "netlify/functions/admin-users.mjs": "28befa7e7f69f7a0d05efca5ee285f8b6d18cd4049c03e4f9b45924de6b9b5c1",
+  "netlify/functions/ai-sigom.mjs": "6e27c9377603b6086930a11dc6ff68ad342e4d810578552869eb81479754c93e",
+  "netlify.toml": "15b81582c059cc5ef3cc9260ad722f3240493acf02e2a08ac6c4d488bfe136c8",
+  "package.json": "237bd8bda65c09cbb39da766242b6120c2ae0c21005b2f6170274a1cc0871074",
+  "public/app/administracao.css": "5051b515570e73a9e4c20d743c5585bbdd89aea4d9275e0551e5c110b236aa59",
+  "public/app/administracao.html": "31fab8494f200bbff7d39756f94e94fda4e3535db9f119d7eeff7d054f5cbee2",
+  "public/app/administracao.js": "42881bdef398c2adb67b1f26e5587287df3bc6631e720273208eef4f4a5c826c",
+  "public/app/dashboard-fase3.css": "25f6ccb37d2def11ce5dec6ef35958d389740aedf3710047f253e85ce13cf32d",
+  "public/app/dashboard-fase3.js": "1ec4f247292c762be3d9063a149e836a3334b20235fcfde7f1fcccc51b2f76f5",
+  "public/app/dashboard-fase4.css": "f8684dfb2e3371e0696f9ff129b1787107f148406b12bb3f115d97869be095e2",
+  "public/app/dashboard-fase4.js": "6a6bca810f0b9d69bf56117fc77f5ba21ead9b50095258fa27d716d7211b5cb6",
+  "public/app/dashboard-supabase.css": "51a9699b9e9bab3b6e426fb0c2c3455d0d328bee346ee65921c36ffef65ab398",
+  "public/app/dashboard-supabase.js": "d780cd643fda6a9582c59a61499f04c1734d7a466bf4aa8ab6126115d48b7c03",
+  "public/app/dashboard.html": "51e98ec015f4d6a9a30feed18f05e96eacd706b0588cd7ed06213cdad817cabb",
+  "public/app/fio-online.css": "49d3b3aaeffac2bdedbfaddfee57fcdfd584f4f68c1a0d3e6c122581d244dc79",
+  "public/app/fio-online.js": "b087b17ef7e1d3a7d190fdfa20555849266a0aaeb1344c017257f412f01a39c3",
+  "public/app/fio-supabase-adapter.js": "7d9f9c408122f2d4d1b935fa50e7f6e4270ad63d9630979c87202b80da8015f6",
+  "public/app/fio.html": "4815879c4aa3ee8f171bd0c5ead4e6a35430d3c27df62dc60ef911b2f6260a98",
+  "public/app/ia-sigom.css": "7969ced2c26d9d8f31cf0ecba1333afda8b937f4bfd980cccc0db0f79453dbc9",
+  "public/app/ia-sigom.html": "1f524768607318be8e6dd6cfb8619b9fcfcb2cbea9367faf7db514438007889c",
+  "public/app/ia-sigom.js": "e28a59f3926c723fcf5b83bf706975aadbd783c780f5b345916c77cc790a1a28",
+  "public/app/inteligencia.css": "2be05d9203b7e9c0447991bdd815197ddfb3fe3d385be214aa794e07396f8f44",
+  "public/app/inteligencia.html": "abc0d5026b8f84fa30cae6d55696efb24b5facb275dcab7f314228b99e388014",
+  "public/app/inteligencia.js": "b4a58697d1db83726a2189669dbd1b942dca0a29bf7177fe6e4c934766eebed2",
+  "public/app/legacy/dashboard_original.html": "028a3e6ebee4bf3b9c033db3c68ceaaa2bd62154e8470bfbd919c9a968495326",
+  "public/app/legacy/dashboard_original_fase12_2.html": "028a3e6ebee4bf3b9c033db3c68ceaaa2bd62154e8470bfbd919c9a968495326",
+  "public/app/legacy_fio_verdadeira_original.html": "7d39d97679b6e067ae5e7ecc5d36c72373914733f0d5abc50365f6f882926ef5",
+  "public/app/legacy_objetivos_original.html": "1184d9228fb5de6b96bc8ac50d093258a7df024f3d2362d0c6a92257c3689186",
+  "public/app/legacy_obras_paralisadas_original.html": "ad57fa56e5fdf858530d9f8f7d5b50d752bc39ab00c501d488ca429711958f1a",
+  "public/app/mobile.html": "f4ccad3ab3d1825221208c76dc7150e2f1616d15456994b12f3fafc22dde7550",
+  "public/app/objetivos-online.css": "82e1e6d4ad7f07e82e76b0f4b5ddb78b29e456104debd538ce7472a8646a4996",
+  "public/app/objetivos-online.js": "d60a567810cfd953ff854ac6bdb43e1549ff8de15a9952d1cbb3a41ec18da580",
+  "public/app/objetivos.html": "329ca140e574326d7a55c558f043aff91e8a01047f7e06b924f7410b28e009c3",
+  "public/app/obras-paralisadas-online.css": "0e435f30406cde8f3bfa38afc262f4f5193fb0470eb2dbbc1d62520d289759f4",
+  "public/app/obras-paralisadas-online.js": "a2c764c74f56eaa0e6fb86bb94ddf878b2c59331a9e5bb3820619f32e84fc047",
+  "public/app/obras-paralisadas.html": "ad1af52eb2fd3bba8f6e99a394ab2251ad9832444941fcd30cd36083004b875d",
+  "public/app/painel-diretor.css": "c338a614b8a003df7175423626248998589a7cea045a5ca2a95ab09d6d1baf53",
+  "public/app/painel-diretor.html": "75e486641741956711feeb65ad89769e35459ba0ff071bab00e5c96c715b35c9",
+  "public/app/painel-diretor.js": "636e746101d1c52f172dcd37f1560d80c9e539e66d9d632e8544dc5df9fd2df6",
+  "public/app/sigom-data-adapter.js": "c80cef55c86de3348fb1802abadd2973f6b5ffb1c941755b4ac177fbbb3b5ec6",
+  "public/app.html": "79d3ad8e2e9fba795ec8576364e8d6828569194b91362e8fc62f589df5d5e61b",
+  "public/assets/logos/dec.png": "02337490cfdb803479edfff570a6bd9e1458c3a718542b51fe2ca18482613e37",
+  "public/assets/logos/dom.png": "a1ef4ebe847da2b5504c82e80d79f7de4d82d448ccb882bbff2c7e623d54f731",
+  "public/assets/logos/sigom.png": "e5f6f29d69c0291684dfb7c1d2affb7864b3303334738c816fbe7fec79f72739",
+  "public/auth.js": "c79c8e36e3ffdcc4a15f17c7b16a40e510881eba2fa2a5b813adc0f098b288af",
+  "public/config.js": "9e4a681ebc429fc211649c95d0d0a0e094fe5f356efa3a189885d87029a6171b",
+  "public/index.html": "c93547de013118f3acfb061a12b54baebaccde7bd15d03608643106c2be8df52",
+  "public/shell.js": "f68b5dc45af871963fd3c24b30a2d5052a2a1c979fd0e2b15eac5e29d98c612c",
+  "public/styles.css": "63c427302db765bc7763b1e9c7d5adb566634700b9a25373f58d032058ad1d6e",
+  "supabase/01_verificacao_mfa_perfis.sql": "dddf4c4857e13608a514df3230a62ec50705a6acc5a338528973ae590c6a13ca",
+  "supabase/02_fase_5_admin_importacoes.sql": "e4e30ad04d39e8e0280f1accbf043650f342b5b2b26752f4eaa99232121edeb6",
+  "supabase/03_fase_6_fio_online.sql": "d124d5e5cac8eef0807fef8685822d3879d8593417610fae3ce7e568838bec20",
+  "supabase/04_fase_7_objetivos_metas.sql": "674df062204b112e93219f520cd42d2e460c55c8375abd6a392c48a47544c251",
+  "supabase/05_fase_8_obras_paralisadas_recontratacoes.sql": "f3862d44fc8119a4d178dda970d829ab9fd8a45c104e335a2199fe49952f0e04",
+  "supabase/06_fase_9_relatorios_executivos.sql": "bd050a1fea442bd1de2c3e0cf7c492f3959904c456a899e1263765a619278950",
+  "supabase/07_fase_10_pesquisa_timeline_alertas.sql": "47a1976568937078beeee99aec1c82556c8088d17e6dc0e2310a2b7556d28d7a",
+  "supabase/08_fase_11_ia_sigom.sql": "812d76fae979215210c0ffbfb0d2da440f8e9621d52e5e6cc73ec5e450275a40",
+  "supabase/09_fase_12_modelo_dados_formulas.sql": "f1f66b60d9348b81abfe2de6969ca0a51008a42767c7408731df39ebc4c4e830",
+  "supabase/10_fase_12_validacao_dados.sql": "39b8767a04421f363ecb21b73aa8d00fd49dea64c356a608446a3a0c73d0e8e3",
+  "supabase/11_fase_12_1_portfolio_saldos_principais.sql": "70597a0b8af1e431c0f854ca50fe8e835beae78b3c41f37317e0a2c0d2fafeb8",
+  "supabase/12_fase_12_1_validacao_portfolio_saldos.sql": "e109e7105ccf33f6bff15878c2e72e2371eca61881d3e191acbe46598feb6abe",
+  "supabase/13_fase_12_2_dashboard_fio_verdadeira.sql": "4d2fcd9a6905fe1bc92dcb51dfe12686975e80029caa622e8cee854b460469fc",
+  "testes/CHECKLIST_FASE_10.md": "6fd1520a8fe92ac95426aaa8b1b0452e5cf1308cc1fa950086caa96fdc0f1090",
+  "testes/CHECKLIST_FASE_11.md": "c027fcdbb3d6d21ab9aa6d079beb123fac9966c5a1919569e0f7cc73fffa9c8c",
+  "testes/CHECKLIST_FASE_12.md": "9ed608e99c3579a5266a2c21b8a3a39cc5e4b7ef35dcfee0059162aee9f1dfbc",
+  "testes/CHECKLIST_FASE_12_1.md": "383828c0ead8cbfabf7d03cd29a507187365e8c498ae7dbbc1ce14b630a2d691",
+  "testes/CHECKLIST_FASE_12_2.md": "31c1dcc4784169f73b2bbd9ac09bac0dc4232e116551d2ed267ba3c1932b35eb",
+  "testes/CHECKLIST_FASE_2.md": "68efe7b2688400a42d2178d55c495f8620bf7a48ace60552e0c7b506eb83e2ed",
+  "testes/CHECKLIST_FASE_3.md": "fb8efa9e766052df7263e1a31f690a965a172e2aae70cdb7e853507343c3605d",
+  "testes/CHECKLIST_FASE_4.md": "4ab5b0f9743470946808fa72ae6d529a5ac6c59f1006d56f70369d4efa766fff",
+  "testes/CHECKLIST_FASE_5.md": "3e1d05e901a262f302e36b7db972a7eb4142795fcc0e73aedfada1cdc9bdbbc0",
+  "testes/CHECKLIST_FASE_6.md": "86a6b4525bcbfcb663219a50c2a37191da8f03d424068bb349a2bc37590e353b",
+  "testes/CHECKLIST_FASE_7.md": "a5d7e6d33abc1ed5965592726586654da62693733490dfbd9d1af23fbc10bdc2",
+  "testes/CHECKLIST_FASE_8.md": "bf78e3ebed9d8ce382596d243e71ba614d329c9a0ebe02497052d0b6448948cd",
+  "testes/CHECKLIST_FASE_9.md": "526619e3c7e5d5c8892fa516e9b02b6fbd60d1d2be2592632167e7470b1360e6"
 }
