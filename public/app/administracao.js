@@ -88,10 +88,11 @@ async function readPrincipais(file){
   }
   return out;
 }
-function mapSaldoConsolidado(r){
-  const out={om:norm(get(r,['OM','Organização Militar'])),dados_origem:r};
-  for(let ano=2016;ano<=2026;ano++)out[`saldo_${ano}`]=num(get(r,[String(ano)]))||0;
-  out.total=num(get(r,['total','Total']))||Object.keys(out).filter(k=>/^saldo_\d{4}$/.test(k)).reduce((a,k)=>a+(out[k]||0),0);
+function mapSaldoConsolidado(r,indice=0){
+  const om=norm(get(r,['OM','Organização Militar']));
+  const out={om,dados_origem:r,ordem:indice+1,linha_tipo:/^TOTAL$/i.test(om)?'TOTAL':/^EB$/i.test(om)?'EB':/^TEREO$/i.test(om)?'TEREO':'OM'};
+  let soma=0;for(let ano=2016;ano<=2026;ano++){const n=num(get(r,[String(ano)]));out[`saldo_${ano}`]=n??0;soma+=n??0}
+  const informado=num(get(r,['total','Total']));out.total_informado=informado;out.total_calculado=soma;out.total=informado;
   return out;
 }
 function saldoLongRows(r){const rows=[];for(let ano=2016;ano<=2026;ano++)rows.push({om:r.om,ano,valor:r[`saldo_${ano}`]||0,dados:r.dados_origem});return rows}
@@ -100,7 +101,7 @@ function mapObjetivo(r){const objetivo=norm(get(r,['Objetivo','Meta'])),opus=nor
 
 async function validateSpreadsheet(type){
   const file=$(inputFor(type)).files[0];if(!file)return alert('Selecione um arquivo.');
-  try{const raw=type==='principais'?null:await readSheet(file);let rows=[];if(type==='obras'||type==='portfolio')rows=raw.map(mapObra);if(type==='principais')rows=await readPrincipais(file);if(type==='saldos')rows=raw.map(mapSaldoConsolidado);if(type==='objetivos')rows=raw.map(mapObjetivo);
+  try{const raw=type==='principais'?null:await readSheet(file);let rows=[];if(type==='obras'||type==='portfolio')rows=raw.map(mapObra);if(type==='principais')rows=await readPrincipais(file);if(type==='saldos')rows=raw.map((r,i)=>mapSaldoConsolidado(r,i));if(type==='objetivos')rows=raw.map(mapObjetivo);
     const errors=[];rows.forEach((r,i)=>{if((type==='obras'||type==='portfolio')&&!r.opus)errors.push(`Linha ${i+2}: Nº OPUS ausente.`);if(type==='principais'&&(!r.categoria||!r.descricao))errors.push(`Registro ${i+1}: categoria ou descrição ausente.`);if(type==='saldos'&&!r.om)errors.push(`Linha ${i+2}: OM ausente.`);if(type==='objetivos'&&!r.chave)errors.push(`Linha ${i+2}: chave ausente.`)});
     state.pending={type,file,rows:rows.filter((r,i)=>!errors.some(e=>e.startsWith(`Linha ${i+2}:`))),errors};renderPreview();
   }catch(e){alert(`Não foi possível ler o arquivo: ${e.message}`)}

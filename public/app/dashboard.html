@@ -288,15 +288,15 @@ body.logo-locked .logoSlot{cursor:default}
 
 <header>
  <div class="topRow">
-  <div class="logoSlot" id="logoL" title="Logo da DOM — clique para inserir símbolo">DOM<br>logo</div>
+  <div class="logoSlot filled" id="logoL" title="Logo da DOM"><img src="/assets/logos/dom.png" alt="DOM"></div>
   <div class="mid">
-   <div class="logoSlot" id="logoM" title="Logo do SIGOM — clique para inserir símbolo ao lado esquerdo do nome">SIGOM<br>logo</div>
+   <div class="logoSlot filled" id="logoM" title="Logo do SIGOM"><img src="/assets/logos/sigom.png" alt="SIGOM"></div>
    <div class="titleBox">
     <h1 id="appTitle" title="Clique para alterar o nome">Sistema Integrado de Gestão de Obras Militar</h1>
     <div class="sub">DOM / Exército Brasileiro · <span id="lastUpdate">dados: —</span></div>
    </div>
   </div>
-  <div class="logoSlot" id="logoR" title="Logo do DEC — auditor/administrador pode inserir símbolo">DEC<br>logo</div>
+  <div class="logoSlot filled" id="logoR" title="Logo do DEC"><img src="/assets/logos/dec.png" alt="DEC"></div>
  </div>
  <div class="toolRow no-print">
   <span id="status" style="display:none"></span>
@@ -630,6 +630,33 @@ const SALDO_PATHS=[
   'planilha_unificada_OM.xlsx'
 ];
 let DATA=[], PORT=[], SALDOS=[], PORTKEYS=new Set(), charts={}, dataDate=null, curTab='visao';
+
+// Ponte oficial Supabase -> variáveis internas do Dashboard homologado.
+// O Dashboard original usa variáveis léxicas (DATA/PORT/SALDOS), portanto
+// atribuir apenas window.DATA não atualiza a interface.
+window.SIGOM_APLICAR_DADOS_ONLINE=function(payload={}){
+  DATA=Array.isArray(payload.data)?payload.data:[];
+  PORT=Array.isArray(payload.portfolio)?payload.portfolio:[];
+  SALDOS=Array.isArray(payload.saldos)?payload.saldos:[];
+  NOME_OBRA_MAP=payload.nomes||{};
+  dataDate=new Date();
+  aplicarNomesObras(DATA); aplicarNomesObras(PORT);
+  document.body.classList.add('auth-ok');
+  try{document.getElementById('loginScreen')?.remove()}catch(e){}
+  document.getElementById('dropMsg')?.classList.add('hidden');
+  document.getElementById('app')?.classList.remove('hidden');
+  const principal=DATA.length?DATA:PORT;
+  if(!DATA.length&&PORT.length) DATA=[...PORT];
+  const st=document.getElementById('status');
+  if(st)st.textContent='✔ '+DATA.length+' obras carregadas do Supabase'+(payload.fonte?' · '+payload.fonte:'');
+  const lu=document.getElementById('lastUpdate');
+  if(lu)lu.textContent='dados online · '+new Date().toLocaleString('pt-BR');
+  initFilters(); preencherSelectGrupos(); render(); initObraSelect(); renderAnalise(); renderMediaMensalGlobal(); renderPlanilha();
+  try{renderGeneric('tblPort',PORT);applyPort()}catch(e){console.warn('Portfólio:',e)}
+  try{const info=document.getElementById('saldoInfo');if(info)info.textContent='— '+SALDOS.length+' OM(s) · Supabase';renderSaldos()}catch(e){console.warn('Saldos:',e)}
+  return {obras:DATA.length,portfolio:PORT.length,saldos:SALDOS.length};
+};
+
 let ANALISE_FONT_SIZE=Math.max(8,Math.min(20,parseInt(localStorage.getItem('sigom_analise_font_size')||'11',10)||11));
 let NOME_OBRA_MAP={};
 
@@ -2964,7 +2991,9 @@ async function logoutSIGOM(){
   location.reload();
 }
 
-initLogin();
+// Autenticação e carga são controladas pelo shell Supabase/MFA.
+// O carregador local legado permanece no código apenas para contingência.
+document.body.classList.add('auth-ok');
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

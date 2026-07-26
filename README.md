@@ -1,3 +1,22 @@
+# SIGOM — Fase 12.3
+
+Execute `supabase/15_fase_12_3_baselines_saldos_integral.sql` após as migrations anteriores.
+
+A tela principal de Objetivos é a baseline original. A FIO é o HTML original. Ambas usam as bases oficiais importadas no Supabase.
+
+# SIGOM — Fase 12.2.2
+
+Correção do Dashboard GOLD para carregar as tabelas importadas no Supabase e exibir as logos DOM, SIGOM e DEC.
+
+## Aplicação
+
+1. Execute `supabase/14_fase_12_2_2_leitura_dashboard.sql`.
+2. Publique o pacote no Netlify.
+3. Use `Clear cache and deploy site`.
+4. Atualize o navegador com `Ctrl+Shift+R`.
+
+A interface e a FIO homologadas foram preservadas.
+
 # SIGOM — Fase 12.2
 
 Interface principal homologada pelo Dashboard SIGOM e FIO verdadeira integrada ao Supabase.

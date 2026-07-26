@@ -1,0 +1,11 @@
+# Checklist Fase 12.3
+- [ ] Login/MFA abre Objetivos sem segundo login
+- [ ] Objetivos mantém todas as abas e exportações do baseline
+- [ ] Obras importadas aparecem nos objetivos
+- [ ] Logos DOM/SIGOM/DEC aparecem
+- [ ] FIO mantém o slide original
+- [ ] FIO combina Obras e Portfólio
+- [ ] Nova versão da FIO salva no Supabase
+- [ ] Saldos importa 21 linhas e 13 colunas
+- [ ] Linhas TOTAL, EB e TEREO são preservadas
+- [ ] Total informado e calculado podem ser comparados

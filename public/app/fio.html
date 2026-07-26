@@ -425,7 +425,7 @@ function fioAnterior(){if(!OBRAS.length)return;fioIndexAtual=(fioIndexAtual-1+OB
 function fioProxima(){if(!OBRAS.length)return;fioIndexAtual=(fioIndexAtual+1)%OBRAS.length;renderFioSlide(fioIndexAtual)}
 function fioKey(r){return 'fio_edit_'+String(r['Solicitação']||'semopus').replace(/\W/g,'_')+'_'+fmtContrato(r['Contrato']).replace(/\W/g,'_')}
 function photoKey(r){return fioKey(r)+'_foto'}
-function getLogo(id,label){const data=store.get('go_'+id);return data?`<div class="fio-logo"><img src="${data}"></div>`:`<div class="fio-logo">${label}</div>`}
+function getLogo(id,label){const data=store.get('go_'+id);const online=id==='logoR'?'/assets/logos/dec.png':'/assets/logos/dom.png';return `<div class="fio-logo"><img src="${data||online}" alt="${label}"></div>`}
 function mediaMensal(r){
   const direto=toNum(r['media mensal global']);
   if(isNum(direto)&&direto>0)return direto;
@@ -575,7 +575,21 @@ async function restaurarFIO(){
 async function copiarSlideFIO(){try{const html=document.getElementById('fioSlide').outerHTML;await navigator.clipboard.writeText(html);alert('HTML do slide copiado. Cole no PowerPoint/Word ou em outro editor HTML.')}catch(e){alert('Não foi possível copiar automaticamente.')}}
 function voltarDashboard(){try{if(history.length>1)history.back();else location.href='dashboard_SIGOM.html'}catch(e){location.href='dashboard_SIGOM.html'}}
 function escapeHtml(s){return String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))}
-tryLoad();
+
+window.SIGOM_APLICAR_DADOS_FIO=function(payload){
+  DATA=Array.isArray(payload.data)?payload.data:[];
+  PORT=Array.isArray(payload.portfolio)?payload.portfolio:[];
+  OBRAS=Array.isArray(payload.obras)&&payload.obras.length?payload.obras:(PORT.length?PORT:DATA);
+  FIO_EDICOES=payload.edicoes||{};
+  fioIndexAtual=0;
+  montarSelectFIO();
+  montarSelectGruposFIO();
+  aplicarQueryInicial();
+  renderFioSlide(0);
+  const st=document.querySelector('.status');if(st)st.textContent=(payload.fonte||'Supabase')+' · '+OBRAS.length+' obras';
+};
+
+// carga local desativada na versão online; o adaptador Supabase inicia a FIO
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
