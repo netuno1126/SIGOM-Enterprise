@@ -1,3 +1,13 @@
+## Atualização Fase 12.15
+
+Média Mensal Global com abreviação monetária e cálculo por grupo, Portfólio ou base geral. Consulte `README_FASE_12_15.md`.
+
+# SIGOM — Fase 12.14
+
+Correção da importação persistente do Portfólio e diagnóstico detalhado de erros.
+
+Consulte `README_FASE_12_14.md`.
+
 # SIGOM — Fase 12.4
 
 Correções operacionais do Dashboard, Objetivos, FIO e Grupos.

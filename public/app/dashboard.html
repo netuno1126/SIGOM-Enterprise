@@ -653,6 +653,9 @@ window.SIGOM_APLICAR_DADOS_ONLINE=function(payload={}){
   // O usuário pode desmarcar o checkbox para retornar à Planilha de Obras.
   const chkPortfolio=document.getElementById('fSel');
   if(chkPortfolio) chkPortfolio.checked=PORT.length>0;
+  // A partir deste ponto a consulta online terminou; funções do Dashboard podem
+  // distinguir uma tabela realmente vazia de um carregamento ainda pendente.
+  window.__sigomLoaded=true;
   const st=document.getElementById('status');
   if(st)st.textContent='✔ '+DATA.length+' obras carregadas do Supabase'+(payload.fonte?' · '+payload.fonte:'');
   const lu=document.getElementById('lastUpdate');
@@ -668,6 +671,22 @@ let NOME_OBRA_MAP={};
 
 const fmtBR=n=>isNum(n)?n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'-';
 const fmtMi=n=>isNum(n)?'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'-';
+function fmtMoedaAbreviadaBR(n){
+  if(!isNum(n))return '-';
+  const abs=Math.abs(n);
+  const faixas=[
+    [1e18,'Qi'],[1e15,'Qua'],[1e12,'Tri'],[1e9,'Bi'],[1e6,'Mi'],[1e3,'mil']
+  ];
+  const faixa=faixas.find(([div])=>abs>=div);
+  if(!faixa)return 'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const [div,sufixo]=faixa;
+  const valor=n/div;
+  const casas=Math.abs(valor)>=100?0:Math.abs(valor)>=10?1:2;
+  return 'R$ '+valor.toLocaleString('pt-BR',{minimumFractionDigits:casas,maximumFractionDigits:casas})+' '+sufixo;
+}
+function tituloMoedaCompleta(n){
+  return isNum(n)?'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'';
+}
 const fmtR$=n=>isNum(n)?'R$ '+fmtBR(n):'-';
 function ajustarValoresKPI(root=document){
   const elementos=root.querySelectorAll?.('.kpi .val')||[];
@@ -1459,15 +1478,28 @@ function atualizarFiltrosFonteAtivaSIGOM(){
     st.textContent='✔ '+base.length+' obras · fonte ativa: '+fonte;
   }
 }
-function alternarFontePortfolioSIGOM(){
+function alternarFontePortfolioSIGOM(evento){
   const chk=document.getElementById('fSel');
   const fg=document.getElementById('fGrupo');
-  // Remove o grupo especial oculto para evitar que ele mantenha o Portfólio
-  // ativo depois que o usuário desmarca o checkbox.
   if(fg&&fg.value==='__PORT__')fg.value='';
+
+  // Durante a abertura do Dashboard o HTML é inicializado antes da consulta
+  // assíncrona ao Supabase. Nesse intervalo PORT ainda está vazio, mas isso não
+  // significa que a tabela não possua registros. Portanto, não exibir alerta nem
+  // desmarcar o checkbox enquanto o adaptador ainda estiver carregando.
+  const carregamentoConcluido=window.__sigomLoaded===true;
   if(chk?.checked&&!PORT.length){
+    if(!carregamentoConcluido){
+      const st=document.getElementById('status');
+      if(st)st.textContent='⏳ Carregando a Planilha do Portfólio do Supabase...';
+      return;
+    }
     chk.checked=false;
-    alert('A Planilha do Portfólio ainda não possui registros importados.');
+    const st=document.getElementById('status');
+    if(st)st.textContent='⚠ A tabela portfolio_obras não possui registros visíveis para este usuário.';
+    // Alerta somente quando a ação foi realmente iniciada pelo usuário, e não
+    // durante a inicialização automática da página.
+    if(evento?.isTrusted)alert('A Planilha do Portfólio ainda não possui registros importados ou não está liberada pelo RLS.');
   }
   atualizarFiltrosFonteAtivaSIGOM();
   render();
@@ -2198,8 +2230,25 @@ function renderObra(i){
 
 
 /* ---------- média mensal global ---------- */
+function contextoMediaMensalGlobal(){
+  const grp=(document.getElementById('fGrupo')||{}).value||'';
+  const somentePortfolio=!!document.getElementById('fSel')?.checked;
+  let base= somentePortfolio && PORT.length ? PORT.slice() : DATA.slice();
+  let titulo= somentePortfolio && PORT.length ? 'Portfólio selecionado' : 'Base geral';
+
+  if(grp && grp!=='__PORT__'){
+    const refs=new Set((GRUPOS[grp]&&GRUPOS[grp].obras)||[]);
+    base=base.filter(r=>refs.has(groupKey(r))||refs.has(legacyOpusKey(r)));
+    titulo='Grupo: '+grp+(somentePortfolio&&PORT.length?' · Portfólio':'');
+  }else if(grp==='__PORT__'){
+    base=PORT.length?PORT.slice():DATA.slice();
+    titulo=PORT.length?'Portfólio selecionado':'Base geral';
+  }
+  return {rows:base,titulo};
+}
 function renderMediaMensalGlobal(){
-  const rows=DATA.map(r=>{
+  const contexto=contextoMediaMensalGlobal();
+  const rows=contexto.rows.map(r=>{
     const media=valorMediaMensalGlobal(r);
     const saldo=saldoNENaoLiquidado(r);
     const meses=isNum(media)&&media>0?Math.floor(saldo/media):null;
@@ -2214,14 +2263,20 @@ function renderMediaMensalGlobal(){
 
   const k=document.getElementById('kpisMediaGlobal');
   if(k){
-    k.innerHTML=[
-      ['Obras analisadas',rows.length,''],
-      ['Média mensal global somada',fmtMi(somaMedia)+'/mês',''],
-      ['Saldo NE não liquidado',fmtMi(somaSaldo),''],
-      ['Estimativa global',mesesGlobal!==null?mesesGlobal+(mesesGlobal===1?' mês':' meses'):'-',mesesGlobal!==null&&mesesGlobal<3?'alert':'ok'],
-      ['Obras < 3 meses',criticas,criticas?'alert':'ok']
-    ].map(([l,v,c])=>`<div class="kpi ${c}"><div class="lbl">${l}</div><div class="val">${v}</div></div>`).join('');
+    const itens=[
+      ['Obras analisadas',rows.length,'',''],
+      ['Média mensal global somada',fmtMoedaAbreviadaBR(somaMedia)+'/mês','',tituloMoedaCompleta(somaMedia)+'/mês'],
+      ['Saldo NE não liquidado',fmtMoedaAbreviadaBR(somaSaldo),'',tituloMoedaCompleta(somaSaldo)],
+      ['Estimativa global',mesesGlobal!==null?mesesGlobal+(mesesGlobal===1?' mês':' meses'):'-',mesesGlobal!==null&&mesesGlobal<3?'alert':'ok',''],
+      ['Obras < 3 meses',criticas,criticas?'alert':'ok','']
+    ];
+    k.innerHTML=itens.map(([l,v,c,t])=>`<div class="kpi ${c}"${t?` title="${esc(t)}"`:''}><div class="lbl">${l}</div><div class="val">${v}</div></div>`).join('');
   }
+
+  const tituloSecao=document.querySelector('#mediaGlobal .printTitle');
+  if(tituloSecao)tituloSecao.textContent='Sistema Integrado de Gestão de Obras — Média Mensal Global — '+contexto.titulo;
+  const hTabela=document.querySelector('#mediaGlobal .card:last-child h3');
+  if(hTabela)hTabela.textContent='Média Mensal Global por Obra — '+contexto.titulo;
 
   const tbody=document.querySelector('#tblMediaGlobal tbody');
   if(tbody){
@@ -2240,7 +2295,7 @@ function renderMediaMensalGlobal(){
           <td>${fmtMi(x.saldo)}</td>
           <td>${dt(r['Data Assinatura'])}</td>
           <td>${isNum(x.dias)?x.dias:'-'}</td>
-          <td>${isNum(x.media)?fmtMi(x.media)+'/mês':'-'}</td>
+          <td>${isNum(x.media)?fmtMoedaAbreviadaBR(x.media)+'/mês':'-'}</td>
           <td>${x.meses!==null?x.meses+(x.meses===1?' mês':' meses'):'-'}</td>
         </tr>`;
       }).join('');
@@ -2251,7 +2306,7 @@ function renderMediaMensalGlobal(){
     mkChart('chMediaGlobal','bar',{
       labels:topMedia.map(x=>String(x.r['Descrição']??x.r.Contrato??'').slice(0,34)),
       datasets:[{label:'R$ Mi/mês',data:topMedia.map(x=>+(x.media/1e6).toFixed(2)),backgroundColor:'#2e75b6'}]
-    },{indexAxis:'y',plugins:{legend:{display:false}}});
+    },{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:(ctx)=>fmtMoedaAbreviadaBR(topMedia[ctx.dataIndex]?.media)+'/mês'}}}});
   }
 
   const topMeses=rows.filter(x=>x.meses!==null).sort((a,b)=>a.meses-b.meses).slice(0,15);

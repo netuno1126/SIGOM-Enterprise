@@ -1,4 +1,6 @@
 (() => {
+  // Evita que o Dashboard conclua prematuramente que o Portfólio está vazio.
+  window.__sigomLoaded=false;
   const cfg = window.SIGOM_CONFIG || window.parent?.SIGOM_CONFIG;
   const sb = window.supabase?.createClient && cfg
     ? window.supabase.createClient(cfg.supabaseUrl, cfg.supabasePublishableKey)
@@ -209,6 +211,9 @@
       const errs=[obrasResult.error,portfolioResult.error].filter(Boolean).map(e=>e.message).join(' | ');
       const st=document.getElementById('status');
       if(st)st.textContent='⚠ Supabase respondeu sem obras.'+(errs?' '+errs:' Verifique a importação e a migration 14.');
+    }else if(portfolioResult.error){
+      const st=document.getElementById('status');
+      if(st)st.textContent='⚠ Obras carregadas, mas o Portfólio não pôde ser consultado: '+portfolioResult.error.message;
     }
   }
 

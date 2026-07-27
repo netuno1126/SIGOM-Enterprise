@@ -1,6 +1,6 @@
 const cfg=window.SIGOM_CONFIG;
 const db=supabase.createClient(cfg.supabaseUrl,cfg.supabasePublishableKey);
-const state={session:null,profile:null,pending:null};
+const state={session:null,profile:null,pending:null,lastImportErrors:[]};
 const $=s=>document.querySelector(s);const $$=s=>[...document.querySelectorAll(s)];
 const norm=s=>String(s??'').normalize('NFKC').trim();
 const key=s=>norm(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
@@ -25,6 +25,7 @@ function bind(){
   $$('.tab').forEach(b=>b.onclick=()=>{if(b.classList.contains('hidden'))return;$$('.tab').forEach(x=>x.classList.remove('active'));$$('.panel').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(`[data-panel="${b.dataset.tab}"]`).classList.add('active')});
   $$('[data-import]').forEach(b=>b.onclick=()=>validateSpreadsheet(b.dataset.import));
   $('#cancelImport').onclick=clearPreview;$('#commitImport').onclick=commitImport;$('#downloadTemplate').onclick=downloadTemplate;
+  $('#downloadImportErrors').onclick=downloadImportErrors;
   $('#validateGroups').onclick=importGroups;$('#btnExportGroups').onclick=exportGroups;$('#refreshHistory').onclick=loadHistory;$('#refreshUsers').onclick=loadUsers;$('#refreshAudit').onclick=loadAudit;
   $('#createUserForm').onsubmit=createUser;
   window.addEventListener('message',e=>{if(e.data?.type==='SIGOM_REFRESH_HISTORY')loadHistory()});
@@ -112,13 +113,83 @@ function renderPreview(){const p=state.pending;$('#previewBox').classList.remove
   const sample=p.rows.slice(0,20),cols=[...new Set(sample.flatMap(r=>Object.keys(r).filter(k=>k!=='dados')))].slice(0,12);$('#previewHead').innerHTML=`<tr>${cols.map(c=>`<th>${esc(c)}</th>`).join('')}</tr>`;$('#previewBody').innerHTML=sample.map(r=>`<tr>${cols.map(c=>`<td>${esc(r[c])}</td>`).join('')}</tr>`).join('')}
 function clearPreview(){state.pending=null;$('#previewBox').classList.add('hidden')}
 function setProgress(done,total,text){$('#progressBox').classList.remove('hidden');$('#progressBar').style.width=`${total?Math.round(done/total*100):0}%`;$('#progressText').textContent=text}
-async function commitImport(){const p=state.pending;if(!p||!p.rows.length)return;const table={obras:'obras',portfolio:'portfolio_obras',principais:'principais_obras',saldos:'saldos_alongados_consolidado',objetivos:'objetivos_auditoria'}[p.type];
-  const {data:imp,error:ie}=await db.from('importacoes_planilha').insert({nome_arquivo:p.file.name,tamanho_bytes:p.file.size,linhas_lidas:p.rows.length+p.errors.length,status:'processando',detalhes:{tipo:p.type,erros_validacao:p.errors},importado_por:state.session.user.id}).select('id').single();if(ie)return alert(ie.message);
-  let ok=0,fail=0,details=[];const batch=100;for(let i=0;i<p.rows.length;i+=batch){const chunk=p.rows.slice(i,i+batch).map(r=>({...r,atualizado_por:state.session.user.id,...((p.type==='obras')?{origem_importacao_id:imp.id}:{})}));
-    const conflict=p.type==='saldos'?'om':p.type==='principais'?'chave':p.type==='objetivos'?'chave':p.type==='portfolio'?'nr_solicitacao,nr_contrato':'opus,contrato';const {error}=await db.from(table).upsert(chunk,{onConflict:conflict});if(error){fail+=chunk.length;details.push({inicio:i+1,erro:error.message})}else{ok+=chunk.length;if(p.type==='saldos'){const longRows=chunk.flatMap(saldoLongRows).map(r=>({...r,atualizado_por:state.session.user.id}));const lr=await db.from('saldos_alongados').upsert(longRows,{onConflict:'om,ano'});if(lr.error)details.push({inicio:i+1,erro:`Detalhamento anual: ${lr.error.message}`})}}setProgress(Math.min(i+batch,p.rows.length),p.rows.length,`Processados ${Math.min(i+batch,p.rows.length)} de ${p.rows.length}`)}
-  await db.from('importacoes_planilha').update({obras_processadas:ok,obras_com_erro:fail,status:fail?'concluida_com_erros':'concluida',detalhes:{tipo:p.type,erros_validacao:p.errors,lotes_com_erro:details},concluido_em:new Date().toISOString()}).eq('id',imp.id);
-  setProgress(p.rows.length,p.rows.length,`Concluído: ${ok} registros gravados; ${fail} erros.`);clearPreview();await loadHistory();
+async function commitImport(){
+  const p=state.pending;if(!p||!p.rows.length)return;
+  const table={obras:'obras',portfolio:'portfolio_obras',principais:'principais_obras',saldos:'saldos_alongados_consolidado',objetivos:'objetivos_auditoria'}[p.type];
+  const {data:imp,error:ie}=await db.from('importacoes_planilha').insert({nome_arquivo:p.file.name,tamanho_bytes:p.file.size,linhas_lidas:p.rows.length+p.errors.length,status:'processando',detalhes:{tipo:p.type,erros_validacao:p.errors},importado_por:state.session.user.id}).select('id').single();
+  if(ie)return alert(ie.message);
+
+  let ok=0,fail=0,details=[];const batch=100;
+  // portfolio_obras já possui o índice histórico completo (opus, contrato).
+  // A chave nr_solicitacao,nr_contrato foi criada inicialmente como índice
+  // parcial e não pode ser usada de forma confiável pelo PostgREST ON CONFLICT.
+  const conflict=p.type==='saldos'?'om':p.type==='principais'?'chave':p.type==='objetivos'?'chave':p.type==='portfolio'?'opus,contrato':'opus,contrato';
+
+  const preparar=(r)=>({...r,atualizado_por:state.session.user.id,...((p.type==='obras')?{origem_importacao_id:imp.id}:{})});
+  const chaveLinha=(r)=>p.type==='portfolio'||p.type==='obras'?`${r.opus||r.nr_solicitacao||'?'} | ${r.contrato||r.nr_contrato||''}`:p.type==='saldos'?(r.om||'?'):(r.chave||'?');
+
+  for(let i=0;i<p.rows.length;i+=batch){
+    const chunk=p.rows.slice(i,i+batch).map(preparar);
+    const batchResult=await db.from(table).upsert(chunk,{onConflict:conflict});
+    if(!batchResult.error){
+      ok+=chunk.length;
+      if(p.type==='saldos'){
+        const longRows=chunk.flatMap(saldoLongRows).map(r=>({...r,atualizado_por:state.session.user.id}));
+        const lr=await db.from('saldos_alongados').upsert(longRows,{onConflict:'om,ano'});
+        if(lr.error)details.push({linha:`lote ${i+1}`,chave:'saldos anuais',erro:lr.error.message});
+      }
+    }else{
+      // Um único registro inválido não deve reprovar as outras 99 linhas. Faz a
+      // repetição individual para gravar as válidas e identificar o erro exato.
+      for(let j=0;j<chunk.length;j++){
+        const item=chunk[j];
+        const one=await db.from(table).upsert(item,{onConflict:conflict});
+        if(one.error){
+          fail++;
+          details.push({linha:i+j+2,chave:chaveLinha(item),erro:one.error.message,codigo:one.error.code||''});
+        }else{
+          ok++;
+          if(p.type==='saldos'){
+            const lr=await db.from('saldos_alongados').upsert(saldoLongRows(item).map(r=>({...r,atualizado_por:state.session.user.id})),{onConflict:'om,ano'});
+            if(lr.error)details.push({linha:i+j+2,chave:item.om,erro:`Detalhamento anual: ${lr.error.message}`,codigo:lr.error.code||''});
+          }
+        }
+      }
+    }
+    setProgress(Math.min(i+batch,p.rows.length),p.rows.length,`Processados ${Math.min(i+batch,p.rows.length)} de ${p.rows.length}`);
+  }
+
+  // Confirma que os registros são realmente visíveis após o upsert. Isso detecta
+  // de imediato problemas de RLS ou de chave de conflito.
+  let verificacao=null;
+  if(p.type==='portfolio'){
+    const vr=await db.from('portfolio_obras').select('id',{count:'exact',head:true});
+    verificacao={tabela:'portfolio_obras',registros_visiveis:vr.count??0,erro:vr.error?.message||null};
+    if(vr.error)details.push({linha:'verificação',chave:'portfolio_obras',erro:vr.error.message,codigo:vr.error.code||''});
+  }
+
+  state.lastImportErrors=details;
+  await db.from('importacoes_planilha').update({obras_processadas:ok,obras_com_erro:fail,status:fail?'concluida_com_erros':'concluida',detalhes:{tipo:p.type,erros_validacao:p.errors,lotes_com_erro:details,verificacao},concluido_em:new Date().toISOString()}).eq('id',imp.id);
+
+  const detalhe=$('#importErrorDetails'),acoes=$('#importErrorActions');
+  if(details.length){
+    detalhe.classList.remove('hidden');acoes.classList.remove('hidden');
+    detalhe.textContent=details.slice(0,100).map(x=>`Linha ${x.linha} · ${x.chave}\n${x.codigo?`[${x.codigo}] `:''}${x.erro}`).join('\n\n');
+  }else{
+    detalhe.classList.add('hidden');acoes.classList.add('hidden');detalhe.textContent='';
+  }
+  const complemento=verificacao?` · ${verificacao.registros_visiveis} registro(s) visível(is) em portfolio_obras`:'';
+  setProgress(p.rows.length,p.rows.length,`Concluído: ${ok} registros gravados; ${fail} erros${complemento}.`);
+  clearPreview();await loadHistory();
 }
+
+function downloadImportErrors(){
+  const rows=state.lastImportErrors||[];if(!rows.length)return alert('Não há erros registrados na última importação.');
+  const cab='linha;chave;codigo;erro\n';
+  const csv=cab+rows.map(r=>[r.linha,r.chave,r.codigo||'',r.erro].map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(';')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}));a.download='SIGOM_erros_importacao.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+
 function downloadTemplate(){const csv='RM;Contratante;OM Beneficiada;Nr Contrato;Nr Solicitação;Empresa;Descrição Solicitação;% estimado;% medido;Valor Solicitação;Valor Contratado;Ações Financeiras;Início (OS);Fim Prazo;Fim Vigência;% Quarta;Data quarta;% Antepenúltima;Data Antepenúltima;% Penúltima;Data Penúltima;% Última;Data Última;Valor Inicial;Valor Aditivado;Valor Apostilado;Valor Atual;Total NC;Total NE;% Empenhado;Falta Empenhar;Total Notas Fiscais;Prazo Contratado;Prazo Aditivo;Prazo Total;Vigência Contratado;Vigência Aditivado;Vigência Total;Término de Vigência;Saldo a Descentralizar;Ação Orçamentaria;IDP;data projetada;obs;dias atrasados;% atraso;media medicao 3;media mensal global;analise;media 90 dias;saldo de empenho\n';const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='modelo_importacao_obras_sigom.csv';a.click();URL.revokeObjectURL(a.href)}
 
 async function importGroups(){const file=$('#fileGroups').files[0];if(!file)return alert('Selecione o JSON.');let src;try{src=JSON.parse(await file.text())}catch(e){return alert('JSON inválido.')};const groups=Array.isArray(src)?src:(src.grupos||[]);let created=0,links=0,missing=[];
