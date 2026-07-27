@@ -24,7 +24,7 @@ function bind(){
   $$('.tab').forEach(b=>b.onclick=()=>{if(b.classList.contains('hidden'))return;$$('.tab').forEach(x=>x.classList.remove('active'));$$('.panel').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(`[data-panel="${b.dataset.tab}"]`).classList.add('active')});
   $$('[data-import]').forEach(b=>b.onclick=()=>validateSpreadsheet(b.dataset.import));
   $('#cancelImport').onclick=clearPreview;$('#commitImport').onclick=commitImport;$('#downloadTemplate').onclick=downloadTemplate;
-  $('#validateGroups').onclick=importGroups;$('#refreshHistory').onclick=loadHistory;$('#refreshUsers').onclick=loadUsers;$('#refreshAudit').onclick=loadAudit;
+  $('#validateGroups').onclick=importGroups;$('#btnExportGroups').onclick=exportGroups;$('#refreshHistory').onclick=loadHistory;$('#refreshUsers').onclick=loadUsers;$('#refreshAudit').onclick=loadAudit;
   $('#createUserForm').onsubmit=createUser;
   window.addEventListener('message',e=>{if(e.data?.type==='SIGOM_REFRESH_HISTORY')loadHistory()});
 }
@@ -122,8 +122,23 @@ function downloadTemplate(){const csv='RM;Contratante;OM Beneficiada;Nr Contrato
 
 async function importGroups(){const file=$('#fileGroups').files[0];if(!file)return alert('Selecione o JSON.');let src;try{src=JSON.parse(await file.text())}catch(e){return alert('JSON inválido.')};const groups=Array.isArray(src)?src:(src.grupos||[]);let created=0,links=0,missing=[];
   for(const g0 of groups){const nome=norm(g0.nome||g0.name);if(!nome)continue;let {data:g}=await db.from('grupos').select('id').eq('nome',nome).maybeSingle();if(!g){const res=await db.from('grupos').insert({nome,descricao:norm(g0.descricao),criado_por:state.session.user.id,atualizado_por:state.session.user.id}).select('id').single();if(res.error){missing.push(`${nome}: ${res.error.message}`);continue}g=res.data;created++}
-    const obras=g0.obras||g0.items||[];for(const o of obras){const opus=norm(o.opus||o.nr_opus||o['Nr OPUS']||o);const contrato=norm(o.contrato||'');let q=db.from('obras').select('id').eq('opus',opus);if(contrato)q=q.eq('contrato',contrato);const {data:obra}=await q.limit(1).maybeSingle();if(!obra){missing.push(`${nome}: ${opus}${contrato?' | '+contrato:''}`);continue}const {error}=await db.from('grupo_obras').upsert({grupo_id:g.id,obra_id:obra.id,adicionado_por:state.session.user.id},{onConflict:'grupo_id,obra_id'});if(!error)links++}}
+    const obras=g0.obras||g0.items||[];for(const o of obras){let opus='',contrato='';if(o&&typeof o==='object'){opus=norm(o.opus||o.nr_opus||o['Nr OPUS']||o['Nr Solicitação']);contrato=norm(o.contrato||o['Nr Contrato'])}else{const raw=norm(o);const pos=raw.indexOf('|');opus=pos>=0?raw.slice(0,pos):raw;contrato=pos>=0?raw.slice(pos+1):''}opus=String(opus).replace(/\D/g,'');let q=db.from('obras').select('id,opus,contrato,nr_solicitacao,nr_contrato').or(`opus.eq.${opus},nr_solicitacao.eq.${opus}`);const {data:cands,error:qerr}=await q.limit(20);if(qerr){missing.push(`${nome}: ${qerr.message}`);continue}const normC=v=>String(v||'').toLowerCase().replace(/\s+/g,'');const obra=(cands||[]).find(x=>!contrato||normC(x.contrato||x.nr_contrato)===normC(contrato))||(cands||[])[0];if(!obra){missing.push(`${nome}: ${opus}${contrato?' | '+contrato:''}`);continue}const {error}=await db.from('grupo_obras').upsert({grupo_id:g.id,obra_id:obra.id,adicionado_por:state.session.user.id},{onConflict:'grupo_id,obra_id'});if(!error)links++}}
   $('#groupsResult').textContent=`Grupos criados: ${created}\nVínculos processados: ${links}\nNão encontrados/erros: ${missing.length}\n\n${missing.slice(0,100).join('\n')}`}
+
+
+async function exportGroups(){
+  const [{data:groups,error:ge},{data:links,error:le},{data:obras,error:oe}]=await Promise.all([
+    db.from('grupos').select('*').order('nome'),
+    db.from('grupo_obras').select('*'),
+    db.from('obras').select('id,opus,contrato,nr_solicitacao,nr_contrato')
+  ]);
+  if(ge||le||oe)return alert((ge||le||oe).message);
+  const om=new Map((obras||[]).map(o=>[String(o.id),`${o.nr_solicitacao||o.opus||''}|${o.nr_contrato||o.contrato||''}`]));
+  const by=new Map((groups||[]).map(g=>[String(g.id),{nome:g.nome,descricao:g.descricao||'',criadoEm:g.criado_em||'',criadoPor:g.criado_por||'',criador:g.criador||'',obras:[],subgrupos:{},arquivado:!!g.arquivado,arquivadoEm:g.arquivado_em||''}]));
+  (links||[]).forEach(l=>{const g=by.get(String(l.grupo_id)),k=om.get(String(l.obra_id));if(g&&k)g.obras.push(k)});
+  const payload={config:{permitirAuditorExcluir:false,permitirUsuarioCriarGrupo:true},usuario:state.session?.user?.email||'',perfil:state.profile?.perfil||'',atualizadoEm:new Date().toISOString(),grupos:[...by.values()]};
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json;charset=utf-8'}));a.download='grupos_obras.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
 
 async function authHeader(){const {data:{session}}=await db.auth.getSession();return {'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`}}
 async function adminCall(action,payload={}){const r=await fetch('/.netlify/functions/admin-users',{method:'POST',headers:await authHeader(),body:JSON.stringify({action,...payload})});const j=await r.json();if(!r.ok)throw new Error(j.error||'Falha administrativa');return j}

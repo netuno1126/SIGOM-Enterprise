@@ -4,7 +4,9 @@
   const get=(o,...ks)=>{for(const k of ks){if(o?.[k]!==null&&o?.[k]!==undefined&&o?.[k]!=='')return o[k]}return null};
   async function all(table){const out=[];let from=0;for(;;){const {data,error}=await sb.from(table).select('*').range(from,from+999);if(error)throw new Error(`${table}: ${error.message}`);out.push(...(data||[]));if(!data||data.length<1000)break;from+=1000}return out}
   async function optional(t){try{return await all(t)}catch(e){console.warn(e);return[]}}
-  function key(o){return [get(o,'nr_solicitacao','opus'),get(o,'nr_contrato','contrato')].map(v=>String(v||'').trim().toLowerCase()).join('|')}
+  function digitsKey(v){return String(v??'').replace(/\D/g,'').replace(/^0+(?=\d)/,'')}
+  function contractKey(v){return String(v??'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'').replace(/^n[º°o.]*/,'')}
+  function key(o){return digitsKey(get(o,'nr_solicitacao','opus')||o?.dados_origem?.['Nr Solicitação']||o?.dados?.['Nr Solicitação'])+'|'+contractKey(get(o,'nr_contrato','contrato')||o?.dados_origem?.['Nr Contrato']||o?.dados?.['Nr Contrato'])}
   function merge(base,port){const m=new Map();base.forEach(o=>m.set(key(o),{...o,_obra_id:o.id}));port.forEach(p=>{const k=key(p),b=m.get(k)||{};m.set(k,{...b,...p,id:b._obra_id||b.id||p.id,_obra_id:b._obra_id||b.id||null,dados_origem:{...(b.dados_origem||b.dados||{}),...(p.dados_origem||p.dados||{})}})});return [...m.values()]}
   function row(o){const d=o.dados_origem||o.dados||{};return {
     'RM':get(o,'rm')??d.RM,'Contratante':get(o,'contratante')??d.Contratante,'OM Beneficiada':get(o,'om_beneficiada')??d['OM Beneficiada'],
@@ -25,5 +27,6 @@
     doLogin({login:session.user.email,nome:profile?.nome||session.user.email,perfil:profile?.perfil||'consulta'});setOnlineLogos();
     const fi=document.getElementById('fonteInfo');if(fi&&!obras.length)fi.textContent='Supabase sem registros na tabela de obras. Importe a Planilha de Obras pela Administração.';
   }
-  document.addEventListener('DOMContentLoaded',()=>load().catch(e=>{console.error(e);document.body.classList.add('auth-ok');const fi=document.getElementById('fonteInfo');if(fi)fi.textContent='Erro ao carregar dados online: '+e.message}));
+  window.SIGOM_CARREGAR_OBJETIVOS_ONLINE=()=>load().catch(e=>{console.error(e);document.body.classList.add('auth-ok');const fi=document.getElementById('fonteInfo');if(fi)fi.textContent='Erro ao carregar dados online: '+e.message});
+  if(document.readyState!=='loading')setTimeout(window.SIGOM_CARREGAR_OBJETIVOS_ONLINE,0);
 })();

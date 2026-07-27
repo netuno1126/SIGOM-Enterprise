@@ -1,3 +1,9 @@
+# SIGOM — Fase 12.4
+
+Correções operacionais do Dashboard, Objetivos, FIO e Grupos.
+
+Execute `supabase/16_fase_12_4_grupos_e_operacao.sql` após as migrations anteriores.
+
 # SIGOM — Fase 12.3
 
 Execute `supabase/15_fase_12_3_baselines_saldos_integral.sql` após as migrations anteriores.

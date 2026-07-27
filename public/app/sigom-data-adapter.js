@@ -57,6 +57,61 @@
   }
   async function optional(table){try{return {rows:await all(table),error:null}}catch(error){console.warn(error);return {rows:[],error}}}
 
+
+  const normText=v=>String(v??'').trim();
+  const normContrato=v=>String(v??'').trim().toLowerCase().replace(/\s+/g,'').replace(/^n[º°o.]*/i,'');
+  const normOpus=v=>String(v??'').replace(/\D/g,'');
+  function parseObraRef(item){
+    if(item&&typeof item==='object')return {opus:normOpus(item.opus||item.nr_opus||item['Nr OPUS']||item['Nr Solicitação']),contrato:normText(item.contrato||item['Nr Contrato'])};
+    const raw=normText(item);const pos=raw.indexOf('|');
+    return pos>=0?{opus:normOpus(raw.slice(0,pos)),contrato:normText(raw.slice(pos+1))}:{opus:normOpus(raw),contrato:''};
+  }
+  async function loadGroupsFromDb(){
+    const [gr,ln]=await Promise.all([optional('grupos'),optional('grupo_obras')]);
+    const obraMap=new Map();
+    [...(window.SIGOM_OBTER_OBRAS_ATUAIS?.()||[])].forEach(o=>{if(o.id||o.obra_id)obraMap.set(String(o.id||o.obra_id),o)});
+    const byId=new Map(gr.rows.map(g=>[String(g.id),{nome:g.nome,descricao:g.descricao||'',criadoEm:g.criado_em||'',criadoPor:g.criado_por||'',criador:g.criador||'',obras:[],subgrupos:{},arquivado:!!g.arquivado,arquivadoEm:g.arquivado_em||''}]));
+    for(const l of ln.rows){
+      const g=byId.get(String(l.grupo_id)),o=obraMap.get(String(l.obra_id));if(!g||!o)continue;
+      const op=normText(o['Solicitação']||o.nr_solicitacao||o.opus),ct=normText(o.Contrato||o.nr_contrato||o.contrato);
+      if(op)g.obras.push(op+'|'+ct);
+    }
+    const payload={config:{permitirAuditorExcluir:false,permitirUsuarioCriarGrupo:true},usuario:'',perfil:'',atualizadoEm:new Date().toISOString(),grupos:[...byId.values()]};
+    window.SIGOM_APLICAR_GRUPOS_ONLINE?.(payload);return payload;
+  }
+  async function saveGroupsToDb(payload){
+    const {data:{session}}=await sb.auth.getSession();if(!session)throw new Error('Sessão expirada.');
+    const groups=Array.isArray(payload?.grupos)?payload.grupos:[];
+    const base=window.SIGOM_OBTER_OBRAS_ATUAIS?.()||[];
+    const obraByKey=new Map();
+    base.forEach(o=>{const op=normOpus(o['Solicitação']||o.nr_solicitacao||o.opus),ct=normContrato(o.Contrato||o.nr_contrato||o.contrato);if(op){obraByKey.set(op+'|'+ct,o);if(!obraByKey.has(op+'|'))obraByKey.set(op+'|',o)}});
+    let gravados=0,vinculos=0,naoEncontradas=[];
+    for(const g0 of groups){
+      const nome=normText(g0.nome);if(!nome||['config','grupos'].includes(nome.toLowerCase()))continue;
+      let {data:g,error:ge}=await sb.from('grupos').select('id').eq('nome',nome).maybeSingle();
+      if(ge)throw ge;
+      const body={nome,descricao:normText(g0.descricao),arquivado:!!g0.arquivado,atualizado_por:session.user.id};
+      if(!g){const r=await sb.from('grupos').insert({...body,criado_por:session.user.id}).select('id').single();if(r.error)throw r.error;g=r.data}else{const r=await sb.from('grupos').update(body).eq('id',g.id);if(r.error)throw r.error}
+      gravados++;
+      const wanted=[];
+      for(const item of (g0.obras||[])){const ref=parseObraRef(item);let o=obraByKey.get(ref.opus+'|'+normContrato(ref.contrato))||obraByKey.get(ref.opus+'|');if(!o){naoEncontradas.push(`${nome}: ${ref.opus}|${ref.contrato}`);continue}wanted.push(String(o.id||o.obra_id))}
+      const ex=await sb.from('grupo_obras').select('obra_id').eq('grupo_id',g.id);if(ex.error)throw ex.error;
+      const existing=new Set((ex.data||[]).map(x=>String(x.obra_id))),target=new Set(wanted);
+      const add=[...target].filter(id=>!existing.has(id)).map(id=>({grupo_id:g.id,obra_id:id,adicionado_por:session.user.id}));
+      if(add.length){const r=await sb.from('grupo_obras').upsert(add,{onConflict:'grupo_id,obra_id'});if(r.error)throw r.error;vinculos+=add.length}
+      const del=[...existing].filter(id=>!target.has(id));
+      if(del.length){const r=await sb.from('grupo_obras').delete().eq('grupo_id',g.id).in('obra_id',del);if(r.error)console.warn('Não foi possível remover vínculos antigos:',r.error.message)}
+    }
+    await loadGroupsFromDb();
+    return {grupos:gravados,vinculos,naoEncontradas};
+  }
+  window.SIGOM_CARREGAR_GRUPOS_SUPABASE=async()=>{try{await loadGroupsFromDb();return true}catch(e){console.warn(e);return false}};
+  window.SIGOM_SALVAR_GRUPOS_SUPABASE=async payload=>{try{const r=await saveGroupsToDb(payload);alert(`Grupos salvos no Supabase.\nGrupos: ${r.grupos}\nNovos vínculos: ${r.vinculos}\nNão localizadas: ${r.naoEncontradas.length}`);return true}catch(e){alert('Erro ao salvar grupos: '+e.message);return false}};
+  window.selecionarArquivoImportarGrupos=()=>document.getElementById('grupoImportInput')?.click();
+  window.importarGruposJSONArquivo=async file=>{if(!file)return;try{const payload=JSON.parse(await file.text());const normalized=Array.isArray(payload)?{grupos:payload}:payload;const r=await saveGroupsToDb(normalized);alert(`Importação concluída.\nGrupos: ${r.grupos}\nVínculos: ${r.vinculos}\nNão localizadas: ${r.naoEncontradas.length}`)}catch(e){alert('Falha na importação: '+e.message)}};
+  window.exportarGruposJSON=async()=>{try{const payload=await loadGroupsFromDb();const {data:{session}}=await sb.auth.getSession();payload.usuario=session?.user?.email||'';payload.perfil='';const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json;charset=utf-8'}));a.download='grupos_obras.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}catch(e){alert('Falha ao exportar grupos: '+e.message)}};
+  window.salvarGruposNavegadorNoArquivo=()=>window.SIGOM_SALVAR_GRUPOS_SUPABASE(window.SIGOM_OBTER_GRUPOS_ATUAIS?.()||{grupos:[]});
+
   async function load(){
     if(!sb)throw new Error('Configuração do Supabase indisponível.');
     const {data:{session},error:sessionError}=await sb.auth.getSession();
@@ -84,6 +139,7 @@
     if(typeof window.SIGOM_APLICAR_DADOS_ONLINE!=='function')throw new Error('Ponte de dados do Dashboard não encontrada.');
     window.SIGOM_APLICAR_DADOS_ONLINE({data:dataRows,portfolio:portRows,saldos,nomes:names,fonte:source});
     window.__sigomLoaded=true;
+    await loadGroupsFromDb().catch(e=>console.warn("Grupos:",e));
 
     if(!dataRows.length){
       const errs=[obrasResult.error,portfolioResult.error].filter(Boolean).map(e=>e.message).join(' | ');

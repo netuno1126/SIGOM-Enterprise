@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Objetivos e Metas 2026 — DOM</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pptxgenjs/3.12.0/pptxgen.bundle.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
 <style>
 :root{
   --azul:#1e4e79;--azul2:#2e75b6;--azul3:#9dc3e6;--verde:#70ad47;
@@ -695,6 +695,8 @@ function mk(id,type,data,opts){if(charts[id])charts[id].destroy();const el=docum
 function show(id){
   ['visao','obj1','s1','s2','obj2','obj3','obj4','obj5','exec'].forEach(t=>document.getElementById(t).classList.toggle('hidden',t!==id));
   document.querySelectorAll('.tabs button[data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===id));
+  if(id==='exec')renderExec();
+  setTimeout(()=>Object.values(charts||{}).forEach(c=>{try{c.resize();c.update('none')}catch(e){}}),80);
 }
 function renderAll(){renderVisao();renderObj1();renderObj5();renderExec();renderEstaticos();}
 
@@ -1260,7 +1262,7 @@ function exportarPPTX(){
 (async function iniciarDashboardOBJ(){
   await carregarAuditoria();
   renderEstaticos();renderVisao();renderObj1();renderObj5();renderExec();
-  autoCarregar();
+  setTimeout(()=>window.SIGOM_CARREGAR_OBJETIVOS_ONLINE?.(),0);
 })();
 </script>
 

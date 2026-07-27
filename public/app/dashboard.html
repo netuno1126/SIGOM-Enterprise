@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <title>Sistema Integrado de Gestão de Obras Militar</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pptxgenjs/3.12.0/pptxgen.bundle.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
 <style>
 :root{
   --azul:#1e4e79; --azul2:#2e75b6; --azul3:#9dc3e6; --verde:#70ad47;
@@ -306,7 +306,9 @@ body.logo-locked .logoSlot{cursor:default}
   <div class="toolGroup" id="authPanel">
    <button class="fioExternalBtn" onclick="abrirFIOExterno()" title="Abrir slide FIO em HTML separado">📊 FIO</button>
    <button class="fioExternalBtn" onclick="abrirFIOGrupoSelecionado()" title="Gerar FIO por grupo criado no SIGOM">📊 FIO por grupo</button>
-   <button class="objetivosExternalBtn" onclick="salvarGruposNavegadorNoArquivo()" title="Salvar no arquivo Usuarios/grupos_obras.json os grupos que estavam gravados no navegador">💾 Salvar grupos</button>
+   <button class="objetivosExternalBtn" onclick="salvarGruposNavegadorNoArquivo()" title="Salvar os grupos no banco Supabase">💾 Salvar grupos</button>
+<button class="objetivosExternalBtn" onclick="selecionarArquivoImportarGrupos()" title="Importar grupos_obras.json para o banco">📥 Importar grupos</button>
+<button class="objetivosExternalBtn" onclick="exportarGruposJSON()" title="Exportar os grupos do banco no formato grupos_obras.json">📤 Exportar grupos</button>
    <button class="objetivosExternalBtn" onclick="window.open('/app/obras-paralisadas.html','_blank')" title="Cadastrar obras paralisadas por processo crítico">🚧 Obras Paralisadas</button>
    <button class="objetivosExternalBtn" onclick="abrirObjetivosMetas()" title="Abrir Objetivos e Metas 2026 usando o mesmo login do SIGOM">🎯 Objetivos e Metas</button>
    <div class="dropdown" id="menuDrop">
@@ -322,7 +324,9 @@ body.logo-locked .logoSlot{cursor:default}
        <button onclick="gerarFIO()">📄 Gerar FIO</button>
        <button onclick="abrirFIOExterno();closeDrops()">📊 Apresentação FIO</button>
        <button onclick="abrirFIOGrupoSelecionado();closeDrops()">📊 FIO por grupo</button>
-       <button onclick="salvarGruposNavegadorNoArquivo();closeDrops()">💾 Salvar grupos</button>
+       <button onclick="salvarGruposNavegadorNoArquivo();closeDrops()">💾 Salvar grupos no banco</button>
+<button onclick="selecionarArquivoImportarGrupos();closeDrops()">📥 Importar grupos JSON</button>
+<button onclick="exportarGruposJSON();closeDrops()">📤 Exportar grupos JSON</button>
        <button onclick="abrirExportTabela();closeDrops()">📤 Exportar tabela / Word</button>
        <button onclick="window.open('/app/obras-paralisadas.html','_blank');closeDrops()">🚧 Obras Paralisadas</button>
        <button onclick="abrirObjetivosMetas();closeDrops()">🎯 Objetivos e Metas</button>
@@ -1606,7 +1610,10 @@ function initObraSelect(){
 function openObra(key){
   const i=DATA.findIndex(r=>obraKey(r)===key);
   if(i<0){alert('Obra não encontrada após consolidação. Recarregue o dashboard.');return;}
-  document.getElementById('selObra').value=i; show('obra'); renderObra(i);
+  const busca=document.getElementById('buscaObraDetalhe');if(busca)busca.value='';
+  initObraSelect();
+  const sel=document.getElementById('selObra');if(sel)sel.value=String(i);
+  show('obra'); renderObra(i);
 }
 function toggleDrop(id,ev){
   if(ev)ev.stopPropagation();
@@ -1713,7 +1720,18 @@ function payloadGruposSIGOM(){
   };
 }
 
+
+window.SIGOM_APLICAR_GRUPOS_ONLINE=function(payload){
+  GRUPOS=normalizarGruposSIGOM(payload||{grupos:[]});
+  GRUPOS_SERVER_OK=true;
+  preencherSelectGrupos();
+  render();
+};
+window.SIGOM_OBTER_GRUPOS_ATUAIS=function(){return payloadGruposSIGOM()};
+window.SIGOM_OBTER_OBRAS_ATUAIS=function(){return DATA.slice()};
+
 async function carregarGruposServidor(){
+  if(typeof window.SIGOM_CARREGAR_GRUPOS_SUPABASE==="function") return window.SIGOM_CARREGAR_GRUPOS_SUPABASE();
   try{
     const res=await fetch('/api/grupos?_='+Date.now(),{cache:'no-store'});
     if(!res.ok)throw new Error('HTTP '+res.status);
@@ -1730,6 +1748,7 @@ async function carregarGruposServidor(){
 }
 
 async function salvarGruposServidor(){
+  if(typeof window.SIGOM_SALVAR_GRUPOS_SUPABASE==="function") return window.SIGOM_SALVAR_GRUPOS_SUPABASE(payloadGruposSIGOM());
   if(GRUPOS_SALVANDO)return;
   GRUPOS_SALVANDO=true;
   const body=JSON.stringify(payloadGruposSIGOM());
@@ -1990,7 +2009,7 @@ function show(id){
   if(id==='obra'&&DATA.length)renderObra(+document.getElementById('selObra').value||0);
   if(id==='analise'&&DATA.length)renderAnalise();
   if(id==='mediaGlobal'&&DATA.length)renderMediaMensalGlobal();
-  if(id==='mediaGlobal'&&DATA.length)renderMediaMensalGlobal();
+  setTimeout(()=>Object.values(charts||{}).forEach(c=>{try{c.resize();c.update('none')}catch(e){}}),80);
 }
 function renderObra(i){
   const r=DATA[i]; if(!r)return;

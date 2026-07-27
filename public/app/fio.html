@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SIGOM · Apresentação FIO</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pptxgenjs/3.12.0/pptxgen.bundle.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
 <style>
 :root{
   --fio-azul:#0070c0;
@@ -359,7 +359,7 @@ async function garantirBibliotecaPPT(){
   const fontes=[
     'pptxgen.bundle.js',
     'lib/pptxgen.bundle.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/pptxgenjs/3.12.0/pptxgen.bundle.js',
+    'https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js',
     'https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js'
   ];
   for(const src of fontes){
@@ -367,10 +367,19 @@ async function garantirBibliotecaPPT(){
   }
   return false;
 }
+
+async function imagemUrlDataUri(url){
+  try{
+    const r=await fetch(url);if(!r.ok)return null;const b=await r.blob();
+    return await new Promise((resolve,reject)=>{const fr=new FileReader();fr.onload=()=>resolve(fr.result);fr.onerror=reject;fr.readAsDataURL(b)});
+  }catch(e){console.warn('Logo PPT:',e);return null}
+}
+
 async function gerarPPTFIO(obras,arquivo){
   const ok=await garantirBibliotecaPPT();
   if(!ok){alert('Biblioteca PowerPoint não carregada. O HTML tentou carregar automaticamente de: pptxgen.bundle.js, lib/pptxgen.bundle.js e CDN. Para funcionar sem internet, coloque o arquivo pptxgen.bundle.js na mesma pasta do fio_slide_SIGOM.html. Enquanto isso, exporte em PDF.');return;}
   const pptx=new PptxGenJS(); pptx.defineLayout({name:'FIO16x9',width:13.333,height:7.5}); pptx.layout='FIO16x9';
+  const [logoDEC,logoDOM]=await Promise.all([imagemUrlDataUri('/assets/logos/dec.png'),imagemUrlDataUri('/assets/logos/dom.png')]);
   const AZ='0070C0',AZE='1E4E79',AM='FFCC33',CIN='E6E6E6',BOR='4D4D4D',VD='70AD47',LR='E67E22';
   obras.forEach(r=>{
     const s=pptx.addSlide(); s.background={color:CIN};
@@ -378,8 +387,8 @@ async function gerarPPTFIO(obras,arquivo){
     const title=String(r['Descrição']||r['OM Beneficiada']||'Anexo da Obra'); const ao=acaoOrcamentariaFIO(r);
     s.addShape(pptx.ShapeType.rect,{x:0.28,y:0.22,w:12.78,h:0.72,fill:{color:AZE},line:{color:'B8C6D8',width:.5}});
     s.addText(title,{x:0.38,y:0.34,w:11.6,h:0.42,fontFace:'Arial',fontSize:20,bold:true,color:'FFFFFF',fit:'shrink'});
-    s.addText('DEC',{x:12.10,y:0.30,w:0.45,h:0.35,fontSize:9,bold:true,color:AZE,fill:{color:'FFFFFF'},align:'center',valign:'mid'});
-    s.addText('DOM',{x:12.58,y:0.30,w:0.45,h:0.35,fontSize:9,bold:true,color:AZE,fill:{color:'FFFFFF'},align:'center',valign:'mid'});
+    if(logoDEC)s.addImage({data:logoDEC,x:12.10,y:0.26,w:0.43,h:0.48});else s.addText('DEC',{x:12.10,y:0.30,w:0.45,h:0.35,fontSize:9,bold:true,color:AZE,fill:{color:'FFFFFF'},align:'center',valign:'mid'});
+    if(logoDOM)s.addImage({data:logoDOM,x:12.58,y:0.26,w:0.43,h:0.48});else s.addText('DOM',{x:12.58,y:0.30,w:0.45,h:0.35,fontSize:9,bold:true,color:AZE,fill:{color:'FFFFFF'},align:'center',valign:'mid'});
     s.addShape(pptx.ShapeType.rect,{x:0.28,y:0.94,w:12.78,h:0.28,fill:{color:AZ},line:{color:'FFFFFF',width:.5}});
     s.addText(`Nr OPUS: ${r['Solicitação']||'—'}  -  AO: ${ao}`,{x:0.32,y:0.98,w:12.65,h:0.16,fontSize:10,bold:true,color:'FFFFFF',align:'center',fit:'shrink'});
     s.addShape(pptx.ShapeType.rect,{x:0.28,y:1.22,w:12.78,h:1.45,fill:{color:AM},line:{color:'FFFFFF',width:.5}});
