@@ -161,6 +161,27 @@
     if(sessionError)throw sessionError;
     if(!session){window.parent.location.href='/';return}
 
+    // Sincroniza a identidade Supabase com a sessão usada pelo Dashboard baseline.
+    // Sem esta ponte, o menu legado não reconhece o perfil e oculta as ações administrativas.
+    const {data:profile,error:profileError}=await sb.from('profiles')
+      .select('nome,username,perfil,ativo')
+      .eq('id',session.user.id)
+      .maybeSingle();
+    if(profileError)console.warn('Perfil SIGOM:',profileError.message);
+    if(profile?.ativo===false){await sb.auth.signOut();window.parent.location.href='/';return}
+    const perfilNormalizado=String(profile?.perfil||'consulta').trim().toLowerCase();
+    const authInfo={
+      id:session.user.id,
+      email:session.user.email,
+      login:profile?.username||session.user.email,
+      username:profile?.username||'',
+      nome:profile?.nome||profile?.username||session.user.email,
+      perfil:perfilNormalizado
+    };
+    sessionStorage.setItem('sigom_auth_user',JSON.stringify(authInfo));
+    try{localStorage.setItem('sigom_auth_user',JSON.stringify(authInfo))}catch(_e){}
+    if(typeof window.aplicarPerfilVisual==='function')window.aplicarPerfilVisual();
+
     let source='obras_indicadores';
     let obrasResult=await optional('obras_indicadores');
     if(obrasResult.error||!obrasResult.rows.length){source='obras';obrasResult=await optional('obras')}

@@ -87,3 +87,6 @@ O checkbox da Visão Geral agora alterna efetivamente entre a tabela `obras` e a
 ## Fase 12.9
 
 Correção responsiva dos KPIs com valores monetários extensos, sem abreviar ou ocultar o conteúdo.
+
+## Fase 12.10
+O Dashboard agora sincroniza o perfil Supabase com o menu baseline, exibe `Nome — Perfil` e libera o cadastro de usuários somente ao Administrador.

@@ -2527,22 +2527,38 @@ function getAuthInfo(){
     return {login:raw,nome:raw,perfil:(raw==='APGDOM'?'Administrador':'Usuário')};
   }catch(e){return null}
 }
+function normalizarPerfilSIGOM(perfil){
+  const p=String(perfil||'consulta').trim().toLowerCase();
+  if(p.includes('admin'))return 'administrador';
+  if(p.includes('editor'))return 'editor';
+  if(p.includes('auditor'))return 'auditor';
+  return 'consulta';
+}
 function isAdminSIGOM(){
   const u=getAuthInfo();
-  const p=String(u&&u.perfil||'').toLowerCase();
-  return p.includes('admin')||p.includes('auditor');
+  const p=normalizarPerfilSIGOM(u&&u.perfil);
+  return p==='administrador'||p==='auditor';
+}
+function isAdministradorSIGOM(){
+  const u=getAuthInfo();
+  return normalizarPerfilSIGOM(u&&u.perfil)==='administrador';
 }
 function perfilLabelSIGOM(){
   const u=getAuthInfo();
-  return u?String(u.perfil||'Usuário'):'Usuário';
+  const p=normalizarPerfilSIGOM(u&&u.perfil);
+  return ({administrador:'Administrador',editor:'Editor',auditor:'Auditor',consulta:'Consulta'})[p];
 }
 function aplicarPerfilVisual(){
   const u=getAuthInfo();
-  const admin=isAdminSIGOM();
-  document.body.classList.toggle('admin-ok',admin);
-  document.body.classList.toggle('logo-locked',!admin);
+  const administrador=isAdministradorSIGOM();
+  document.body.classList.toggle('admin-ok',administrador);
+  document.body.classList.toggle('logo-locked',!administrador);
   const box=document.getElementById('authUserBox');
-  if(box&&u)box.innerHTML=(u.nome?u.nome:u.login)+'<br><b>'+perfilLabelSIGOM()+'</b>';
+  if(box&&u){
+    const nome=u.nome||u.login||'Usuário';
+    box.textContent=nome+' — '+perfilLabelSIGOM();
+    box.title='Perfil de acesso: '+perfilLabelSIGOM();
+  }
 }
 async function alterarSenhaSIGOM(){
   const u=getAuthInfo();
@@ -2565,7 +2581,7 @@ async function alterarSenhaSIGOM(){
   }
 }
 function abrirCadastroUsuariosSIGOM(){
-  if(!isAdminSIGOM()){alert('Acesso exclusivo do Administrador.');return;}
+  if(!isAdministradorSIGOM()){alert('Acesso exclusivo do Administrador.');return;}
   window.open('/app/administracao.html?tab=users','_blank','noopener');
 }
 
