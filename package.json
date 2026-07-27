@@ -2,5 +2,8 @@
   "name": "sigom-fase-12-14-portfolio-persistente",
   "version": "12.14.0",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.57.4"
+  }
 }
