@@ -10,14 +10,14 @@ const esc=v=>norm(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','
 
 async function boot(){
   const {data:{session}}=await db.auth.getSession();if(!session)return parent.location.replace('/');state.session=session;
-  const {data:profile,error}=await db.from('profiles').select('nome,perfil,ativo').eq('id',session.user.id).maybeSingle();
+  const {data:profile,error}=await db.from('profiles').select('nome,username,perfil,ativo').eq('id',session.user.id).maybeSingle();
   if(error)throw error;state.profile=profile||{perfil:'consulta',ativo:true};
   $('#sessionUser').textContent=profile?.nome||session.user.email;$('#profileBadge').textContent=`Perfil: ${state.profile.perfil}`;
   const canWrite=['administrador','editor'].includes(state.profile.perfil)&&state.profile.ativo!==false;
   document.body.classList.toggle('read-only',!canWrite);$('#accessDenied').classList.toggle('hidden',canWrite);
   $$('[data-import],#validateGroups,#commitImport').forEach(b=>b.disabled=!canWrite);
   if(state.profile.perfil!=='administrador')$$('.admin-only').forEach(e=>e.classList.add('hidden'));
-  bind();await loadHistory();if(state.profile.perfil==='administrador'){await loadUsers();await loadAudit()}
+  bind();const requested=new URLSearchParams(location.search).get('tab');if(requested){const btn=document.querySelector(`.tab[data-tab="${requested}"]`);if(btn&&!btn.classList.contains('hidden'))btn.click();}await loadHistory();if(state.profile.perfil==='administrador'){await loadUsers();await loadAudit()}
 }
 
 function bind(){
@@ -142,9 +142,25 @@ async function exportGroups(){
 
 async function authHeader(){const {data:{session}}=await db.auth.getSession();return {'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`}}
 async function adminCall(action,payload={}){const r=await fetch('/.netlify/functions/admin-users',{method:'POST',headers:await authHeader(),body:JSON.stringify({action,...payload})});const j=await r.json();if(!r.ok)throw new Error(j.error||'Falha administrativa');return j}
-async function loadUsers(){if(state.profile?.perfil!=='administrador')return;try{const {users}=await adminCall('list');$('#usersBody').innerHTML=users.map(u=>`<tr class="${u.ativo?'':'inactive'}"><td><strong>${esc(u.nome||u.email)}</strong><br><small>${esc(u.email)}</small></td><td><select data-user-profile="${u.id}">${['consulta','editor','auditor','administrador'].map(p=>`<option ${p===u.perfil?'selected':''}>${p}</option>`).join('')}</select></td><td>${u.ativo?'Sim':'Não'}</td><td><button class="mini-btn" data-save-user="${u.id}">Salvar</button> <button class="mini-btn secondary" data-toggle-user="${u.id}" data-active="${u.ativo}">${u.ativo?'Desativar':'Ativar'}</button></td></tr>`).join('');
-  $$('[data-save-user]').forEach(b=>b.onclick=async()=>{await adminCall('update',{userId:b.dataset.saveUser,perfil:$(`[data-user-profile="${b.dataset.saveUser}"]`).value});await loadUsers()});$$('[data-toggle-user]').forEach(b=>b.onclick=async()=>{await adminCall('update',{userId:b.dataset.toggleUser,ativo:b.dataset.active!=='true'});await loadUsers()})}catch(e){$('#usersBody').innerHTML=`<tr><td colspan="4">${esc(e.message)}</td></tr>`}}
-async function createUser(e){e.preventDefault();const f=new FormData(e.target);try{await adminCall('create',{nome:f.get('nome'),email:f.get('email'),password:f.get('password'),perfil:f.get('perfil')});$('#createUserStatus').textContent='Usuário criado com sucesso.';e.target.reset();await loadUsers()}catch(err){$('#createUserStatus').textContent=err.message}}
+async function loadUsers(){
+  if(state.profile?.perfil!=='administrador')return;
+  try{
+    const {users}=await adminCall('list');
+    $('#usersBody').innerHTML=users.map(u=>`<tr class="${u.ativo?'':'inactive'}"><td><strong>${esc(u.nome||u.username||u.email)}</strong>${u.username?`<br><small>@${esc(u.username)}</small>`:''}<br><small>${esc(u.email)}</small></td><td><select data-user-profile="${u.id}">${['consulta','editor','auditor','administrador'].map(p=>`<option ${p===u.perfil?'selected':''}>${p}</option>`).join('')}</select></td><td>${u.ativo?'Sim':'Não'}</td><td><button class="mini-btn" data-save-user="${u.id}">Salvar</button> <button class="mini-btn secondary" data-toggle-user="${u.id}" data-active="${u.ativo}">${u.ativo?'Desativar':'Ativar'}</button></td></tr>`).join('');
+    $$('[data-save-user]').forEach(b=>b.onclick=async()=>{await adminCall('update',{userId:b.dataset.saveUser,perfil:$(`[data-user-profile="${b.dataset.saveUser}"]`).value});await loadUsers()});
+    $$('[data-toggle-user]').forEach(b=>b.onclick=async()=>{await adminCall('update',{userId:b.dataset.toggleUser,ativo:b.dataset.active!=='true'});await loadUsers()});
+  }catch(e){$('#usersBody').innerHTML=`<tr><td colspan="4">${esc(e.message)}</td></tr>`}
+}
+async function createUser(e){
+  e.preventDefault();
+  const f=new FormData(e.target);
+  try{
+    await adminCall('create',{nome:f.get('nome'),username:f.get('username'),email:f.get('email'),password:f.get('password'),perfil:f.get('perfil')});
+    $('#createUserStatus').textContent='Usuário criado com sucesso. Ele poderá entrar com o e-mail ou com @'+f.get('username')+'.';
+    e.target.reset();
+    await loadUsers();
+  }catch(err){$('#createUserStatus').textContent=err.message}
+}
 async function loadHistory(){const {data,error}=await db.from('importacoes_planilha').select('*').order('importado_em',{ascending:false}).limit(100);$('#historyBody').innerHTML=error?`<tr><td colspan="6">${esc(error.message)}</td></tr>`:(data||[]).map(x=>`<tr><td>${fmtDate(x.importado_em)}</td><td>${esc(x.nome_arquivo)}</td><td>${esc(x.status)}</td><td>${x.linhas_lidas}</td><td>${x.obras_processadas}</td><td>${x.obras_com_erro}</td></tr>`).join('')}
 async function loadAudit(){if(state.profile?.perfil!=='administrador')return;const {data,error}=await db.from('auditoria_logs').select('*').order('criado_em',{ascending:false}).limit(200);$('#auditBody').innerHTML=error?`<tr><td colspan="5">${esc(error.message)}</td></tr>`:(data||[]).map(x=>`<tr><td>${fmtDate(x.criado_em)}</td><td>${esc(x.acao)}</td><td>${esc(x.entidade)}</td><td>${esc(x.entidade_id)}</td><td>${esc(x.usuario_id)}</td></tr>`).join('')}
 boot().catch(e=>{console.error(e);$('#accessDenied').classList.remove('hidden');$('#accessDenied').textContent=`Falha ao inicializar: ${e.message}`});

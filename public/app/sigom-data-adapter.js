@@ -112,6 +112,49 @@
   window.exportarGruposJSON=async()=>{try{const payload=await loadGroupsFromDb();const {data:{session}}=await sb.auth.getSession();payload.usuario=session?.user?.email||'';payload.perfil='';const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json;charset=utf-8'}));a.download='grupos_obras.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}catch(e){alert('Falha ao exportar grupos: '+e.message)}};
   window.salvarGruposNavegadorNoArquivo=()=>window.SIGOM_SALVAR_GRUPOS_SUPABASE(window.SIGOM_OBTER_GRUPOS_ATUAIS?.()||{grupos:[]});
 
+  function slugKey(v){return String(v??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'')}
+  function parsePrincipaisWorkbook(file){
+    return file.arrayBuffer().then(buf=>{
+      const wb=XLSX.read(buf,{type:'array',cellDates:true});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const grid=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:false,dateNF:'dd/mm/yyyy'});
+      const out=[];let categoria='';let ordem=0;let rmAtual='';
+      for(const row of grid){
+        const a=String(row[0]??'').trim(),b=String(row[1]??'').trim(),c=String(row[2]??'').trim();
+        const ac=a.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
+        if(ac==='OBRAS EM ANDAMENTO'||ac==='FUTURAS OBRAS'){categoria=ac;ordem=0;rmAtual='';continue}
+        if(!categoria||ac==='NR SOLICITACAO'||(!a&&!b&&!c))continue;
+        if(c)rmAtual=c;
+        const nr=String(a).replace(/\D/g,'');
+        if(!nr||!b)continue;
+        ordem++;
+        out.push({
+          chave:[categoria,nr,rmAtual].join('|'),categoria,nr_solicitacao:nr,
+          descricao:b,rm:rmAtual||null,ordem,
+          dados_origem:{'Nr Solicitação':nr,'Descrição':b,'RM':rmAtual}
+        });
+      }
+      return out;
+    });
+  }
+  window.selecionarArquivoPrincipaisObras=()=>document.getElementById('principaisImportInput')?.click();
+  window.importarPrincipaisObrasArquivo=async file=>{
+    if(!file)return;
+    try{
+      const rows=await parsePrincipaisWorkbook(file);
+      if(!rows.length)throw new Error('Nenhum Nº OPUS e nome de obra foi encontrado na planilha.');
+      const {data:{session}}=await sb.auth.getSession();if(!session)throw new Error('Sessão expirada.');
+      let ok=0;
+      for(let i=0;i<rows.length;i+=100){
+        const chunk=rows.slice(i,i+100).map(r=>({...r,atualizado_por:session.user.id,atualizado_em:new Date().toISOString()}));
+        const {error}=await sb.from('principais_obras').upsert(chunk,{onConflict:'chave'});
+        if(error)throw error;ok+=chunk.length;
+      }
+      alert(`Nome Principais Obras importado com sucesso.\nRegistros: ${ok}`);
+      await load();
+    }catch(e){alert('Falha na importação de Nome Principais Obras: '+e.message)}
+  };
+
   async function load(){
     if(!sb)throw new Error('Configuração do Supabase indisponível.');
     const {data:{session},error:sessionError}=await sb.auth.getSession();
@@ -152,6 +195,8 @@
   window.abrirFIOExterno=()=>window.open('/app/fio.html','_blank');
   window.abrirFIOGrupoSelecionado=()=>{const g=document.getElementById('fGrupo')?.value||'';window.open('/app/fio.html?grupo='+encodeURIComponent(g),'_blank')};
   document.addEventListener('DOMContentLoaded',()=>{
+    const gi=document.getElementById('grupoImportInput');if(gi)gi.addEventListener('change',async e=>{const f=e.target.files?.[0];e.target.value='';await window.importarGruposJSONArquivo(f)});
+    const pi=document.getElementById('principaisImportInput');if(pi)pi.addEventListener('change',async e=>{const f=e.target.files?.[0];e.target.value='';await window.importarPrincipaisObrasArquivo(f)});
     document.querySelectorAll('.filters input,.filters select,.tblFilterRow input').forEach(el=>{
       const paint=()=>el.classList.toggle('sigom-filtro-ativo',!!String(el.value||'').trim());
       el.addEventListener('input',paint);el.addEventListener('change',paint);

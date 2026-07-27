@@ -110,7 +110,8 @@
       <div class="two-col">
         <form id="createUserForm" class="card">
           <h3>Novo usuário</h3>
-          <label>Nome<input name="nome" required></label>
+          <label>Nome completo<input name="nome" required></label>
+          <label>Nome de usuário<input name="username" minlength="3" maxlength="40" pattern="[A-Za-z0-9._-]+" autocomplete="off" required><small>Use letras, números, ponto, hífen ou sublinhado. Ex.: fabio.barboza</small></label>
           <label>E-mail<input name="email" type="email" required></label>
           <label>Senha provisória<input name="password" type="password" minlength="8" required></label>
           <label>Perfil<select name="perfil"><option value="consulta">Consulta</option><option value="editor">Editor</option><option value="auditor">Auditor</option><option value="administrador">Administrador</option></select></label>

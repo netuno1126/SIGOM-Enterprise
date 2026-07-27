@@ -65,3 +65,25 @@ A planilha oficial `Planilha de Obras_Dash.xlsx` passa a ser a referência do mo
 Regra institucional: `IDP = % medido / % estimado`.
 
 Consulte `README_FASE_12.md` antes da implantação.
+
+
+## Fase 12.5
+Execute `supabase/17_fase_12_5_nomes_principais_obras.sql`. O menu do Dashboard passa a importar grupos JSON e a planilha Nome Principais Obras.
+
+## Fase 12.6
+
+Execute `supabase/18_fase_12_6_login_usuario.sql`. O login passa a aceitar e-mail ou nome de usuário, e as ações do cabeçalho ficam concentradas no menu em cascata.
+
+
+## Fase 12.7 — PowerPoint editável
+
+A FIO exportada em PPTX utiliza tabelas nativas do PowerPoint nos quadros de dados físico-financeiros e de PA/IDP/observações. As células podem ser editadas, copiadas e coladas em outras apresentações.
+
+
+## Fase 12.8 — Alternância real do Portfólio
+
+O checkbox da Visão Geral agora alterna efetivamente entre a tabela `obras` e a tabela `portfolio_obras`, recalculando filtros, indicadores, tabela, gráficos e exportações. Não requer SQL adicional.
+
+## Fase 12.9
+
+Correção responsiva dos KPIs com valores monetários extensos, sem abreviar ou ocultar o conteúdo.

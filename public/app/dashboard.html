@@ -63,9 +63,11 @@ body.admin-ok .dropcontent button.adminOnly{display:block}
 .filters select,.filters input{padding:8px 10px;border:1px solid #c4d3e3;border-radius:8px;background:#fff;font-size:13px;min-width:150px}
 .filters label.chk{display:flex;align-items:center;gap:6px;font-size:13px;background:#fff;padding:8px 12px;border-radius:8px;border:1px solid #c4d3e3;cursor:pointer}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:16px}
-.kpi{background:var(--card);border-radius:12px;padding:12px;box-shadow:0 2px 6px rgba(30,78,121,.12)}
+.kpi{background:var(--card);border-radius:12px;padding:12px;box-shadow:0 2px 6px rgba(30,78,121,.12);min-width:0;overflow:hidden}
 .kpi .lbl{font-size:10.5px;text-transform:uppercase;color:#5b7a99;letter-spacing:.4px}
-.kpi .val{font-size:22px;font-weight:700;color:var(--azul);margin-top:4px}
+.kpi .val{font-size:22px;font-weight:700;color:var(--azul);margin-top:4px;max-width:100%;line-height:1.08;overflow-wrap:anywhere;word-break:break-word}
+.kpi .val.kpi-long{font-size:16px}
+.kpi .val.kpi-very-long{font-size:12px;line-height:1.05}
 .kpi.alert .val{color:var(--vermelho)}
 .kpi.ok .val{color:var(--verde)}
 .grid{display:grid;gap:14px}
@@ -303,14 +305,9 @@ body.logo-locked .logoSlot{cursor:default}
   <input type="file" id="fileInput" accept=".xlsx" style="display:none">
   <input type="file" id="portInput" accept=".xlsx" style="display:none">
   <input type="file" id="saldoInput" accept=".xlsx" style="display:none">
+  <input type="file" id="grupoImportInput" accept=".json,application/json" style="display:none">
+  <input type="file" id="principaisImportInput" accept=".xlsx,.xls,.xlsm" style="display:none">
   <div class="toolGroup" id="authPanel">
-   <button class="fioExternalBtn" onclick="abrirFIOExterno()" title="Abrir slide FIO em HTML separado">📊 FIO</button>
-   <button class="fioExternalBtn" onclick="abrirFIOGrupoSelecionado()" title="Gerar FIO por grupo criado no SIGOM">📊 FIO por grupo</button>
-   <button class="objetivosExternalBtn" onclick="salvarGruposNavegadorNoArquivo()" title="Salvar os grupos no banco Supabase">💾 Salvar grupos</button>
-<button class="objetivosExternalBtn" onclick="selecionarArquivoImportarGrupos()" title="Importar grupos_obras.json para o banco">📥 Importar grupos</button>
-<button class="objetivosExternalBtn" onclick="exportarGruposJSON()" title="Exportar os grupos do banco no formato grupos_obras.json">📤 Exportar grupos</button>
-   <button class="objetivosExternalBtn" onclick="window.open('/app/obras-paralisadas.html','_blank')" title="Cadastrar obras paralisadas por processo crítico">🚧 Obras Paralisadas</button>
-   <button class="objetivosExternalBtn" onclick="abrirObjetivosMetas()" title="Abrir Objetivos e Metas 2026 usando o mesmo login do SIGOM">🎯 Objetivos e Metas</button>
    <div class="dropdown" id="menuDrop">
      <button class="dropbtn" onclick="toggleDrop('menuDrop',event)">☰ Menu ▾</button>
      <div class="dropcontent">
@@ -318,6 +315,7 @@ body.logo-locked .logoSlot{cursor:default}
        <div class="dropsec">Dados</div>
        <button onclick="pick('fileInput')">📂 Inserir planilha de Obras</button>
        <button onclick="pick('portInput')">📋 Inserir planilha de Portfólio</button>
+       <button onclick="selecionarArquivoPrincipaisObras();closeDrops()">🏷️ Importar Nome Principais Obras</button>
        <button onclick="pick('saldoInput')">💰 Inserir planilha de Saldos</button>
        <div class="dropsec">Gerar / Exportar</div>
        <button onclick="gerarPPTX()">⟳ Atualizar PowerPoint</button>
@@ -334,7 +332,7 @@ body.logo-locked .logoSlot{cursor:default}
        <button class="adminOnly" onclick="salvarConfig()">💾 Salvar configuração</button>
        <div class="dropsec">Conta</div>
        <button onclick="alterarSenhaSIGOM()">🔑 Alterar senha</button>
-       <button class="adminOnly" onclick="cadastrarUsuarioSIGOM()">👥 Cadastrar usuário</button>
+       <button class="adminOnly" onclick="abrirCadastroUsuariosSIGOM();closeDrops()">👥 Cadastrar novos usuários</button>
        <button class="adminOnly" onclick="abrirPainelLogosSIGOM()">🖼 Logos</button>
        <button id="logoutBtn" onclick="logoutSIGOM()">🔒 Sair</button>
      </div>
@@ -667,7 +665,26 @@ let NOME_OBRA_MAP={};
 const fmtBR=n=>isNum(n)?n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'-';
 const fmtMi=n=>isNum(n)?'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'-';
 const fmtR$=n=>isNum(n)?'R$ '+fmtBR(n):'-';
-const pct=n=>isNum(n)?n.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%':'-';
+function ajustarValoresKPI(root=document){
+  const elementos=root.querySelectorAll?.('.kpi .val')||[];
+  elementos.forEach(el=>{
+    const texto=(el.textContent||'').trim();
+    el.classList.remove('kpi-long','kpi-very-long');
+    if(texto.length>30) el.classList.add('kpi-very-long');
+    else if(texto.length>18) el.classList.add('kpi-long');
+    if(texto) el.title=texto;
+  });
+}
+function ativarAjusteAutomaticoKPI(){
+  const alvos=['kpis','kpisAnalise','kpisMediaGlobal','kpisSaldo']
+    .map(id=>document.getElementById(id)).filter(Boolean);
+  alvos.forEach(alvo=>{
+    ajustarValoresKPI(alvo);
+    new MutationObserver(()=>requestAnimationFrame(()=>ajustarValoresKPI(alvo)))
+      .observe(alvo,{childList:true,subtree:true,characterData:true});
+  });
+}
+const pct=n=>{const v=toNum(n);return isNum(v)?v.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'%':'-';};
 function fmtContrato(v){
   if(v==null||v==='')return '';
   // SheetJS pode interpretar "MM/AAAA" ou "NNN/AAAA" como data: reconverter para mm/aaaa
@@ -1315,11 +1332,12 @@ function applyPort(){
   const temValor=PORT.some(r=>isNum(r['Valor Atual']));
   document.getElementById('portInfo').textContent='— '+PORT.length+' obra(s) na planilha do Portfólio'+
     (temValor?' (com valores)':' ⚠ sem coluna "Valor Atual" — KPIs podem não somar');
-  const fs=document.getElementById('fSel');
-  if(fs)fs.checked=true; // abrir o dashboard com as obras do portfólio selecionado visíveis
+  // Não ativa silenciosamente o grupo especial __PORT__. O checkbox passa a ser
+  // a única chave da Visão Geral para alternar entre Planilha de Obras e Portfólio.
   const fg=document.getElementById('fGrupo');
-  if(fg && !fg.value)fg.value='__PORT__';
+  if(fg && fg.value==='__PORT__')fg.value='';
   preencherSelectAnalise();
+  atualizarFiltrosFonteAtivaSIGOM();
   render();
   if(curTab==='analise')renderAnalise();
 }
@@ -1395,13 +1413,50 @@ function termosAtivosBusca(){
   return termos;
 }
 
+function fonteBaseVisaoGeralSIGOM(){
+  const chk=document.getElementById('fSel');
+  return (chk?.checked && PORT.length)?PORT:DATA;
+}
+function atualizarFiltrosFonteAtivaSIGOM(){
+  const base=fonteBaseVisaoGeralSIGOM();
+  const valoresAtuais={
+    fRM:document.getElementById('fRM')?.value||'',
+    fCt:document.getElementById('fCt')?.value||'',
+    fEmp:document.getElementById('fEmp')?.value||'',
+    fContrato:document.getElementById('fContrato')?.value||''
+  };
+  fill('fRM',[...new Set(base.map(r=>r.RM))].filter(v=>v!=null&&v!=='').sort((a,b)=>String(a).localeCompare(String(b),'pt-BR',{numeric:true})));
+  fill('fCt',[...new Set(base.map(r=>r.Contratante))].filter(Boolean).sort((a,b)=>String(a).localeCompare(String(b),'pt-BR')));
+  fill('fEmp',[...new Set(base.map(r=>r.Empresa))].filter(Boolean).sort((a,b)=>String(a).localeCompare(String(b),'pt-BR')));
+  preencherFiltroContratos(base);
+  for(const [id,val] of Object.entries(valoresAtuais)){
+    const el=document.getElementById(id); if(el&&[...el.options].some(o=>o.value===val))el.value=val;
+  }
+  const st=document.getElementById('status');
+  if(st){
+    const fonte=(document.getElementById('fSel')?.checked&&PORT.length)?'Portfólio':'Planilha de Obras';
+    st.textContent='✔ '+base.length+' obras · fonte ativa: '+fonte;
+  }
+}
+function alternarFontePortfolioSIGOM(){
+  const chk=document.getElementById('fSel');
+  const fg=document.getElementById('fGrupo');
+  // Remove o grupo especial oculto para evitar que ele mantenha o Portfólio
+  // ativo depois que o usuário desmarca o checkbox.
+  if(fg&&fg.value==='__PORT__')fg.value='';
+  if(chk?.checked&&!PORT.length){
+    chk.checked=false;
+    alert('A Planilha do Portfólio ainda não possui registros importados.');
+  }
+  atualizarFiltrosFonteAtivaSIGOM();
+  render();
+  if(curTab==='analise')renderAnalise();
+}
 function initFilters(){
   ['fGrupo','fRM','fCt','fEmp','fContrato','fPrazo','fBusca'].forEach(id=>{const el=document.getElementById(id); if(el&&!el.getAttribute('data-title-original'))el.setAttribute('data-title-original',el.title||'');});
-  fill('fRM',[...new Set(DATA.map(r=>r.RM))].filter(v=>v!=null).sort((a,b)=>a-b));
-  fill('fCt',[...new Set(DATA.map(r=>r.Contratante))].filter(Boolean).sort());
-  fill('fEmp',[...new Set(DATA.map(r=>r.Empresa))].filter(Boolean).sort());
-  preencherFiltroContratos();
-  ['fRM','fCt','fEmp','fContrato','fPrazo','fSel'].forEach(id=>document.getElementById(id).onchange=render);
+  atualizarFiltrosFonteAtivaSIGOM();
+  ['fRM','fCt','fEmp','fContrato','fPrazo'].forEach(id=>document.getElementById(id).onchange=render);
+  document.getElementById('fSel').onchange=alternarFontePortfolioSIGOM;
   document.getElementById('fBusca').oninput=render;
   document.querySelectorAll('#tbl thead .tblFilterRow input').forEach(inp=>inp.oninput=render);
   saveSel();
@@ -1424,11 +1479,11 @@ function agruparPorContrato(rows){
   });
   return Object.values(mapa).sort((a,b)=>String(a.contrato).localeCompare(String(b.contrato),'pt-BR',{numeric:true}));
 }
-function preencherFiltroContratos(){
+function preencherFiltroContratos(base=fonteBaseVisaoGeralSIGOM()){
   const s=document.getElementById('fContrato'); if(!s)return;
   const atual=s.value;
   s.innerHTML='<option value="">Contrato — todos</option>';
-  agruparPorContrato(DATA).forEach(g=>{
+  agruparPorContrato(base).forEach(g=>{
     const o=document.createElement('option');
     o.value=g.contrato;
     o.textContent=`${g.contrato} — ${g.opus.size} OPUS — ${fmtMi(g.valor)}`;
@@ -1489,6 +1544,10 @@ function render(){
   atualizarFiltrosAtivos();
   const termosBusca=termosAtivosBusca();
   const rows=filtered();
+  const fontePortfolio=!!(document.getElementById('fSel')?.checked&&PORT.length);
+  const fonteNome=fontePortfolio?'Planilha do Portfólio':'Planilha de Obras';
+  const chkLabel=document.getElementById('fSel')?.closest('label');
+  if(chkLabel)chkLabel.title='Fonte atual: '+fonteNome+'. '+(fontePortfolio?'Desmarque para usar a Planilha de Obras.':'Marque para usar exclusivamente os registros de portfolio_obras.');
   // alerta: busca por OPUS/contrato sem resultado → planilha-fonte pode estar desatualizada
   const qBusca=(document.getElementById('fBusca').value||'').trim();
   let alerta=document.getElementById('avisoFonte');
@@ -2505,6 +2564,11 @@ async function alterarSenhaSIGOM(){
     alert('Para alterar senha em arquivo, abra o SIGOM pelo ABRIR_DASHBOARD_SIGOM.bat atualizado.');
   }
 }
+function abrirCadastroUsuariosSIGOM(){
+  if(!isAdminSIGOM()){alert('Acesso exclusivo do Administrador.');return;}
+  window.open('/app/administracao.html?tab=users','_blank','noopener');
+}
+
 async function cadastrarUsuarioSIGOM(){
   if(!isAdminSIGOM()){alert('Apenas perfil Auditor/Administrador pode cadastrar usuário.');return;}
   const admin=getAuthInfo();
@@ -3017,7 +3081,9 @@ document.body.classList.add('auth-ok');
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/config.js"></script>
-<script src="/app/sigom-data-adapter.js"></script>
+<script src="/app/sigom-data-adapter.js">
+document.addEventListener('DOMContentLoaded',ativarAjusteAutomaticoKPI);
+</script>
 <style>.sigom-filtro-ativo{background:#fff2cc!important;border-color:#e67e22!important;box-shadow:0 0 0 2px rgba(230,126,34,.18)!important}.sigom-match{background:#ffeb3b;color:#000;font-weight:800}.auth-ok #loginScreen{display:none!important}</style>
 </body>
 </html>
