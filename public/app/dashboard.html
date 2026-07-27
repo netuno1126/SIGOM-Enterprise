@@ -381,7 +381,7 @@ body.logo-locked .logoSlot{cursor:default}
         <select id="fEmp"><option value="">Empresa — todas</option></select>
         <select id="fContrato" title="Filtrar por contrato. A lista mostra quantos Nº OPUS existem no contrato e a soma do Valor Atual."><option value="">Contrato — todos</option></select>
         <select id="fPrazo"><option value="">Prazo — todos</option><option value="SIM">No prazo</option><option value="NÃO">Atrasadas</option></select>
-        <label class="chk"><input type="checkbox" id="fSel"> Somente portfólio selecionado (planilha do Portfólio)</label>
+        <label class="chk"><input type="checkbox" id="fSel" checked> Somente portfólio selecionado (planilha do Portfólio)</label>
         <input id="fBusca" placeholder="🔎 Buscar obra, OPUS, contrato, empresa…">
       </div>
       <div class="kpis" id="kpis"></div>
@@ -649,6 +649,10 @@ window.SIGOM_APLICAR_DADOS_ONLINE=function(payload={}){
   document.getElementById('app')?.classList.remove('hidden');
   const principal=DATA.length?DATA:PORT;
   if(!DATA.length&&PORT.length) DATA=[...PORT];
+  // Comportamento padrão após login: iniciar pela Planilha do Portfólio.
+  // O usuário pode desmarcar o checkbox para retornar à Planilha de Obras.
+  const chkPortfolio=document.getElementById('fSel');
+  if(chkPortfolio) chkPortfolio.checked=PORT.length>0;
   const st=document.getElementById('status');
   if(st)st.textContent='✔ '+DATA.length+' obras carregadas do Supabase'+(payload.fonte?' · '+payload.fonte:'');
   const lu=document.getElementById('lastUpdate');
@@ -684,7 +688,24 @@ function ativarAjusteAutomaticoKPI(){
       .observe(alvo,{childList:true,subtree:true,characterData:true});
   });
 }
-const pct=n=>{const v=toNum(n);return isNum(v)?v.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'%':'-';};
+function toPercentNum(v){
+  if(v==null||v==='')return null;
+  let n;
+  if(typeof v==='number') n=isFinite(v)?v:null;
+  else {
+    let s=String(v).replace(/R\$|\s|%/g,'');
+    if(!s||s==='-')return null;
+    if(s.includes(',')) s=s.replace(/\./g,'').replace(',','.');
+    // Em percentuais, ponto isolado é separador decimal, não milhar.
+    n=Number(s);
+  }
+  if(!isNum(n))return null;
+  // Excel pode fornecer 0,9377; importações antigas podem ter gravado 9377.
+  if(Math.abs(n)>0&&Math.abs(n)<=1)n*=100;
+  else if(Math.abs(n)>1000&&Math.abs(n)<=10000)n/=100;
+  return n;
+}
+const pct=n=>{const v=toPercentNum(n);return isNum(v)?v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%':'-';};
 function fmtContrato(v){
   if(v==null||v==='')return '';
   // SheetJS pode interpretar "MM/AAAA" ou "NNN/AAAA" como data: reconverter para mm/aaaa
@@ -791,12 +812,8 @@ function detalheMesesRecurso(r){
   return {meses, texto, classe:meses<3?'cbad':'cok'};
 }
 
-function pctMedicaoValor(v){
-  if(!isNum(v))return null;
-  // Se a planilha trouxer percentual como 0,15, converte para 15.
-  // Se trouxer como 15, mantém 15.
-  return Math.abs(v)<=1 ? v*100 : v;
-}
+function pctMedicaoValor(v){ return toPercentNum(v); }
+
 function valorMediaLiq3Ultimas(r){
   // Média liq. 3 últimas medições = média dos incrementos percentuais
   // convertidos em valor pelo Valor Inicial.
@@ -900,7 +917,11 @@ function normalizeRows(rows){
         if(!vazio(v) || !(canon in o)){ o[canon]=v; melhorPrio[canon]=prio; }
       }
     }
-    NUMCOLS.forEach(c=>{ if(c in o) o[c]=toNum(o[c]); });
+    NUMCOLS.forEach(c=>{
+      if(!(c in o))return;
+      if(['% estimado','% medido','% Quarta','% Antepenúltima','% Penúltima','% Última','% Empenhado','% atraso'].includes(c)) o[c]=toPercentNum(o[c]);
+      else o[c]=toNum(o[c]);
+    });
     return o;
   });
 }

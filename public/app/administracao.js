@@ -4,7 +4,8 @@ const state={session:null,profile:null,pending:null};
 const $=s=>document.querySelector(s);const $$=s=>[...document.querySelectorAll(s)];
 const norm=s=>String(s??'').normalize('NFKC').trim();
 const key=s=>norm(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
-const num=v=>{if(typeof v==='number')return Number.isFinite(v)?v:null;const s=norm(v).replace(/R\$|\s/g,'').replace(/\./g,'').replace(',','.').replace('%','');const n=Number(s);return Number.isFinite(n)?n:null};
+const num=v=>{if(typeof v==='number')return Number.isFinite(v)?v:null;let s=norm(v).replace(/R\$|\s|%/g,'');if(!s)return null;if(s.includes(',')&&s.includes('.'))s=s.lastIndexOf(',')>s.lastIndexOf('.')?s.replace(/\./g,'').replace(',','.'):s.replace(/,/g,'');else if(s.includes(','))s=s.replace(',','.');const n=Number(s);return Number.isFinite(n)?n:null};
+const percentual=v=>{let n=num(v);if(n===null)return null;if(Math.abs(n)>0&&Math.abs(n)<=1)n*=100;else if(Math.abs(n)>1000&&Math.abs(n)<=10000)n/=100;return n};
 const fmtDate=v=>v?new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeStyle:'short'}).format(new Date(v)):'—';
 const esc=v=>norm(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
@@ -46,29 +47,29 @@ function mapObra(r){
     om_beneficiada:norm(get(r,['OM Beneficiada','OM'])),
     empresa:norm(get(r,['Empresa','Contratada'])),
     descricao,descricao_solicitacao:descricao,nome_obra:descricao,
-    percentual_estimado:num(get(r,['% estimado','% Estimado','Percentual Estimado'])),
-    percentual_medido:num(get(r,['% medido','% Medido','Percentual Medido'])),
+    percentual_estimado:percentual(get(r,['% estimado','% Estimado','Percentual Estimado'])),
+    percentual_medido:percentual(get(r,['% medido','% Medido','Percentual Medido'])),
     valor_solicitacao:num(get(r,['Valor Solicitação'])),
     valor_contratado:num(get(r,['Valor Contratado'])),
     acoes_financeiras:norm(get(r,['Ações Financeiras'])),
     inicio_os:isoDate(get(r,['Início (OS)','Início da Obra'])),
     fim_prazo:isoDate(get(r,['Fim Prazo'])),
     fim_vigencia:isoDate(get(r,['Fim Vigência'])),
-    percentual_quarta:num(get(r,['% Quarta'])),data_quarta:isoDate(get(r,['Data quarta'])),
-    percentual_antepenultima:num(get(r,['% Antepenúltima'])),data_antepenultima:isoDate(get(r,['Data Antepenúltima'])),
-    percentual_penultima:num(get(r,['% Penúltima'])),data_penultima:isoDate(get(r,['Data Penúltima'])),
-    percentual_ultima:num(get(r,['% Última'])),data_ultima:isoDate(get(r,['Data Última'])),
+    percentual_quarta:percentual(get(r,['% Quarta'])),data_quarta:isoDate(get(r,['Data quarta'])),
+    percentual_antepenultima:percentual(get(r,['% Antepenúltima'])),data_antepenultima:isoDate(get(r,['Data Antepenúltima'])),
+    percentual_penultima:percentual(get(r,['% Penúltima'])),data_penultima:isoDate(get(r,['Data Penúltima'])),
+    percentual_ultima:percentual(get(r,['% Última'])),data_ultima:isoDate(get(r,['Data Última'])),
     valor_inicial:num(get(r,['Valor Inicial'])),valor_aditivado:num(get(r,['Valor Aditivado'])),
     valor_apostilado:num(get(r,['Valor Apostilado'])),valor_atual:num(get(r,['Valor Atual','Valor Total','VALOR TOTAL'])),
     total_nc:num(get(r,['Total NC'])),total_ne:num(get(r,['Total NE','Empenho','EMPENHO'])),
-    percentual_empenhado:num(get(r,['% Empenhado'])),falta_empenhar:num(get(r,['Falta Empenhar'])),
+    percentual_empenhado:percentual(get(r,['% Empenhado'])),falta_empenhar:num(get(r,['Falta Empenhar'])),
     total_nf:totalNotas,total_notas_fiscais:totalNotas,
     prazo_contratado:intNum(get(r,['Prazo Contratado'])),prazo_aditivo:intNum(get(r,['Prazo Aditivo'])),prazo_total:intNum(get(r,['Prazo Total'])),
     vigencia_contratado:intNum(get(r,['Vigência Contratado'])),vigencia_aditivado:intNum(get(r,['Vigência Aditivado'])),vigencia_total:intNum(get(r,['Vigência Total'])),
     termino_vigencia:isoDate(get(r,['Término de Vigência'])),saldo_descentralizar:num(get(r,['Saldo a Descentralizar'])),
     acao_orcamentaria:norm(get(r,['Ação Orçamentaria','Ação Orçamentária'])),idp:num(get(r,['IDP'])),
     data_projetada:isoDate(get(r,['data projetada','Data Projetada'])),obs:norm(get(r,['obs','Observações'])),
-    dias_atrasados:intNum(get(r,['dias atrasados'])),percentual_atraso:num(get(r,['% atraso'])),
+    dias_atrasados:intNum(get(r,['dias atrasados'])),percentual_atraso:percentual(get(r,['% atraso'])),
     media_medicao_3:num(get(r,['media medicao 3'])),media_mensal_global:num(get(r,['media mensal global'])),
     analise:norm(get(r,['analise','Análise'])),media_90_dias:num(get(r,['media 90 dias'])),saldo_empenho:num(get(r,['saldo de empenho'])),
     dados:r,dados_origem:r
@@ -146,8 +147,48 @@ async function loadUsers(){
   if(state.profile?.perfil!=='administrador')return;
   try{
     const {users}=await adminCall('list');
-    $('#usersBody').innerHTML=users.map(u=>`<tr class="${u.ativo?'':'inactive'}"><td><strong>${esc(u.nome||u.username||u.email)}</strong>${u.username?`<br><small>@${esc(u.username)}</small>`:''}<br><small>${esc(u.email)}</small></td><td><select data-user-profile="${u.id}">${['consulta','editor','auditor','administrador'].map(p=>`<option ${p===u.perfil?'selected':''}>${p}</option>`).join('')}</select></td><td>${u.ativo?'Sim':'Não'}</td><td><button class="mini-btn" data-save-user="${u.id}">Salvar</button> <button class="mini-btn secondary" data-toggle-user="${u.id}" data-active="${u.ativo}">${u.ativo?'Desativar':'Ativar'}</button></td></tr>`).join('');
-    $$('[data-save-user]').forEach(b=>b.onclick=async()=>{await adminCall('update',{userId:b.dataset.saveUser,perfil:$(`[data-user-profile="${b.dataset.saveUser}"]`).value});await loadUsers()});
+    $('#usersBody').innerHTML=users.map(u=>`<tr class="${u.ativo?'':'inactive'}" data-user-row="${u.id}">
+      <td>
+        <div data-user-display="${u.id}"><strong>${esc(u.nome||u.username||u.email)}</strong>${u.username?`<br><small>@${esc(u.username)}</small>`:''}<br><small>${esc(u.email)}</small></div>
+        <div class="user-edit-fields hidden" data-user-editor="${u.id}">
+          <label>Nome completo<input data-user-name="${u.id}" value="${esc(u.nome||'')}"></label>
+          <label>Nome de usuário<input data-user-username="${u.id}" value="${esc(u.username||'')}" minlength="3" maxlength="40" pattern="[A-Za-z0-9._-]+"></label>
+          <label>E-mail<input data-user-email="${u.id}" type="email" value="${esc(u.email||'')}"></label>
+        </div>
+      </td>
+      <td><select data-user-profile="${u.id}" disabled>${['consulta','editor','auditor','administrador'].map(p=>`<option ${p===u.perfil?'selected':''}>${p}</option>`).join('')}</select></td>
+      <td>${u.ativo?'Sim':'Não'}</td>
+      <td class="user-actions">
+        <button class="mini-btn secondary" data-edit-user="${u.id}">Editar</button>
+        <button class="mini-btn hidden" data-save-user="${u.id}">Salvar</button>
+        <button class="mini-btn secondary" data-toggle-user="${u.id}" data-active="${u.ativo}">${u.ativo?'Desativar':'Ativar'}</button>
+      </td>
+    </tr>`).join('');
+
+    $$('[data-edit-user]').forEach(b=>b.onclick=()=>{
+      const id=b.dataset.editUser;
+      $(`[data-user-display="${id}"]`).classList.add('hidden');
+      $(`[data-user-editor="${id}"]`).classList.remove('hidden');
+      $(`[data-user-profile="${id}"]`).disabled=false;
+      $(`[data-save-user="${id}"]`).classList.remove('hidden');
+      b.classList.add('hidden');
+    });
+
+    $$('[data-save-user]').forEach(b=>b.onclick=async()=>{
+      const id=b.dataset.saveUser;
+      b.disabled=true;
+      try{
+        await adminCall('update',{
+          userId:id,
+          nome:$(`[data-user-name="${id}"]`).value,
+          username:$(`[data-user-username="${id}"]`).value,
+          email:$(`[data-user-email="${id}"]`).value,
+          perfil:$(`[data-user-profile="${id}"]`).value
+        });
+        await loadUsers();
+      }catch(e){alert(e.message);b.disabled=false}
+    });
+
     $$('[data-toggle-user]').forEach(b=>b.onclick=async()=>{await adminCall('update',{userId:b.dataset.toggleUser,ativo:b.dataset.active!=='true'});await loadUsers()});
   }catch(e){$('#usersBody').innerHTML=`<tr><td colspan="4">${esc(e.message)}</td></tr>`}
 }

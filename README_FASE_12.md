@@ -31,3 +31,8 @@ A estrutura oficial do Portfólio, Principais Obras e Saldos Alongados foi acres
 - `mapeamentos/portfolio_saldos_principais.json`
 
 A importação online passa a reconhecer diretamente os três formatos oficiais.
+
+
+## Fase 12.12 — Portfólio padrão
+
+Após o login, o Dashboard inicia com **Somente portfólio selecionado** marcado quando houver registros em `portfolio_obras`.

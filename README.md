@@ -90,3 +90,8 @@ Correção responsiva dos KPIs com valores monetários extensos, sem abreviar ou
 
 ## Fase 12.10
 O Dashboard agora sincroniza o perfil Supabase com o menu baseline, exibe `Nome — Perfil` e libera o cadastro de usuários somente ao Administrador.
+
+
+## Fase 12.12 — Portfólio padrão
+
+Após o login, o Dashboard inicia com **Somente portfólio selecionado** marcado quando houver registros em `portfolio_obras`.

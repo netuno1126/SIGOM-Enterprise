@@ -40,8 +40,22 @@ export default async (req)=>{
     }
     if(body.action==='update'){
       if(!body.userId)return json({error:'userId obrigatório'},400)
-      const patch={atualizado_em:new Date().toISOString()};if(body.perfil)patch.perfil=body.perfil;if(typeof body.ativo==='boolean')patch.ativo=body.ativo
-      if(body.username!==undefined){const username=cleanUsername(body.username);if(!validUsername(username))return json({error:'Nome de usuário inválido'},400);patch.username=username}
+      const patch={atualizado_em:new Date().toISOString()}
+      if(body.perfil)patch.perfil=body.perfil
+      if(typeof body.ativo==='boolean')patch.ativo=body.ativo
+      if(body.nome!==undefined)patch.nome=String(body.nome||'').trim()
+      if(body.username!==undefined){
+        const username=cleanUsername(body.username)
+        if(!validUsername(username))return json({error:'Nome de usuário inválido'},400)
+        const {data:existing,error:xe}=await admin.from('profiles').select('id').ilike('username',username).neq('id',body.userId).maybeSingle();if(xe)throw xe
+        if(existing)return json({error:'Este nome de usuário já está em uso.'},409)
+        patch.username=username
+      }
+      if(body.email!==undefined){
+        const email=String(body.email||'').trim().toLowerCase()
+        if(!email||!/^\S+@\S+\.\S+$/.test(email))return json({error:'E-mail inválido'},400)
+        const {error:ae}=await admin.auth.admin.updateUserById(body.userId,{email,email_confirm:true});if(ae)throw ae
+      }
       const {error}=await admin.from('profiles').update(patch).eq('id',body.userId);if(error)throw error
       return json({ok:true})
     }

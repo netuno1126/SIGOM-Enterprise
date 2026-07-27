@@ -309,8 +309,8 @@ const num=v=>{if(v==null||v==='')return null;if(typeof v==='number')return isFin
 const digits=v=>String(v??'').replace(/\D/g,'');
 const fmtMi=n=>isNum(n)?'R$ '+(n/1e6).toLocaleString('pt-BR',{maximumFractionDigits:1})+' Mi':'—';
 const fmtR$=n=>isNum(n)?'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'—';
-const pctNum=v=>{const n=num(v);if(!isNum(n))return null;return Math.abs(n)<=1?n*100:n;};
-const pct=n=>{const p=pctNum(n);return isNum(p)?p.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%':'—';};
+const pctNum=v=>{let n=num(v);if(!isNum(n))return null;if(Math.abs(n)>0&&Math.abs(n)<=1)n*=100;else if(Math.abs(n)>1000&&Math.abs(n)<=10000)n/=100;return n;};
+const pct=n=>{const p=pctNum(n);return isNum(p)?p.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%':'—';};
 function asDate(v){if(v==null||v==='')return null;if(v instanceof Date)return v;
   if(typeof v==='number'){const d=XLSX.SSF.parse_date_code(v);return d?new Date(d.y,d.m-1,d.d):null}
   const s=String(v);let m=s.match(/(\d{4})-(\d{2})-(\d{2})/);if(m)return new Date(+m[1],+m[2]-1,+m[3]);
