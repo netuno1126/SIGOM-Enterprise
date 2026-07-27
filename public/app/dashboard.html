@@ -653,6 +653,21 @@ window.SIGOM_APLICAR_DADOS_ONLINE=function(payload={}){
   // O usuário pode desmarcar o checkbox para retornar à Planilha de Obras.
   const chkPortfolio=document.getElementById('fSel');
   if(chkPortfolio) chkPortfolio.checked=PORT.length>0;
+
+  // Estado inicial oficial após cada login/recarregamento autenticado.
+  // Abre sempre na Visão Geral, com o Portfólio ativo e todos os demais filtros
+  // limpos, exatamente como a baseline operacional homologada.
+  const defaults={fGrupo:'',fRM:'',fCt:'',fEmp:'',fContrato:'',fPrazo:'',fBusca:''};
+  for(const [id,value] of Object.entries(defaults)){
+    const el=document.getElementById(id);
+    if(el) el.value=value;
+  }
+  document.querySelectorAll('#tbl thead .tblFilterRow input').forEach(el=>{el.value='';});
+  try{localStorage.removeItem('sigom_filtros_dashboard')}catch(e){}
+  curTab='visao';
+  document.querySelectorAll('.tab').forEach(el=>el.classList.toggle('active',el.dataset.tab==='visao'));
+  document.querySelectorAll('.tabContent').forEach(el=>el.classList.toggle('active',el.id==='visao'));
+
   // A partir deste ponto a consulta online terminou; funções do Dashboard podem
   // distinguir uma tabela realmente vazia de um carregamento ainda pendente.
   window.__sigomLoaded=true;

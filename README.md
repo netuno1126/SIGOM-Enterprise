@@ -105,3 +105,7 @@ O Dashboard agora sincroniza o perfil Supabase com o menu baseline, exibe `Nome 
 ## Fase 12.12 — Portfólio padrão
 
 Após o login, o Dashboard inicia com **Somente portfólio selecionado** marcado quando houver registros em `portfolio_obras`.
+
+## Fase 12.17 — FIO com grupos do Supabase
+
+A FIO original agora carrega grupos, subgrupos e vínculos de obras diretamente de `grupos` e `grupo_obras`, permitindo selecionar obras e exportar FIO por grupo.

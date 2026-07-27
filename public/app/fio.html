@@ -617,6 +617,7 @@ window.SIGOM_APLICAR_DADOS_FIO=function(payload){
   PORT=Array.isArray(payload.portfolio)?payload.portfolio:[];
   OBRAS=Array.isArray(payload.obras)&&payload.obras.length?payload.obras:(PORT.length?PORT:DATA);
   FIO_EDICOES=payload.edicoes||{};
+  if(payload.grupos&&typeof payload.grupos==='object')GRUPOS=normalizarGruposSIGOM({grupos:Object.values(payload.grupos)});
   fioIndexAtual=0;
   montarSelectFIO();
   montarSelectGruposFIO();
