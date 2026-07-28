@@ -5,7 +5,7 @@ const $=s=>document.querySelector(s);const $$=s=>[...document.querySelectorAll(s
 const norm=s=>String(s??'').normalize('NFKC').trim();
 const key=s=>norm(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
 const num=v=>{if(typeof v==='number')return Number.isFinite(v)?v:null;let s=norm(v).replace(/R\$|\s|%/g,'');if(!s)return null;if(s.includes(',')&&s.includes('.'))s=s.lastIndexOf(',')>s.lastIndexOf('.')?s.replace(/\./g,'').replace(',','.'):s.replace(/,/g,'');else if(s.includes(','))s=s.replace(',','.');const n=Number(s);return Number.isFinite(n)?n:null};
-const percentual=v=>{let n=num(v);if(n===null)return null;if(Math.abs(n)>0&&Math.abs(n)<=1)n*=100;else if(Math.abs(n)>1000&&Math.abs(n)<=10000)n/=100;return n};
+const percentual=v=>{const original=norm(v);let n=num(v);if(n===null)return null;/* Valores com % já estão na escala exibida. Frações sem sinal (0,0307) viram 3,07. Nunca multiplica 3,07 para 307. */if(!/%/.test(original)&&Math.abs(n)>0&&Math.abs(n)<=1)n*=100;return n};
 const fmtDate=v=>v?new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeStyle:'short'}).format(new Date(v)):'—';
 const esc=v=>norm(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 

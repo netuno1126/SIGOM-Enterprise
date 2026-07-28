@@ -125,6 +125,19 @@
     await loadGroupsFromDb();
     return {grupos:gravados,vinculos,naoEncontradas};
   }
+
+  // Edição administrativa auditada da aba Tabelas.
+  window.SIGOM_ATUALIZAR_OBRA_ADMIN=async(obraId,alteracoes,motivo)=>{
+    if(!obraId||!alteracoes||!Object.keys(alteracoes).length)throw new Error('Nenhuma alteração válida foi informada.');
+    const {data:{session}}=await sb.auth.getSession();
+    if(!session)throw new Error('Sessão expirada. Entre novamente.');
+    const {data:profile,error:pe}=await sb.from('profiles').select('perfil,ativo').eq('id',session.user.id).maybeSingle();
+    if(pe)throw pe;
+    if(profile?.perfil!=='administrador'||profile?.ativo===false)throw new Error('Somente Administrador pode editar diretamente os dados das tabelas.');
+    const {data:result,error}=await sb.rpc('sigom_editar_obra_admin',{p_obra_id:obraId,p_alteracoes:alteracoes,p_motivo:String(motivo||'Correção manual pela aba Tabelas')});
+    if(error)throw error;
+    return result;
+  };
   window.SIGOM_CARREGAR_GRUPOS_SUPABASE=async()=>{try{await loadGroupsFromDb();return true}catch(e){console.warn(e);return false}};
   window.SIGOM_SALVAR_GRUPOS_SUPABASE=async payload=>{try{const r=await saveGroupsToDb(payload);alert(`Grupos salvos no Supabase.\nGrupos: ${r.grupos}\nNovos vínculos: ${r.vinculos}\nNão localizadas: ${r.naoEncontradas.length}`);return true}catch(e){alert('Erro ao salvar grupos: '+e.message);return false}};
   window.selecionarArquivoImportarGrupos=()=>document.getElementById('grupoImportInput')?.click();

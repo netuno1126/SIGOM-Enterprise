@@ -130,3 +130,19 @@ Os marcos técnicos continuam em `docs/`. Eles complementam este README único, 
 - A exportação da FIO voltou a usar formas e caixas de texto editáveis, removendo tabelas OOXML que geravam arquivos recusados por algumas versões do Microsoft PowerPoint.
 - Login por e-mail passa a autenticar diretamente no Supabase; a Netlify Function continua sendo usada somente para login por nome de usuário.
 - Nenhum novo README paralelo foi criado.
+
+## Fase 12.22 — estabilidade operacional
+
+- restaura a exportação PowerPoint da FIO ao modelo anterior baseado em formas e caixas de texto;
+- remove o uso de tabelas nativas do PowerPoint na exportação;
+- consolida as políticas RLS de `grupos` e `grupo_obras`;
+- mantém gravação de grupos somente para Administrador e Editor;
+- cadastra o username `fabiobarboza.dom` para a conta administradora correspondente;
+- mantém login por e-mail e nome de usuário com MFA.
+
+A migration `supabase/24_fase_12_22_grupos_username_fio_rollback.sql` já foi aplicada ao projeto de produção em 28/07/2026.
+
+
+## Fase 12.23 — Edição administrativa e saneamento de valores
+
+A aba Tabelas possui modo de edição exclusivo do Administrador, com motivo obrigatório e auditoria. A importação de percentuais preserva 3,07 como 3,07%, sem converter para 307%.

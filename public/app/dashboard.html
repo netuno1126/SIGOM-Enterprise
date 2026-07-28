@@ -158,6 +158,13 @@ select#selAtrasadas{border-color:var(--vermelho);background:#fff3f0;color:var(--
   box-shadow:0 0 0 2px rgba(242,201,76,.28)!important;
   font-weight:700;
 }
+
+/* Modo de edição administrativa da aba Tabelas */
+.tableEditBar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px}
+.tableEditHint{font-size:11px;color:#5b7a99}
+#tblFull.edit-mode td[data-editable="1"]{background:#fffbea;outline:1px dashed #e6a700;cursor:text}
+#tblFull td.sigom-cell-changed{background:#fff59d!important;box-shadow:inset 0 0 0 2px #e67e22}
+#tblFull td[contenteditable="true"]:focus{background:#fff2cc!important;outline:2px solid #2e75b6}
 .sigom-match{
   background:#fff59d;
   padding:0 2px;
@@ -546,6 +553,12 @@ body.logo-locked .logoSlot{cursor:default}
     <div id="planilha" class="hidden">
       <div class="card">
         <h3>Planilha completa (todas as colunas)</h3>
+        <div class="tableEditBar no-print adminOnly">
+          <button id="btnModoEdicaoTabela" class="btn orange sm" onclick="alternarModoEdicaoTabela()">✏ Ativar modo de edição</button>
+          <button id="btnSalvarEdicoesTabela" class="btn green sm hidden" onclick="salvarEdicoesTabela()">💾 Salvar alterações</button>
+          <button id="btnCancelarEdicoesTabela" class="btn gray sm hidden" onclick="cancelarEdicoesTabela()">Cancelar</button>
+          <span id="tableEditStatus" class="tableEditHint">Somente o Administrador pode corrigir dados diretamente. Todas as alterações ficam auditadas.</span>
+        </div>
         <div class="tblbox" style="max-height:640px"><table id="tblFull"><thead></thead><tbody></tbody></table></div>
       </div>
     </div>
@@ -2415,15 +2428,52 @@ function renderAnalise(){
 }
 
 /* ---------- aba planilha ---------- */
+const CAMPOS_EDITAVEIS_TABELA={
+  'RM':'rm','Contratante':'contratante','OM Beneficiada':'om_beneficiada','Empresa':'empresa','Descrição':'descricao','Nome da Obra':'nome_obra',
+  '% estimado':'percentual_estimado','% medido':'percentual_medido','Valor Solicitação':'valor_solicitacao','Valor Contratado':'valor_contratado',
+  'Valor Inicial':'valor_inicial','Valor Aditivado':'valor_aditivado','Valor Apostilado':'valor_apostilado','Valor Atual':'valor_atual','Total NC':'total_nc',
+  'Total NE':'total_ne','% Empenhado':'percentual_empenhado','Falta Empenhar':'falta_empenhar','Total Notas Fiscais':'total_nf',
+  'Saldo a Descentralizar':'saldo_descentralizar','Ação Orçamentaria':'acao_orcamentaria','IDP':'idp','obs':'obs','dias atrasados':'dias_atrasados',
+  '% atraso':'percentual_atraso','media medicao 3':'media_medicao_3','media mensal global':'media_mensal_global','analise':'analise','media 90 dias':'media_90_dias','saldo de empenho':'saldo_empenho',
+  'Início Obra':'inicio_os','Fim Prazo':'fim_prazo','Fim Vigência':'fim_vigencia','Data quarta':'data_quarta','Data Antepenúltima':'data_antepenultima','Data Penúltima':'data_penultima','Data Última':'data_ultima','data projetada':'data_projetada'
+};
+const NUMERICOS_EDICAO=new Set(['percentual_estimado','percentual_medido','valor_solicitacao','valor_contratado','valor_inicial','valor_aditivado','valor_apostilado','valor_atual','total_nc','total_ne','percentual_empenhado','falta_empenhar','total_nf','saldo_descentralizar','idp','dias_atrasados','percentual_atraso','media_medicao_3','media_mensal_global','media_90_dias','saldo_empenho']);
+let MODO_EDICAO_TABELA=false;
+let EDICOES_TABELA=new Map();
+function parseNumeroEdicao(v){let s=String(v??'').trim().replace(/R\$|%|\s/g,'');if(!s)return null;if(s.includes(',')&&s.includes('.'))s=s.lastIndexOf(',')>s.lastIndexOf('.')?s.replace(/\./g,'').replace(',','.'):s.replace(/,/g,'');else if(s.includes(','))s=s.replace(',','.');const n=Number(s);if(!Number.isFinite(n))throw new Error('Valor numérico inválido: '+v);return n}
+function alternarModoEdicaoTabela(){
+  if(!document.body.classList.contains('admin-ok'))return alert('Somente o Administrador pode ativar a edição direta.');
+  MODO_EDICAO_TABELA=!MODO_EDICAO_TABELA;
+  document.getElementById('btnModoEdicaoTabela').textContent=MODO_EDICAO_TABELA?'🔒 Desativar modo de edição':'✏ Ativar modo de edição';
+  document.getElementById('btnSalvarEdicoesTabela').classList.toggle('hidden',!MODO_EDICAO_TABELA);
+  document.getElementById('btnCancelarEdicoesTabela').classList.toggle('hidden',!MODO_EDICAO_TABELA);
+  renderPlanilha();
+}
+function registrarEdicaoTabela(td){
+  const id=td.dataset.id,col=td.dataset.col,dbcol=CAMPOS_EDITAVEIS_TABELA[col];if(!id||!dbcol)return;
+  const row=DATA.find(x=>String(x.obra_id||x.id)===String(id));if(!row)return;
+  let valor=td.textContent.trim();try{if(NUMERICOS_EDICAO.has(dbcol))valor=parseNumeroEdicao(valor)}catch(e){td.classList.add('sigom-cell-changed');document.getElementById('tableEditStatus').textContent=e.message;return}
+  if(!EDICOES_TABELA.has(id))EDICOES_TABELA.set(id,{row,alteracoes:{},originais:{}});
+  const item=EDICOES_TABELA.get(id);if(!(col in item.originais))item.originais[col]=row[col];item.alteracoes[dbcol]=valor;item.alteracoes.__ui=item.alteracoes.__ui||{};item.alteracoes.__ui[col]=valor;
+  td.classList.add('sigom-cell-changed');document.getElementById('tableEditStatus').textContent=`${EDICOES_TABELA.size} obra(s) com alterações pendentes.`;
+}
+function cancelarEdicoesTabela(){EDICOES_TABELA.clear();MODO_EDICAO_TABELA=false;document.getElementById('btnModoEdicaoTabela').textContent='✏ Ativar modo de edição';document.getElementById('btnSalvarEdicoesTabela').classList.add('hidden');document.getElementById('btnCancelarEdicoesTabela').classList.add('hidden');document.getElementById('tableEditStatus').textContent='Alterações canceladas.';renderPlanilha()}
+async function salvarEdicoesTabela(){
+  if(!EDICOES_TABELA.size)return alert('Nenhuma alteração pendente.');
+  const motivo=prompt('Informe o motivo da correção (obrigatório para auditoria):','Atualização manual de dados da obra');if(!motivo||!motivo.trim())return;
+  const btn=document.getElementById('btnSalvarEdicoesTabela');btn.disabled=true;let ok=0;
+  try{
+    for(const [id,item] of EDICOES_TABELA){const payload={...item.alteracoes};delete payload.__ui;await window.SIGOM_ATUALIZAR_OBRA_ADMIN(id,payload,motivo.trim());Object.entries(item.alteracoes.__ui||{}).forEach(([c,v])=>item.row[c]=v);ok++}
+    EDICOES_TABELA.clear();MODO_EDICAO_TABELA=false;document.getElementById('tableEditStatus').textContent=`${ok} obra(s) atualizada(s) e auditada(s). Atualize com F5 para conferir todos os indicadores.`;document.getElementById('btnModoEdicaoTabela').textContent='✏ Ativar modo de edição';document.getElementById('btnSalvarEdicoesTabela').classList.add('hidden');document.getElementById('btnCancelarEdicoesTabela').classList.add('hidden');
+  }catch(e){alert('Não foi possível salvar: '+e.message)}finally{btn.disabled=false;renderPlanilha()}
+}
 function renderPlanilha(){
   if(!DATA.length)return;
-  const cols=Object.keys(DATA[0]);
-  document.querySelector('#tblFull thead').innerHTML='<tr>'+cols.map(c=>`<th>${c}</th>`).join('')+'</tr>';
-  document.querySelector('#tblFull tbody').innerHTML=DATA.map(r=>'<tr>'+cols.map(c=>{
-    let v=r[c];
-    if(NUMCOLS.includes(c)&&isNum(v))v=v.toLocaleString('pt-BR',{maximumFractionDigits:2});
-    else if(/^data|Fim |Data /i.test(c))v=dt(v);
-    return `<td>${v??''}</td>`}).join('')+'</tr>').join('');
+  const cols=Object.keys(DATA[0]);const tbl=document.getElementById('tblFull');tbl.classList.toggle('edit-mode',MODO_EDICAO_TABELA);
+  tbl.querySelector('thead').innerHTML='<tr>'+cols.map(c=>`<th>${c}</th>`).join('')+'</tr>';
+  tbl.querySelector('tbody').innerHTML=DATA.map(r=>{const rid=String(r.obra_id||r.id||'');return '<tr>'+cols.map(c=>{
+    let v=r[c];if(NUMCOLS.includes(c)&&isNum(v))v=v.toLocaleString('pt-BR',{maximumFractionDigits:2});else if(/^data|Fim |Data /i.test(c))v=dt(v);
+    const editable=MODO_EDICAO_TABELA&&!!CAMPOS_EDITAVEIS_TABELA[c];return `<td data-id="${esc(rid)}" data-col="${esc(c)}" data-editable="${editable?'1':'0'}" ${editable?'contenteditable="true" spellcheck="false" oninput="registrarEdicaoTabela(this)"':''}>${v??''}</td>`}).join('')+'</tr>'}).join('');
 }
 
 /* ---------- PDF ---------- */
