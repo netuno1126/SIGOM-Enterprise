@@ -203,8 +203,8 @@ select#selAtrasadas{border-color:var(--vermelho);background:#fff3f0;color:var(--
 .printTitle{display:none}
 
 /* ===== LOGIN SIGOM ===== */
-body:not(.auth-ok) header, body:not(.auth-ok) .wrap, body:not(.auth-ok) footer{display:none!important}
-body.auth-ok #loginScreen{display:none!important}
+/* Login interno legado desativado: a autenticação ocorre somente em / */
+#loginScreen{display:none!important}
 #loginScreen{position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(135deg,#eaf1f8 0%,#dbe8f5 45%,#c2d8ec 100%)}
 #loginScreen::before{content:"";position:absolute;inset:0;background:url('LOGO/fundo_login.jpg') center/cover no-repeat;opacity:.18;pointer-events:none}
 .loginBrasoes{position:absolute;top:22px;right:30px;display:flex;gap:14px;z-index:2}

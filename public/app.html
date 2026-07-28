@@ -1,4 +1,64 @@
 <!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SIGOM</title>
-<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#dfe9f3}iframe{border:0;width:100%;height:100%;display:block}</style></head>
-<body><iframe id="contentFrame" src="/app/dashboard.html" title="SIGOM — Dashboard"></iframe></body></html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SIGOM</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/config.js"></script>
+  <style>
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#dfe9f3;font-family:Segoe UI,Arial,sans-serif}
+    iframe{border:0;width:100%;height:100%;display:none}
+    #boot{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#163f63,#9fb4c7);color:#fff}
+    #bootCard{background:rgba(255,255,255,.96);color:#173b5c;border-radius:16px;padding:28px 34px;box-shadow:0 18px 45px rgba(0,0,0,.25);text-align:center;min-width:280px}
+    #bootCard strong{display:block;font-size:19px;margin-bottom:8px}
+    #bootCard span{font-size:13px;color:#5b7185}
+  </style>
+</head>
+<body>
+  <div id="boot"><div id="bootCard"><strong>Carregando o SIGOM…</strong><span>Validando a sessão única de acesso.</span></div></div>
+  <iframe id="contentFrame" title="SIGOM — Dashboard"></iframe>
+<script>
+(()=>{
+  const cfg=window.SIGOM_CONFIG;
+  const client=window.supabase.createClient(cfg.supabaseUrl,cfg.supabasePublishableKey);
+  const frame=document.getElementById('contentFrame');
+  const boot=document.getElementById('boot');
+  let profile=null;
+  const perfilLabel=v=>({administrador:'Administrador',editor:'Editor',auditor:'Auditor',consulta:'Consulta'}[String(v||'').toLowerCase()]||'Consulta');
+  async function sair(){try{await client.auth.signOut()}catch(e){}try{sessionStorage.removeItem('sigom_auth_user')}catch(e){}location.replace('/')}
+  function prepararDashboard(){
+    try{
+      const w=frame.contentWindow,d=frame.contentDocument;if(!w||!d)return;
+      d.body.classList.add('auth-ok');
+      d.body.classList.toggle('admin-ok',String(profile?.perfil||'').toLowerCase()==='administrador');
+      d.getElementById('loginScreen')?.remove();
+      const info={login:profile?.username||profile?.nome||'',nome:profile?.nome||profile?.username||'Usuário',perfil:perfilLabel(profile?.perfil),sessionId:''};
+      try{w.sessionStorage.setItem('sigom_auth_user',JSON.stringify(info))}catch(e){}
+      const userBox=d.getElementById('authUserBox');if(userBox)userBox.textContent=`${info.nome} — ${info.perfil}`;
+      const menu=d.querySelector('#menuDrop .dropcontent');
+      if(menu&&!d.getElementById('sigomHelpButton')){
+        const sec=d.createElement('div');sec.className='dropsec';sec.textContent='Ajuda';
+        const btn=d.createElement('button');btn.id='sigomHelpButton';btn.type='button';btn.textContent='❓ Guia completo do usuário';
+        btn.onclick=()=>window.open('/app/guia-usuario.html','_blank','noopener');
+        const conta=[...menu.querySelectorAll('.dropsec')].find(x=>x.textContent.trim().toLowerCase()==='conta');
+        if(conta){menu.insertBefore(sec,conta);menu.insertBefore(btn,conta)}else{menu.append(sec,btn)}
+      }
+      w.logoutSIGOM=sair;const logout=d.getElementById('logoutBtn');if(logout)logout.onclick=sair;
+    }catch(e){console.warn('Preparação do dashboard:',e)}
+  }
+  async function iniciar(){
+    try{
+      const {data:{session}}=await client.auth.getSession();if(!session){location.replace('/');return}
+      if(cfg.requireMfa){const {data:aal}=await client.auth.mfa.getAuthenticatorAssuranceLevel();if(aal?.currentLevel!=='aal2'){location.replace('/');return}}
+      const {data,error}=await client.from('profiles').select('nome,username,perfil,ativo').eq('id',session.user.id).maybeSingle();if(error)throw error;
+      if(data?.ativo===false){await sair();return}profile=data||{nome:session.user.email,perfil:'consulta',ativo:true};
+      frame.addEventListener('load',()=>{prepararDashboard();setTimeout(prepararDashboard,250);setTimeout(prepararDashboard,1200);boot.style.display='none';frame.style.display='block'});
+      frame.src='/app/dashboard.html';
+    }catch(e){console.error(e);document.querySelector('#bootCard span').textContent='Sessão inválida. Retornando ao acesso principal…';setTimeout(()=>location.replace('/'),1200)}
+  }
+  iniciar();
+})();
+</script>
+</body>
+</html>

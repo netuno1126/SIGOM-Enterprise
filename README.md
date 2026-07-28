@@ -146,3 +146,14 @@ A migration `supabase/24_fase_12_22_grupos_username_fio_rollback.sql` já foi ap
 ## Fase 12.23 — Edição administrativa e saneamento de valores
 
 A aba Tabelas possui modo de edição exclusivo do Administrador, com motivo obrigatório e auditoria. A importação de percentuais preserva 3,07 como 3,07%, sem converter para 307%.
+
+
+## Fase 12.24 — Login único e Guia do Usuário
+
+- mantém somente a tela oficial de login da página inicial;
+- bloqueia a tela de login legada dentro do Dashboard;
+- valida sessão Supabase e MFA antes de carregar o iframe;
+- corrige o vínculo do username `apgdom` no Supabase;
+- inclui `Ajuda → Guia completo do usuário` no menu suspenso;
+- acrescenta guia HTML pesquisável e imprimível;
+- não exige nova senha e não cria outro mecanismo de autenticação.
