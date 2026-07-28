@@ -123,3 +123,10 @@ Os marcos técnicos continuam em `docs/`. Eles complementam este README único, 
 - Obras sem contrato permanecem visíveis após F5 e novo login.
 - Execute `supabase/23_fase_12_20_portfolio_opus_sem_contrato.sql`.
 - A documentação permanece consolidada neste único `README.md`.
+
+
+## Fase 12.21 — Estabilidade do PPT da FIO e contingência de autenticação
+
+- A exportação da FIO voltou a usar formas e caixas de texto editáveis, removendo tabelas OOXML que geravam arquivos recusados por algumas versões do Microsoft PowerPoint.
+- Login por e-mail passa a autenticar diretamente no Supabase; a Netlify Function continua sendo usada somente para login por nome de usuário.
+- Nenhum novo README paralelo foi criado.

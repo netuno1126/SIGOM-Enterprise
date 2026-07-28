@@ -30,17 +30,19 @@ async function prepareMfa(){
 }
 
 async function loginWithIdentifier(identifier,password){
+  // E-mail autentica diretamente no Supabase e não depende da Netlify Function.
+  if(identifier.includes('@')){
+    const {error}=await client.auth.signInWithPassword({email:identifier,password});
+    if(error)throw new Error('E-mail ou senha inválidos.');
+    return;
+  }
+  // Nome de usuário precisa da Function para resolver o e-mail de forma protegida.
   const response=await fetch('/.netlify/functions/login-identifier',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({identifier,password})
+    method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({identifier,password})
   });
   const result=await response.json().catch(()=>({}));
-  if(!response.ok)throw new Error(result.error||'Não foi possível autenticar.');
-  const {error}=await client.auth.setSession({
-    access_token:result.access_token,
-    refresh_token:result.refresh_token
-  });
+  if(!response.ok)throw new Error(result.error||'Não foi possível autenticar pelo nome de usuário. Tente o e-mail completo.');
+  const {error}=await client.auth.setSession({access_token:result.access_token,refresh_token:result.refresh_token});
   if(error)throw error;
 }
 

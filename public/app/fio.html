@@ -377,71 +377,48 @@ async function imagemUrlDataUri(url){
 
 async function gerarPPTFIO(obras,arquivo){
   const ok=await garantirBibliotecaPPT();
-  if(!ok){alert('Biblioteca PowerPoint não carregada. O HTML tentou carregar automaticamente de: pptxgen.bundle.js, lib/pptxgen.bundle.js e CDN. Para funcionar sem internet, coloque o arquivo pptxgen.bundle.js na mesma pasta do fio_slide_SIGOM.html. Enquanto isso, exporte em PDF.');return;}
-  const pptx=new PptxGenJS(); pptx.defineLayout({name:'FIO16x9',width:13.333,height:7.5}); pptx.layout='FIO16x9';
+  if(!ok){alert('Biblioteca PowerPoint não carregada. Atualize a página e tente novamente.');return;}
+  const pptx=new PptxGenJS();
+  pptx.defineLayout({name:'FIO16x9',width:13.333,height:7.5});
+  pptx.layout='FIO16x9';
+  pptx.author='SIGOM';pptx.company='DOM/DEC';pptx.lang='pt-BR';
   const [logoDEC,logoDOM]=await Promise.all([imagemUrlDataUri('/assets/logos/dec.png'),imagemUrlDataUri('/assets/logos/dom.png')]);
-  const AZ='0070C0',AZE='1E4E79',AM='FFCC33',CIN='E6E6E6',BOR='4D4D4D',VD='70AD47',LR='E67E22';
-  obras.forEach(r=>{
-    const s=pptx.addSlide(); s.background={color:CIN};
-    s.addShape(pptx.ShapeType.rect,{x:0.05,y:0.05,w:13.23,h:7.40,fill:{color:CIN},line:{color:BOR,width:3}});
-    const title=String(r['Descrição']||r['OM Beneficiada']||'Anexo da Obra'); const ao=acaoOrcamentariaFIO(r);
-    s.addShape(pptx.ShapeType.rect,{x:0.28,y:0.22,w:12.78,h:0.72,fill:{color:AZE},line:{color:'B8C6D8',width:.5}});
-    s.addText(title,{x:0.38,y:0.34,w:11.6,h:0.42,fontFace:'Arial',fontSize:20,bold:true,color:'FFFFFF',fit:'shrink'});
-    if(logoDEC)s.addImage({data:logoDEC,x:12.10,y:0.26,w:0.43,h:0.48});else s.addText('DEC',{x:12.10,y:0.30,w:0.45,h:0.35,fontSize:9,bold:true,color:AZE,fill:{color:'FFFFFF'},align:'center',valign:'mid'});
-    if(logoDOM)s.addImage({data:logoDOM,x:12.58,y:0.26,w:0.43,h:0.48});else s.addText('DOM',{x:12.58,y:0.30,w:0.45,h:0.35,fontSize:9,bold:true,color:AZE,fill:{color:'FFFFFF'},align:'center',valign:'mid'});
-    s.addShape(pptx.ShapeType.rect,{x:0.28,y:0.94,w:12.78,h:0.28,fill:{color:AZ},line:{color:'FFFFFF',width:.5}});
-    s.addText(`Nr OPUS: ${r['Solicitação']||'—'}  -  AO: ${ao}`,{x:0.32,y:0.98,w:12.65,h:0.16,fontSize:10,bold:true,color:'FFFFFF',align:'center',fit:'shrink'});
-    s.addShape(pptx.ShapeType.rect,{x:0.28,y:1.22,w:12.78,h:1.45,fill:{color:AM},line:{color:'FFFFFF',width:.5}});
-    const carac=['Concepção do Objeto','Fundações','Estrutura','Cobertura','Paredes Internas','Terraplenagem e Pavimentação'].map(k=>`${k}: ${r[k]||'—'}`).join('\n');
-    s.addText(carac,{x:0.45,y:1.30,w:12.45,h:1.25,fontSize:9.5,bold:true,color:'000000',breakLine:false,fit:'shrink',bullet:{type:'bullet'}});
-    const y=2.72, hH=.45, hV=1.03, x0=.28, totalW=12.78, cw=totalW/8;
+  const AZ='0070C0',AZE='1E4E79',AM='FFCC33',CIN='E6E6E6',BOR='4D4D4D',VD='70AD47';
+  const caixa=(slide,text,x,y,w,h,fill,color='000000',fontSize=9,bold=true,align='center')=>{
+    slide.addShape(pptx.ShapeType.rect,{x,y,w,h,fill:{color:fill},line:{color:'FFFFFF',width:.5}});
+    slide.addText(String(text??'—'),{x:x+.02,y:y+.02,w:w-.04,h:h-.04,fontFace:'Arial',fontSize,bold,color,align,valign:'mid',margin:.03,fit:'shrink',breakLine:false});
+  };
+  for(const r of obras){
+    const s=pptx.addSlide();s.background={color:CIN};
+    s.addShape(pptx.ShapeType.rect,{x:.05,y:.05,w:13.23,h:7.40,fill:{color:CIN},line:{color:BOR,width:3}});
+    const title=String(r['Descrição']||r['OM Beneficiada']||'Anexo da Obra');const ao=acaoOrcamentariaFIO(r);
+    s.addShape(pptx.ShapeType.rect,{x:.28,y:.22,w:12.78,h:.72,fill:{color:AZE},line:{color:'B8C6D8',width:.5}});
+    s.addText(title,{x:.38,y:.31,w:11.55,h:.50,fontFace:'Arial',fontSize:20,bold:true,color:'FFFFFF',margin:.02,fit:'shrink'});
+    if(logoDEC)s.addImage({data:logoDEC,x:12.10,y:.26,w:.43,h:.48});else caixa(s,'DEC',12.10,.26,.43,.48,'FFFFFF',AZE,8,true);
+    if(logoDOM)s.addImage({data:logoDOM,x:12.58,y:.26,w:.43,h:.48});else caixa(s,'DOM',12.58,.26,.43,.48,'FFFFFF',AZE,8,true);
+    s.addShape(pptx.ShapeType.rect,{x:.28,y:.94,w:12.78,h:.28,fill:{color:AZ},line:{color:'FFFFFF',width:.5}});
+    s.addText(`Nr OPUS: ${r['Solicitação']||'—'}  -  AO: ${ao}`,{x:.32,y:.97,w:12.65,h:.18,fontSize:10,bold:true,color:'FFFFFF',align:'center',margin:0,fit:'shrink'});
+    s.addShape(pptx.ShapeType.rect,{x:.28,y:1.22,w:12.78,h:1.45,fill:{color:AM},line:{color:'FFFFFF',width:.5}});
+    const carac=['Concepção do Objeto','Fundações','Estrutura','Cobertura','Paredes Internas','Terraplenagem e Pavimentação'].map(k=>`• ${k}: ${r[k]||'—'}`).join('\n');
+    s.addText(carac,{x:.45,y:1.30,w:12.35,h:1.22,fontFace:'Arial',fontSize:9.5,bold:true,color:'000000',margin:.02,fit:'shrink'});
     const headers=['INÍCIO','EMPRESA','VALOR TOTAL','EMPENHO','SALDO DE\nEMPENHO','EXECUTADO','MEDIÇÃO\nMENSAL','ENTREGA COM BASE\nNA MEDIÇÃO'];
-    const totalNE=toNum(r['Total NE']); const totalNF=toNum(r['Total Notas Fiscais']); const saldoFinal=(isNum(totalNE)&&isNum(totalNF))?Math.max(0,totalNE-totalNF):null;
-    const vals=[dt(r['Data Assinatura']||r['Início Obra']),r['Empresa']||'—',fmtMi(toNum(r['Valor Atual'])),fmtMi(toNum(r['Total NE'])),fmtMi(saldoFinal),pct(pctAcumulado(r['% medido']||r['% Última'])),fmtR(mediaMensal(r)),entregaTextoPlano(r)];
-    // Tabela nativa do PowerPoint: cada célula permanece editável e pode ser copiada
-    // para outra apresentação sem virar imagem ou grupo de formas independentes.
-    const tabelaFinanceira=[
-      headers.map(hh=>({text:String(hh),options:{bold:true,color:'FFFFFF',fill:AZ,align:'center',valign:'middle',fontFace:'Arial',fontSize:9,margin:0.03}})),
-      vals.map(vv=>({text:String(vv),options:{bold:true,color:'000000',fill:AM,align:'center',valign:'middle',fontFace:'Arial',fontSize:9.5,margin:0.04}}))
-    ];
-    s.addTable(tabelaFinanceira,{
-      x:x0,y,w:totalW,h:hH+hV,
-      colW:Array(8).fill(cw),rowH:[hH,hV],
-      border:{type:'solid',color:'FFFFFF',pt:0.5},
-      margin:0,autoFit:false,wordWrap:true,
-      valign:'middle',align:'center'
-    });
-    s.addShape(pptx.ShapeType.rect,{x:.28,y:4.42,w:3.0,h:1.63,fill:{color:'FFFFFF'},line:{color:VD,width:.8}});
-    s.addText('FOTO\nDa Obra',{x:.28,y:5.0,w:3.0,h:.45,fontSize:14,align:'center',valign:'mid',color:'000000'});
-    const idp=calcIDP(r);
-    const idpTexto=isNum(idp)?idp.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'—';
-    const tabelaObservacoes=[
-      [
-        {text:'PA',options:{bold:true,color:'FFFFFF',fill:'245FA8',align:'center',valign:'middle',fontSize:9,margin:0.02}},
-        {text:'IDP',options:{bold:true,color:'FFFFFF',fill:'245FA8',align:'center',valign:'middle',fontSize:9,margin:0.02}},
-        {text:'OBSERVAÇÕES/PROBLEMAS TÉCNICOS-ORÇAMENTÁRIOS',options:{bold:true,color:'FFFFFF',fill:'245FA8',align:'center',valign:'middle',fontSize:9,margin:0.02}}
-      ],
-      [
-        {text:String(r['PA']||'Não'),options:{bold:true,color:'000000',fill:'FFC000',align:'center',valign:'middle',fontSize:10,margin:0.03}},
-        {text:idpTexto,options:{bold:true,color:'000000',fill:'FFC000',align:'center',valign:'middle',fontSize:10,margin:0.03}},
-        {text:stripHtml(obsHTML(r)),options:{color:'000000',fill:'FFC000',align:'left',valign:'middle',fontSize:9.5,margin:0.08}}
-      ]
-    ];
-    s.addTable(tabelaObservacoes,{
-      x:3.45,y:4.42,w:9.61,h:1.63,
-      colW:[0.62,0.62,8.37],rowH:[0.42,1.21],
-      border:{type:'solid',color:'FFFFFF',pt:0.5},
-      margin:0,autoFit:false,wordWrap:true
-    });
-  });
-  try{
-    await pptx.writeFile({fileName:arquivo});
-  }catch(err){
-    console.error('Falha ao gerar o PowerPoint da FIO:',err);
-    alert('Não foi possível gerar o PowerPoint da FIO. Atualize a página e tente novamente.');
-    throw err;
+    const totalNE=toNum(r['Total NE']),totalNF=toNum(r['Total Notas Fiscais']);const saldoFinal=(isNum(totalNE)&&isNum(totalNF))?Math.max(0,totalNE-totalNF):null;
+    const vals=[dt(r['Data Assinatura']||r['Início Obra']),r['Empresa']||'—',fmtMi(toNum(r['Valor Atual'])),fmtMi(totalNE),fmtMi(saldoFinal),pct(pctAcumulado(r['% medido']||r['% Última'])),fmtR(mediaMensal(r)),entregaTextoPlano(r)];
+    const x0=.28,y0=2.72,totalW=12.78,cw=totalW/8;
+    headers.forEach((v,i)=>caixa(s,v,x0+i*cw,y0,cw,.45,AZ,'FFFFFF',8.5,true));
+    vals.forEach((v,i)=>caixa(s,v,x0+i*cw,y0+.45,cw,1.03,AM,'000000',9.2,true));
+    s.addShape(pptx.ShapeType.rect,{x:.28,y:4.42,w:3,h:1.63,fill:{color:'FFFFFF'},line:{color:VD,width:.8}});
+    s.addText('FOTO\nDa Obra',{x:.28,y:4.90,w:3,h:.55,fontSize:14,align:'center',valign:'mid',color:'000000',margin:0});
+    const idp=calcIDP(r),idpTexto=isNum(idp)?idp.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'—';
+    caixa(s,'PA',3.45,4.42,.62,.42,'245FA8','FFFFFF',9,true);caixa(s,'IDP',4.07,4.42,.62,.42,'245FA8','FFFFFF',9,true);
+    caixa(s,'OBSERVAÇÕES/PROBLEMAS TÉCNICOS-ORÇAMENTÁRIOS',4.69,4.42,8.37,.42,'245FA8','FFFFFF',9,true);
+    caixa(s,r['PA']||'Não',3.45,4.84,.62,1.21,'FFC000','000000',9.5,true);caixa(s,idpTexto,4.07,4.84,.62,1.21,'FFC000','000000',9.5,true);
+    caixa(s,stripHtml(obsHTML(r)),4.69,4.84,8.37,1.21,'FFC000','000000',9,false,'left');
   }
+  try{await pptx.writeFile({fileName:String(arquivo||'FIO_SIGOM.pptx').replace(/[<>:"/\\|?*]+/g,'_')});}
+  catch(err){console.error('Falha ao gerar o PowerPoint da FIO:',err);alert('Não foi possível gerar o PowerPoint da FIO: '+(err?.message||'erro desconhecido'));}
 }
+
 function stripHtml(s){return String(s||'').replace(/<li>/g,'• ').replace(/<br\s*\/?>/g,'\n').replace(/<[^>]+>/g,'').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>')}
 function entregaTextoPlano(r){const e=projetarEntregaMedicoes(r);if(e.tipo==='projecao')return e.texto;if(e.tipo==='concluida')return 'Concluída';if(e.status==='Datas inválidas')return 'Datas inválidas';if(e.status==='Sem dados suficientes')return 'Sem dados';return '—'}
 function escapeAttr(s){return escapeHtml(s).replace(/'/g,'&#39;')}
