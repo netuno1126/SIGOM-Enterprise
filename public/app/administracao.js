@@ -94,21 +94,42 @@ function mapSaldoConsolidado(r,indice=0){
   const om=norm(get(r,['OM','Organização Militar']));
   const out={om,dados_origem:r,ordem:indice+1,linha_tipo:/^TOTAL$/i.test(om)?'TOTAL':/^EB$/i.test(om)?'EB':/^TEREO$/i.test(om)?'TEREO':'OM'};
   let soma=0;for(let ano=2016;ano<=2026;ano++){const n=num(get(r,[String(ano)]));out[`saldo_${ano}`]=n??0;soma+=n??0}
-  const informado=num(get(r,['total','Total']));out.total_informado=informado;out.total_calculado=soma;out.total=informado;
+  const informado=num(get(r,['total','Total']));out.total_informado=informado;out.total_calculado=soma;out.total=informado??soma;
   return out;
 }
 function saldoLongRows(r){const rows=[];for(let ano=2016;ano<=2026;ano++)rows.push({om:r.om,ano,valor:r[`saldo_${ano}`]||0,dados:r.dados_origem});return rows}
 
+
+function consolidarPortfolio(rows){
+  const by=new Map();
+  for(const row of rows){
+    const opus=norm(row.opus||row.nr_solicitacao).replace(/\D/g,'');
+    if(!opus)continue;
+    const contrato=norm(row.contrato||row.nr_contrato);
+    const k=`${opus}|${contrato.toLowerCase().replace(/\s+/g,'')}`;
+    const anterior=by.get(k)||{};
+    by.set(k,{...anterior,...row,opus,nr_solicitacao:opus,contrato,nr_contrato:contrato});
+  }
+  return [...by.values()];
+}
+async function gravarPortfolioSemContrato(item){
+  const opus=norm(item.opus||item.nr_solicitacao).replace(/\D/g,'');
+  const payload={...item,opus,nr_solicitacao:opus,contrato:'',nr_contrato:''};
+  const existente=await db.from('portfolio_obras').select('id').eq('opus',opus).or('contrato.is.null,contrato.eq.').limit(1).maybeSingle();
+  if(existente.error) return {error:existente.error};
+  if(existente.data?.id) return db.from('portfolio_obras').update(payload).eq('id',existente.data.id);
+  return db.from('portfolio_obras').insert(payload);
+}
 function mapObjetivo(r){const objetivo=norm(get(r,['Objetivo','Meta'])),opus=norm(get(r,['Nr OPUS','OPUS'])),contrato=norm(get(r,['Contrato']));return {chave:norm(get(r,['Chave','Nr Solicitação']))||[objetivo,opus,contrato].join('|'),objetivo,opus,contrato,situacao:norm(get(r,['Situação','Status'])),observacao:norm(get(r,['Observação','Observações'])),auditado:/^(sim|true|1)$/i.test(norm(get(r,['Auditado'])))}}
 
 async function validateSpreadsheet(type){
   const file=$(inputFor(type)).files[0];if(!file)return alert('Selecione um arquivo.');
-  try{const raw=type==='principais'?null:await readSheet(file);let rows=[];if(type==='obras'||type==='portfolio')rows=raw.map(mapObra);if(type==='principais')rows=await readPrincipais(file);if(type==='saldos')rows=raw.map((r,i)=>mapSaldoConsolidado(r,i));if(type==='objetivos')rows=raw.map(mapObjetivo);
+  try{const raw=type==='principais'?null:await readSheet(file);let rows=[];if(type==='obras'||type==='portfolio')rows=raw.map(mapObra);if(type==='portfolio')rows=consolidarPortfolio(rows);if(type==='principais')rows=await readPrincipais(file);if(type==='saldos')rows=raw.map((r,i)=>mapSaldoConsolidado(r,i));if(type==='objetivos')rows=raw.map(mapObjetivo);
     const errors=[];rows.forEach((r,i)=>{if((type==='obras'||type==='portfolio')&&!r.opus)errors.push(`Linha ${i+2}: Nº OPUS ausente.`);if(type==='principais'&&(!r.categoria||!r.descricao))errors.push(`Registro ${i+1}: categoria ou descrição ausente.`);if(type==='saldos'&&!r.om)errors.push(`Linha ${i+2}: OM ausente.`);if(type==='objetivos'&&!r.chave)errors.push(`Linha ${i+2}: chave ausente.`)});
     state.pending={type,file,rows:rows.filter((r,i)=>!errors.some(e=>e.startsWith(`Linha ${i+2}:`))),errors};renderPreview();
   }catch(e){alert(`Não foi possível ler o arquivo: ${e.message}`)}
 }
-function renderPreview(){const p=state.pending;$('#previewBox').classList.remove('hidden');$('#previewSummary').textContent=`${p.file.name} · ${p.rows.length} registros válidos · ${p.errors.length} inconsistências`;
+function renderPreview(){const p=state.pending;$('#previewBox').classList.remove('hidden');$('#previewSummary').textContent=`${p.file.name} · ${p.rows.length} registros válidos · ${p.errors.length} inconsistências${p.type==='portfolio'?' · contrato opcional; Nº OPUS é a chave mínima':''}`;
   $('#validationMessages').innerHTML=p.errors.length?`<div class="alert warning"><strong>Inconsistências:</strong><br>${p.errors.slice(0,20).map(esc).join('<br>')}${p.errors.length>20?'<br>…':''}</div>`:'<div class="alert success">Validação concluída sem inconsistências obrigatórias.</div>';
   const sample=p.rows.slice(0,20),cols=[...new Set(sample.flatMap(r=>Object.keys(r).filter(k=>k!=='dados')))].slice(0,12);$('#previewHead').innerHTML=`<tr>${cols.map(c=>`<th>${esc(c)}</th>`).join('')}</tr>`;$('#previewBody').innerHTML=sample.map(r=>`<tr>${cols.map(c=>`<td>${esc(r[c])}</td>`).join('')}</tr>`).join('')}
 function clearPreview(){state.pending=null;$('#previewBox').classList.add('hidden')}
@@ -130,7 +151,12 @@ async function commitImport(){
 
   for(let i=0;i<p.rows.length;i+=batch){
     const chunk=p.rows.slice(i,i+batch).map(preparar);
-    const batchResult=await db.from(table).upsert(chunk,{onConflict:conflict});
+    const comContrato=p.type==='portfolio'?chunk.filter(x=>norm(x.contrato||x.nr_contrato)!==''):chunk;
+    const semContrato=p.type==='portfolio'?chunk.filter(x=>norm(x.contrato||x.nr_contrato)===''):[];
+    const batchResult=comContrato.length?await db.from(table).upsert(comContrato,{onConflict:conflict}):{error:null};
+    let errosSemContrato=[];
+    for(const item of semContrato){const r=await gravarPortfolioSemContrato(item);if(r.error)errosSemContrato.push({item,error:r.error})}
+    if(errosSemContrato.length&&!batchResult.error)batchResult.error=errosSemContrato[0].error;
     if(!batchResult.error){
       ok+=chunk.length;
       if(p.type==='saldos'){
@@ -143,7 +169,7 @@ async function commitImport(){
       // repetição individual para gravar as válidas e identificar o erro exato.
       for(let j=0;j<chunk.length;j++){
         const item=chunk[j];
-        const one=await db.from(table).upsert(item,{onConflict:conflict});
+        const one=(p.type==='portfolio'&&norm(item.contrato||item.nr_contrato)==='')?await gravarPortfolioSemContrato(item):await db.from(table).upsert(item,{onConflict:conflict});
         if(one.error){
           fail++;
           details.push({linha:i+j+2,chave:chaveLinha(item),erro:one.error.message,codigo:one.error.code||''});
@@ -160,12 +186,30 @@ async function commitImport(){
   }
 
   // Confirma que os registros são realmente visíveis após o upsert. Isso detecta
-  // de imediato problemas de RLS ou de chave de conflito.
+  // de imediato problemas de RLS, chave de conflito ou gravação apenas temporária.
   let verificacao=null;
   if(p.type==='portfolio'){
     const vr=await db.from('portfolio_obras').select('id',{count:'exact',head:true});
     verificacao={tabela:'portfolio_obras',registros_visiveis:vr.count??0,erro:vr.error?.message||null};
     if(vr.error)details.push({linha:'verificação',chave:'portfolio_obras',erro:vr.error.message,codigo:vr.error.code||''});
+  }
+  if(p.type==='saldos'){
+    const [vc,vl]=await Promise.all([
+      db.from('saldos_alongados_consolidado').select('id',{count:'exact',head:true}),
+      db.from('saldos_alongados').select('id',{count:'exact',head:true})
+    ]);
+    verificacao={
+      tabela:'saldos_alongados_consolidado',
+      registros_visiveis:vc.count??0,
+      registros_anuais_visiveis:vl.count??0,
+      erro:vc.error?.message||vl.error?.message||null
+    };
+    if(vc.error)details.push({linha:'verificação',chave:'saldos_alongados_consolidado',erro:vc.error.message,codigo:vc.error.code||''});
+    if(vl.error)details.push({linha:'verificação',chave:'saldos_alongados',erro:vl.error.message,codigo:vl.error.code||''});
+    if(!vc.error && (vc.count??0)===0 && ok>0){
+      fail+=ok;ok=0;
+      details.push({linha:'verificação',chave:'saldos_alongados_consolidado',erro:'A importação foi processada, mas nenhum registro ficou visível no banco. Execute a migration 22 e confira as políticas RLS.',codigo:'PERSISTENCIA'});
+    }
   }
 
   state.lastImportErrors=details;
@@ -178,9 +222,12 @@ async function commitImport(){
   }else{
     detalhe.classList.add('hidden');acoes.classList.add('hidden');detalhe.textContent='';
   }
-  const complemento=verificacao?` · ${verificacao.registros_visiveis} registro(s) visível(is) em portfolio_obras`:'';
+  const complemento=verificacao?(p.type==='saldos'?` · ${verificacao.registros_visiveis} linha(s) consolidada(s) e ${verificacao.registros_anuais_visiveis} linha(s) anual(is) visível(is) no Supabase`:` · ${verificacao.registros_visiveis} registro(s) visível(is) em portfolio_obras`):'';
   setProgress(p.rows.length,p.rows.length,`Concluído: ${ok} registros gravados; ${fail} erros${complemento}.`);
   clearPreview();await loadHistory();
+  if(p.type==='saldos'&&!fail){
+    try{window.parent?.postMessage({type:'SIGOM_SALDOS_ATUALIZADOS'},location.origin)}catch(_e){}
+  }
 }
 
 function downloadImportErrors(){

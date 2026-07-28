@@ -8,6 +8,7 @@
 
   const val=(o,...ks)=>{for(const k of ks){if(o?.[k]!==null&&o?.[k]!==undefined&&o?.[k]!=='')return o[k]}return null};
   const data=v=>v||null;
+  function portfolioVisivel(o){return !!String(o?.opus||o?.nr_solicitacao||o?.dados_origem?.['Nr Solicitação']||'').replace(/\D/g,'')}
   function row(o){
     const d=o.dados_origem||o.dados||{};
     return {
@@ -58,6 +59,23 @@
     return out;
   }
   async function optional(table){try{return {rows:await all(table),error:null}}catch(error){console.warn(error);return {rows:[],error}}}
+
+  function pivotSaldosLongos(rows){
+    const by=new Map();
+    for(const r of (rows||[])){
+      const om=String(r.om??'').trim();if(!om)continue;
+      if(!by.has(om))by.set(om,{OM:om});
+      const ano=Number(r.ano);if(ano>=2016&&ano<=2026)by.get(om)[String(ano)]=Number(r.valor)||0;
+    }
+    for(const o of by.values()){
+      let total=0;for(let y=2016;y<=2026;y++){o[String(y)]=Number(o[String(y)])||0;total+=o[String(y)]}o.total=total;
+    }
+    return [...by.values()];
+  }
+
+  function mapSaldosConsolidados(rows){
+    return (rows||[]).map(s=>{const o={OM:s.om};let soma=0;for(let y=2016;y<=2026;y++){o[String(y)]=Number(s['saldo_'+y])||0;soma+=o[String(y)]}o.total=s.total_informado??s.total??s.total_calculado??soma;return o});
+  }
 
 
   const normText=v=>String(v??'').trim();
@@ -187,12 +205,12 @@
     let source='obras_indicadores';
     let obrasResult=await optional('obras_indicadores');
     if(obrasResult.error||!obrasResult.rows.length){source='obras';obrasResult=await optional('obras')}
-    const [portfolioResult,principaisResult,saldosResult]=await Promise.all([
-      optional('portfolio_obras'), optional('principais_obras'), optional('saldos_alongados_consolidado')
+    const [portfolioResult,principaisResult,saldosResult,saldosLongResult]=await Promise.all([
+      optional('portfolio_obras'), optional('principais_obras'), optional('saldos_alongados_consolidado'), optional('saldos_alongados')
     ]);
 
     let obras=obrasResult.rows;
-    const portfolio=portfolioResult.rows;
+    const portfolio=portfolioResult.rows.filter(portfolioVisivel);
     // Contingência operacional: o Portfólio possui a mesma estrutura de 51 campos.
     if(!obras.length&&portfolio.length){obras=[...portfolio];source='portfolio_obras (contingência)'}
 
@@ -200,7 +218,10 @@
     principaisResult.rows.forEach(p=>{if(p.nr_solicitacao)names[String(p.nr_solicitacao).replace(/\D/g,'')]=p.descricao});
     const dataRows=obras.map(row), portRows=portfolio.map(row);
     for(const r of [...dataRows,...portRows]){const n=names[String(r['Solicitação']||'').replace(/\D/g,'')];if(n)r['Nome da Obra']=n}
-    const saldos=saldosResult.rows.map(s=>{const o={OM:s.om};for(let y=2016;y<=2026;y++)o[String(y)]=s['saldo_'+y];o.total=s.total;return o});
+    // Fonte primária: tabela consolidada. Contingência: reconstrói a matriz a partir
+    // da tabela anual, garantindo persistência após F5 e novo login mesmo quando
+    // uma migration antiga deixou a tabela consolidada indisponível.
+    const saldos=saldosResult.rows.length?mapSaldosConsolidados(saldosResult.rows):pivotSaldosLongos(saldosLongResult.rows);
 
     if(typeof window.SIGOM_APLICAR_DADOS_ONLINE!=='function')throw new Error('Ponte de dados do Dashboard não encontrada.');
     window.SIGOM_APLICAR_DADOS_ONLINE({data:dataRows,portfolio:portRows,saldos,nomes:names,fonte:source});
@@ -220,6 +241,7 @@
   window.logoutSIGOM=async()=>{try{await sb.auth.signOut()}finally{window.parent.location.href='/'}};
   window.abrirFIOExterno=()=>window.open('/app/fio.html','_blank');
   window.abrirFIOGrupoSelecionado=()=>{const g=document.getElementById('fGrupo')?.value||'';window.open('/app/fio.html?grupo='+encodeURIComponent(g),'_blank')};
+  window.addEventListener('message',e=>{if(e.origin===location.origin&&e.data?.type==='SIGOM_SALDOS_ATUALIZADOS')load().catch(console.error)});
   document.addEventListener('DOMContentLoaded',()=>{
     const gi=document.getElementById('grupoImportInput');if(gi)gi.addEventListener('change',async e=>{const f=e.target.files?.[0];e.target.value='';await window.importarGruposJSONArquivo(f)});
     const pi=document.getElementById('principaisImportInput');if(pi)pi.addEventListener('change',async e=>{const f=e.target.files?.[0];e.target.value='';await window.importarPrincipaisObrasArquivo(f)});

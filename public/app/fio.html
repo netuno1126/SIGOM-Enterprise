@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SIGOM · Apresentação FIO</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@4.0.1/dist/pptxgen.bundle.js"></script>
 <style>
 :root{
   --fio-azul:#0070c0;
@@ -359,8 +359,8 @@ async function garantirBibliotecaPPT(){
   const fontes=[
     'pptxgen.bundle.js',
     'lib/pptxgen.bundle.js',
-    'https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js',
-    'https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js'
+    'https://cdn.jsdelivr.net/npm/pptxgenjs@4.0.1/dist/pptxgen.bundle.js',
+    'https://cdn.jsdelivr.net/npm/pptxgenjs@4.0.1/dist/pptxgen.bundle.js'
   ];
   for(const src of fontes){
     try{await carregarScriptFIO(src); if(typeof PptxGenJS!=='undefined')return true;}catch(e){}
@@ -401,15 +401,15 @@ async function gerarPPTFIO(obras,arquivo){
     // Tabela nativa do PowerPoint: cada célula permanece editável e pode ser copiada
     // para outra apresentação sem virar imagem ou grupo de formas independentes.
     const tabelaFinanceira=[
-      headers.map(hh=>({text:String(hh),options:{bold:true,color:'FFFFFF',fill:AZ,align:'center',valign:'mid',fontFace:'Arial',fontSize:9,margin:0.03,breakLine:false}})),
-      vals.map(vv=>({text:String(vv),options:{bold:true,color:'000000',fill:AM,align:'center',valign:'mid',fontFace:'Arial',fontSize:9.5,margin:0.04,breakLine:false}}))
+      headers.map(hh=>({text:String(hh),options:{bold:true,color:'FFFFFF',fill:AZ,align:'center',valign:'middle',fontFace:'Arial',fontSize:9,margin:0.03}})),
+      vals.map(vv=>({text:String(vv),options:{bold:true,color:'000000',fill:AM,align:'center',valign:'middle',fontFace:'Arial',fontSize:9.5,margin:0.04}}))
     ];
     s.addTable(tabelaFinanceira,{
       x:x0,y,w:totalW,h:hH+hV,
       colW:Array(8).fill(cw),rowH:[hH,hV],
       border:{type:'solid',color:'FFFFFF',pt:0.5},
       margin:0,autoFit:false,wordWrap:true,
-      valign:'mid',align:'center'
+      valign:'middle',align:'center'
     });
     s.addShape(pptx.ShapeType.rect,{x:.28,y:4.42,w:3.0,h:1.63,fill:{color:'FFFFFF'},line:{color:VD,width:.8}});
     s.addText('FOTO\nDa Obra',{x:.28,y:5.0,w:3.0,h:.45,fontSize:14,align:'center',valign:'mid',color:'000000'});
@@ -417,14 +417,14 @@ async function gerarPPTFIO(obras,arquivo){
     const idpTexto=isNum(idp)?idp.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'—';
     const tabelaObservacoes=[
       [
-        {text:'PA',options:{bold:true,color:'FFFFFF',fill:'245FA8',align:'center',valign:'mid',fontSize:9,margin:0.02}},
-        {text:'IDP',options:{bold:true,color:'FFFFFF',fill:'245FA8',align:'center',valign:'mid',fontSize:9,margin:0.02}},
-        {text:'OBSERVAÇÕES/PROBLEMAS TÉCNICOS-ORÇAMENTÁRIOS',options:{bold:true,color:'FFFFFF',fill:'245FA8',align:'center',valign:'mid',fontSize:9,margin:0.02}}
+        {text:'PA',options:{bold:true,color:'FFFFFF',fill:'245FA8',align:'center',valign:'middle',fontSize:9,margin:0.02}},
+        {text:'IDP',options:{bold:true,color:'FFFFFF',fill:'245FA8',align:'center',valign:'middle',fontSize:9,margin:0.02}},
+        {text:'OBSERVAÇÕES/PROBLEMAS TÉCNICOS-ORÇAMENTÁRIOS',options:{bold:true,color:'FFFFFF',fill:'245FA8',align:'center',valign:'middle',fontSize:9,margin:0.02}}
       ],
       [
-        {text:String(r['PA']||'Não'),options:{bold:true,color:'000000',fill:'FFC000',align:'center',valign:'mid',fontSize:10,margin:0.03}},
-        {text:idpTexto,options:{bold:true,color:'000000',fill:'FFC000',align:'center',valign:'mid',fontSize:10,margin:0.03}},
-        {text:stripHtml(obsHTML(r)),options:{color:'000000',fill:'FFC000',align:'left',valign:'mid',fontSize:9.5,margin:0.08}}
+        {text:String(r['PA']||'Não'),options:{bold:true,color:'000000',fill:'FFC000',align:'center',valign:'middle',fontSize:10,margin:0.03}},
+        {text:idpTexto,options:{bold:true,color:'000000',fill:'FFC000',align:'center',valign:'middle',fontSize:10,margin:0.03}},
+        {text:stripHtml(obsHTML(r)),options:{color:'000000',fill:'FFC000',align:'left',valign:'middle',fontSize:9.5,margin:0.08}}
       ]
     ];
     s.addTable(tabelaObservacoes,{
@@ -434,7 +434,13 @@ async function gerarPPTFIO(obras,arquivo){
       margin:0,autoFit:false,wordWrap:true
     });
   });
-  pptx.writeFile({fileName:arquivo});
+  try{
+    await pptx.writeFile({fileName:arquivo});
+  }catch(err){
+    console.error('Falha ao gerar o PowerPoint da FIO:',err);
+    alert('Não foi possível gerar o PowerPoint da FIO. Atualize a página e tente novamente.');
+    throw err;
+  }
 }
 function stripHtml(s){return String(s||'').replace(/<li>/g,'• ').replace(/<br\s*\/?>/g,'\n').replace(/<[^>]+>/g,'').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>')}
 function entregaTextoPlano(r){const e=projetarEntregaMedicoes(r);if(e.tipo==='projecao')return e.texto;if(e.tipo==='concluida')return 'Concluída';if(e.status==='Datas inválidas')return 'Datas inválidas';if(e.status==='Sem dados suficientes')return 'Sem dados';return '—'}
