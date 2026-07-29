@@ -1,0 +1,14 @@
+SIGOM Fase 12.26 — Correção da IA
+
+Substituir:
+public/app/ia-sigom.js
+
+Correções:
+- rota alterada de /.netlify/functions/ai-sigom para /api/ia-sigom;
+- resposta da Function lida primeiro como texto;
+- tratamento de resposta vazia, HTML ou JSON inválido;
+- mensagem de erro detalhada;
+- histórico não bloqueia a resposta caso falhe.
+
+Commit sugerido:
+fix: corrigir rota e resposta vazia da IA SIGOM
