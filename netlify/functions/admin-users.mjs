@@ -11,30 +11,40 @@ const json = (body, status = 200) => new Response(JSON.stringify(body), {
 const cleanUsername = (value) => String(value || '').trim().toLowerCase()
 const validUsername = (value) => /^[a-z0-9._-]{3,40}$/.test(value)
 
-export default async (req) => {
-  if (req.method !== 'POST') return json({ error: 'Método não permitido' }, 405)
-
-  const url = process.env.SUPABASE_URL
-  const service = process.env.SUPABASE_SERVICE_ROLE_KEY
-  const publishable = process.env.SUPABASE_PUBLISHABLE_KEY
-
-  if (!url || !service || !publishable) {
-    return json({
-      error: 'Serviço administrativo não configurado no Netlify.',
-      missing: [
-        !url && 'SUPABASE_URL',
-        !service && 'SUPABASE_SERVICE_ROLE_KEY',
-        !publishable && 'SUPABASE_PUBLISHABLE_KEY'
-      ].filter(Boolean)
-    }, 500)
-  }
-
-  const token = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '')
-  if (!token) return json({ error: 'Sessão ausente. Entre novamente no SIGOM.' }, 401)
-
+function env(name) {
   try {
+    if (globalThis.Netlify?.env?.get) return Netlify.env.get(name) || ''
+  } catch (_) {}
+  try {
+    return globalThis.process?.env?.[name] || ''
+  } catch (_) {
+    return ''
+  }
+}
+
+export default async (req) => {
+  try {
+    if (req.method !== 'POST') return json({ error: 'Método não permitido' }, 405)
+
+    const url = env('SUPABASE_URL')
+    const service = env('SUPABASE_SERVICE_ROLE_KEY')
+    const publishable = env('SUPABASE_PUBLISHABLE_KEY')
+
+    if (!url || !service || !publishable) {
+      return json({
+        error: 'Serviço administrativo não configurado no Netlify.',
+        missing: [
+          !url && 'SUPABASE_URL',
+          !service && 'SUPABASE_SERVICE_ROLE_KEY',
+          !publishable && 'SUPABASE_PUBLISHABLE_KEY'
+        ].filter(Boolean)
+      }, 500)
+    }
+
+    const token = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '')
+    if (!token) return json({ error: 'Sessão ausente. Entre novamente no SIGOM.' }, 401)
+
     const authClient = createClient(url, publishable, {
-      global: { headers: { Authorization: `Bearer ${token}` } },
       auth: { persistSession: false, autoRefreshToken: false }
     })
 
