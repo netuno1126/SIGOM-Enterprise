@@ -1,6 +1,9 @@
 {
-  "name": "sigom-fase-12-24-login-unico-guia",
-  "version": "12.24.0",
+  "name": "sigom-enterprise",
+  "version": "12.26.1",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.57.4"
+  }
 }
