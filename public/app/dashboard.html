@@ -2959,7 +2959,7 @@ function abrirExportAnaliseWord(){
     <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
       <button class="btn gray" onclick="marcarAnaliseExportacao(true)">Selecionar todas</button>
       <button class="btn gray" onclick="marcarAnaliseExportacao(false)">Limpar</button>
-      <button class="btn blue" onclick="exportarAnaliseWordSIGOM()">📄 Exportar Word</button>
+      <button class="btn blue" onclick="exportarAnaliseWordSIGOM(this)">📄 Exportar Word</button>
       <button class="btn orange" onclick="exportarAnalisePDFSIGOM()">🖨 Exportar PDF</button>
     </div></div>`;
 }
@@ -3107,20 +3107,93 @@ function montarMhtmlWordSIGOM(obj){
   return partes.join('\r\n');
 }
 
-async function exportarAnaliseWordSIGOM(){
-  const obj=await montarDocumentoAnaliseSIGOM('word'); if(!obj)return;
-  const conteudo=montarMhtmlWordSIGOM(obj);
-  const blob=new Blob([conteudo],{type:'application/msword'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;
-  a.download=(obj.titulo||'SIGOM_Analises').replace(/[^\w\-]+/g,'_')+'.doc';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(()=>URL.revokeObjectURL(url),3000);
-}
+async function exportarAnaliseWordSIGOM(botao){
+  const tituloInicial=document.getElementById('analiseExportTituloSIGOM')?.value?.trim()||'SIGOM_Analises';
+  const nomeArquivo=(tituloInicial||'SIGOM_Analises').replace(/[^\w\-]+/g,'_')+'.doc';
+  const textoOriginal=botao?.innerHTML||'📄 Exportar Word';
+  let arquivoHandle=null;
 
+  try{
+    if(botao){
+      botao.disabled=true;
+      botao.innerHTML='⏳ Preparando Word…';
+    }
+
+    if('showSaveFilePicker' in window){
+      try{
+        arquivoHandle=await window.showSaveFilePicker({
+          suggestedName:nomeArquivo,
+          types:[{
+            description:'Documento do Microsoft Word',
+            accept:{'application/msword':['.doc']}
+          }]
+        });
+      }catch(e){
+        if(e?.name==='AbortError')return;
+        console.warn('Seletor nativo indisponível; usando download alternativo.',e);
+      }
+    }
+
+    const obj=await montarDocumentoAnaliseSIGOM('word');
+    if(!obj)return;
+
+    const conteudo=montarMhtmlWordSIGOM(obj);
+    const blob=new Blob([conteudo],{type:'application/msword'});
+    const nomeFinal=(obj.titulo||'SIGOM_Analises').replace(/[^\w\-]+/g,'_')+'.doc';
+
+    if(arquivoHandle){
+      const gravador=await arquivoHandle.createWritable();
+      await gravador.write(blob);
+      await gravador.close();
+      alert('Documento Word gerado com sucesso:\n'+nomeFinal);
+      return;
+    }
+
+    if(navigator.msSaveOrOpenBlob){
+      navigator.msSaveOrOpenBlob(blob,nomeFinal);
+      return;
+    }
+
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=nomeFinal;
+    a.style.display='none';
+    document.body.appendChild(a);
+    a.click();
+
+    setTimeout(()=>{
+      const aviso=document.getElementById('sigomWordDownloadFallback');
+      if(!aviso){
+        const box=document.createElement('div');
+        box.id='sigomWordDownloadFallback';
+        box.className='ovl';
+        box.innerHTML=`<div class="ovl-card" style="width:min(560px,94vw)">
+          <div class="ovl-head"><b>📄 Documento Word preparado</b>
+            <button class="ovl-x" onclick="document.getElementById('sigomWordDownloadFallback').remove()">✕</button>
+          </div>
+          <p style="margin:10px 0;font-size:13px">Caso o navegador não tenha iniciado o download, use o botão abaixo.</p>
+          <a class="btn blue" href="${url}" download="${escHtml(nomeFinal)}" style="display:inline-block;text-decoration:none">Baixar documento Word</a>
+        </div>`;
+        document.body.appendChild(box);
+      }
+    },1200);
+
+    setTimeout(()=>{
+      a.remove();
+      URL.revokeObjectURL(url);
+      document.getElementById('sigomWordDownloadFallback')?.remove();
+    },60000);
+  }catch(e){
+    console.error('Exportação Word SIGOM:',e);
+    alert('Não foi possível gerar o documento Word.\n\nDetalhe: '+(e?.message||e));
+  }finally{
+    if(botao){
+      botao.disabled=false;
+      botao.innerHTML=textoOriginal;
+    }
+  }
+}
 async function exportarAnalisePDFSIGOM(){
   const w=window.open('','_blank');
   if(!w){alert('O navegador bloqueou a janela de impressão. Autorize pop-ups para o SIGOM.');return;}

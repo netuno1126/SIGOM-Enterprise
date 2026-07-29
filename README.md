@@ -451,3 +451,15 @@ com número da fase, data, finalidade e commit recomendado.
 - Nº OPUS e contrato são enviados na URL;
 - o botão **FIO desta obra** da Visão da Obra volta a funcionar;
 - o retorno da FIO utiliza a aba original ou `/app.html`, sem apontar para `dashboard_SIGOM.html`.
+
+
+## Fase 12.30 — Correção do download Word das Análises
+
+- o botão **Exportar Word** abre imediatamente o seletor nativo **Salvar como** no Chrome e no Edge;
+- a captura assíncrona dos gráficos ocorre depois da escolha do arquivo, evitando bloqueio silencioso do navegador;
+- o documento continua sendo gerado no formato `.doc` compatível com Microsoft Word;
+- gráficos e tabelas permanecem incorporados;
+- o grupo, Portfólio e demais filtros selecionados permanecem respeitados;
+- navegadores sem `showSaveFilePicker` utilizam download por `Blob`;
+- há link manual de contingência quando o download automático é bloqueado;
+- nenhuma alteração no Supabase é necessária.
