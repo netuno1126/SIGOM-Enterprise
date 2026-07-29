@@ -260,7 +260,20 @@ async function exportGroups(){
 }
 
 async function authHeader(){const {data:{session}}=await db.auth.getSession();return {'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`}}
-async function adminCall(action,payload={}){const r=await fetch('/.netlify/functions/admin-users',{method:'POST',headers:await authHeader(),body:JSON.stringify({action,...payload})});const j=await r.json();if(!r.ok)throw new Error(j.error||'Falha administrativa');return j}
+async function adminCall(action,payload={}){
+  const r=await fetch('/.netlify/functions/admin-users',{
+    method:'POST',
+    headers:await authHeader(),
+    body:JSON.stringify({action,...payload})
+  });
+  const raw=await r.text();
+  let j={};
+  if(raw.trim()){
+    try{j=JSON.parse(raw)}catch{throw new Error(`Resposta inválida da função administrativa (HTTP ${r.status}).`)}
+  }
+  if(!r.ok)throw new Error(j.error||`Falha administrativa (HTTP ${r.status}).`);
+  return j;
+}
 async function loadUsers(){
   if(state.profile?.perfil!=='administrador')return;
   try{

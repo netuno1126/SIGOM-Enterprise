@@ -1,0 +1,8 @@
+Substitua exatamente estes dois arquivos no repositório:
+
+1. netlify/functions/admin-users.mjs
+2. public/app/administracao.js
+
+Não envie apenas este TXT.
+Mensagem de commit:
+fix: corrigir cadastro e listagem administrativa de usuários
