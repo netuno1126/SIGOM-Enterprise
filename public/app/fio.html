@@ -81,6 +81,8 @@ body{background:#d9dde4;color:#102030;min-height:100vh}
 
 <div class="toolbar no-print">
   <button class="btn blue" onclick="fioAnterior()">← Obra anterior</button>
+  <input id="fioBuscaOpus" class="compact" inputmode="numeric" placeholder="🔎 Buscar Nº OPUS" title="Digite o Nº OPUS e pressione Enter" onkeydown="if(event.key==='Enter'){event.preventDefault();buscarOpusFIO()}">
+  <button class="btn blue" onclick="buscarOpusFIO()">Buscar OPUS</button>
   <select id="fioSelectObra" onchange="fioSelecionarObra(this.value)"></select>
   <button class="btn blue" onclick="fioProxima()">Próxima obra →</button>
   <span class="sep"></span>
@@ -377,7 +379,7 @@ async function imagemUrlDataUri(url){
 
 async function gerarPPTFIO(obras,arquivo){
   const ok=await garantirBibliotecaPPT();
-  if(!ok){alert('Biblioteca PowerPoint não carregada. O HTML tentou carregar automaticamente de: pptxgen.bundle.js, lib/pptxgen.bundle.js e CDN. Para funcionar sem internet, coloque o arquivo pptxgen.bundle.js na mesma pasta do fio_slide_SIGOM.html. Enquanto isso, exporte em PDF.');return;}
+  if(!ok){alert('Biblioteca PowerPoint não carregada. O HTML tentou carregar automaticamente de: pptxgen.bundle.js, lib/pptxgen.bundle.js e CDN. Para funcionar sem internet, coloque o arquivo pptxgen.bundle.js na pasta pública do módulo FIO. Enquanto isso, exporte em PDF.');return;}
   const pptx=new PptxGenJS(); pptx.defineLayout({name:'FIO16x9',width:13.333,height:7.5}); pptx.layout='FIO16x9';
   const [logoDEC,logoDOM]=await Promise.all([imagemUrlDataUri('/assets/logos/dec.png'),imagemUrlDataUri('/assets/logos/dom.png')]);
   const AZ='0070C0',AZE='1E4E79',AM='FFCC33',CIN='E6E6E6',BOR='4D4D4D',VD='70AD47',LR='E67E22';
@@ -416,6 +418,17 @@ function stripHtml(s){return String(s||'').replace(/<li>/g,'• ').replace(/<br\
 function entregaTextoPlano(r){const e=projetarEntregaMedicoes(r);if(e.tipo==='projecao')return e.texto;if(e.tipo==='concluida')return 'Concluída';if(e.status==='Datas inválidas')return 'Datas inválidas';if(e.status==='Sem dados suficientes')return 'Sem dados';return '—'}
 function escapeAttr(s){return escapeHtml(s).replace(/'/g,'&#39;')}
 function montarSelectFIO(){const s=document.getElementById('fioSelectObra');s.innerHTML='';OBRAS.forEach((r,i)=>{const o=document.createElement('option');o.value=i;o.textContent=`${r['Solicitação']||'—'} — ${fmtContrato(r['Contrato'])||'—'} — ${String(r['Descrição']||'').slice(0,80)}`;s.appendChild(o)});s.value=fioIndexAtual}
+function buscarOpusFIO(){
+  const campo=document.getElementById('fioBuscaOpus');
+  const termo=digits(campo?.value||'');
+  if(!termo){alert('Digite o Nº OPUS.');campo?.focus();return}
+  let idx=OBRAS.findIndex(r=>digits(r['Solicitação'])===termo);
+  if(idx<0)idx=OBRAS.findIndex(r=>digits(r['Solicitação']).includes(termo));
+  if(idx<0){alert('Nº OPUS não encontrado na base carregada.');campo?.select();return}
+  fioIndexAtual=idx;
+  const sel=document.getElementById('fioSelectObra');if(sel)sel.value=String(idx);
+  renderFioSlide(idx);
+}
 function aplicarQueryInicial(){
   const q=new URLSearchParams(location.search);
   const grupo=q.get('grupo');
@@ -585,7 +598,16 @@ async function restaurarFIO(){
   catch(e){alert('Não foi possível atualizar o arquivo de edições: '+e.message);}
 }
 async function copiarSlideFIO(){try{const html=document.getElementById('fioSlide').outerHTML;await navigator.clipboard.writeText(html);alert('HTML do slide copiado. Cole no PowerPoint/Word ou em outro editor HTML.')}catch(e){alert('Não foi possível copiar automaticamente.')}}
-function voltarDashboard(){try{if(history.length>1)history.back();else location.href='dashboard_SIGOM.html'}catch(e){location.href='dashboard_SIGOM.html'}}
+function voltarDashboard(){
+  try{
+    if(window.opener && !window.opener.closed){
+      window.opener.focus();
+      window.close();
+      return;
+    }
+  }catch(e){}
+  location.href='/app.html';
+}
 function escapeHtml(s){return String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))}
 
 window.SIGOM_APLICAR_DADOS_FIO=function(payload){
@@ -598,7 +620,7 @@ window.SIGOM_APLICAR_DADOS_FIO=function(payload){
   montarSelectFIO();
   montarSelectGruposFIO();
   aplicarQueryInicial();
-  renderFioSlide(0);
+  renderFioSlide(fioIndexAtual);
   const st=document.querySelector('.status');if(st)st.textContent=(payload.fonte||'Supabase')+' · '+OBRAS.length+' obras';
 };
 

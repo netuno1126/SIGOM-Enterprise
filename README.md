@@ -4,7 +4,7 @@ Este é o **README único e consolidado** do repositório. As atualizações fut
 
 ## Versão atual
 
-**Fase 12.28 — Administração de usuários com MFA configurável individualmente**
+**Fase 12.29 — Retorno da FIO e exportações de análises com gráficos**
 
 A versão atual consolida as correções operacionais, de autenticação, administração, IA, Dashboard, FIO, grupos, importações e segurança desenvolvidas após a Fase 12.19.
 
@@ -393,3 +393,61 @@ docs/
 ```
 
 Ela complementa este README, mas não deve gerar novos arquivos `README_FASE_*.md` na raiz.
+
+
+## Fase 12.29 — Retorno da FIO e exportações com gráficos
+
+### Retorno da FIO
+
+O botão **↩ Dashboard** da FIO não aponta mais para o arquivo inexistente:
+
+```text
+/app/dashboard_SIGOM.html
+```
+
+Quando a FIO foi aberta pelo Dashboard, o botão retorna à janela original e fecha a aba da FIO. Quando foi aberta diretamente, o retorno ocorre por:
+
+```text
+/app.html
+```
+
+Assim a sessão Supabase e a política individual de MFA são validadas antes de carregar o Dashboard.
+
+### Exportação das análises
+
+A exportação da aba **Análises** passa a:
+
+- respeitar o grupo, Portfólio e demais filtros selecionados;
+- aguardar a conclusão do desenho do Chart.js;
+- interromper animações antes da captura;
+- capturar cada canvas em PNG de alta resolução;
+- aplicar fundo branco à imagem;
+- incorporar os gráficos no documento Word;
+- aguardar o carregamento das imagens antes de abrir a impressão/PDF;
+- manter as tabelas de dados abaixo de cada gráfico.
+
+O Word é gerado como documento compatível `.doc`, com imagens incorporadas por MHTML. O PDF continua sendo gerado pela impressão do navegador.
+
+### Versão do pacote
+
+Todos os pacotes posteriores deverão conter:
+
+```text
+VERSAO.txt
+```
+
+com número da fase, data, finalidade e commit recomendado.
+
+### Busca por Nº OPUS na FIO
+
+- campo **Buscar Nº OPUS** incluído na barra da FIO;
+- busca exata e busca parcial pelo número normalizado;
+- tecla Enter ou botão **Buscar OPUS** abre a obra localizada;
+- o parâmetro `?opus=` vindo da Visão da Obra passa a abrir a obra correta, sem retornar à primeira obra.
+
+### Botão FIO desta obra
+
+- os atalhos do Dashboard passaram a abrir `/app/fio.html`;
+- Nº OPUS e contrato são enviados na URL;
+- o botão **FIO desta obra** da Visão da Obra volta a funcionar;
+- o retorno da FIO utiliza a aba original ou `/app.html`, sem apontar para `dashboard_SIGOM.html`.

@@ -2868,7 +2868,7 @@ function abrirObjetivosMetas(){
 
 /* ---------- FIO externo em HTML separado ---------- */
 function abrirFIOExterno(){
-  let url='fio_slide_SIGOM.html';
+  let url='/app/fio.html';
   try{
     if(typeof DATA!=='undefined' && DATA.length){
       let r=null;
@@ -2894,7 +2894,7 @@ function abrirFIOExterno(){
 
 
 function abrirFIOExternoObra(){
-  let url='fio_slide_SIGOM.html';
+  let url='/app/fio.html';
   try{
     const idx=+document.getElementById('selObra').value||0;
     const r=DATA[idx];
@@ -2979,42 +2979,170 @@ function tabelaCriticasAnaliseHTML(){
   const trs=rows.map(r=>`<tr><td>${escHtml(nomeCurtoObra(r)||r['Descrição']||'')}</td><td>${escHtml(r['Solicitação']??'')}</td><td>${escHtml(fmtContrato(r.Contrato))}</td><td>${escHtml(r.Empresa??'')}</td><td>${isNum(r.IDP)?r.IDP.toLocaleString('pt-BR',{maximumFractionDigits:2}):''}</td><td>${diasSemMedir(r)??''}</td><td>${formatarEstimativaRecursosSIGOM(r)}</td></tr>`).join('');
   return `<table class="tblAnaliseWord"><thead><tr><th>Obra</th><th>OPUS</th><th>Contrato</th><th>Empresa</th><th>IDP</th><th>Dias sem medir</th><th>Estimativa</th></tr></thead><tbody>${trs||'<tr><td colspan="7">Nenhuma obra crítica encontrada.</td></tr>'}</tbody></table>`;
 }
-function blocoAnaliseWordHTML(bloco, incluirImagem=true){
-  if(bloco[2]==='tblCrit')return `<div class="sec"><h2>${escHtml(bloco[1])}</h2>${tabelaCriticasAnaliseHTML()}</div>`;
+function aguardarFrameSIGOM(){
+  return new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+}
+function pausaSIGOM(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
+
+async function prepararGraficosAnaliseExportacaoSIGOM(){
+  renderAnalise();
+  await aguardarFrameSIGOM();
+  await pausaSIGOM(120);
+  for(const ch of Object.values(charts||{})){
+    try{
+      ch.stop?.();
+      ch.resize?.();
+      ch.update?.('none');
+    }catch(e){}
+  }
+  await aguardarFrameSIGOM();
+}
+
+function capturarChartPNG_SIGOM(chartId){
+  const ch=charts[chartId];
+  const origem=ch?.canvas;
+  if(!origem || !origem.width || !origem.height)return '';
+  try{
+    ch.stop?.();
+    ch.update?.('none');
+    const escala=2;
+    const canvas=document.createElement('canvas');
+    canvas.width=Math.max(1,origem.width*escala);
+    canvas.height=Math.max(1,origem.height*escala);
+    const ctx=canvas.getContext('2d');
+    ctx.fillStyle='#ffffff';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.drawImage(origem,0,0,canvas.width,canvas.height);
+    return canvas.toDataURL('image/png',1);
+  }catch(e){
+    try{return ch.toBase64Image?.('image/png',1)||origem.toDataURL('image/png',1)}catch(_e){return ''}
+  }
+}
+
+function blocoAnaliseWordHTML(bloco, imagemSrc=''){
+  if(bloco[2]==='tblCrit'){
+    return `<div class="sec"><h2>${escHtml(bloco[1])}</h2>${tabelaCriticasAnaliseHTML()}</div>`;
+  }
   const ch=charts[bloco[2]];
   if(!ch)return `<div class="sec"><h2>${escHtml(bloco[1])}</h2><p>Gráfico não disponível.</p></div>`;
-  let img='';
-  try{img=ch.toBase64Image ? ch.toBase64Image() : ch.canvas.toDataURL('image/png');}catch(e){}
-  return `<div class="sec"><h2>${escHtml(bloco[1])}</h2>${incluirImagem&&img?'<img src="'+img+'">':''}${tabelaChartAnaliseHTML(bloco[2])}</div>`;
+  return `<div class="sec"><h2>${escHtml(bloco[1])}</h2>${imagemSrc?'<img src="'+imagemSrc+'">':''}${tabelaChartAnaliseHTML(bloco[2])}</div>`;
 }
-function montarDocumentoAnaliseSIGOM(){
-  renderAnalise();
+
+function base64Utf8SIGOM(texto){
+  const bytes=new TextEncoder().encode(texto);
+  let bin='';
+  const lote=0x8000;
+  for(let i=0;i<bytes.length;i+=lote){
+    bin+=String.fromCharCode(...bytes.subarray(i,i+lote));
+  }
+  return btoa(bin);
+}
+
+async function montarDocumentoAnaliseSIGOM(modo='pdf'){
+  await prepararGraficosAnaliseExportacaoSIGOM();
+
   const escolhidos=[...document.querySelectorAll('.analiseExportChk:checked')].map(x=>x.value);
   if(!escolhidos.length){alert('Selecione pelo menos um gráfico ou tabela.');return null;}
+
   const titulo=document.getElementById('analiseExportTituloSIGOM')?.value?.trim()||'Análises SIGOM';
   const blocos=ANALISE_EXPORT_BLOCOS.filter(b=>escolhidos.includes(b[0]));
-  let linhas='';
-  for(let i=0;i<blocos.length;i+=2){
-    linhas+='<tr><td>'+blocoAnaliseWordHTML(blocos[i])+'</td><td>'+(blocos[i+1]?blocoAnaliseWordHTML(blocos[i+1]):'')+'</td></tr>';
-  }
-  const css=`@page WordSection1{size:841.9pt 595.3pt;mso-page-orientation:landscape;margin:18pt 14pt 18pt 14pt;}@page{size:A4 landscape;margin:7mm}div.WordSection1{page:WordSection1;}body{font-family:Arial,sans-serif;color:#1a2b3c;margin:0}h1{text-align:center;color:#1e4e79;font-size:16pt;margin:0 0 7pt}h2{color:#1e4e79;font-size:9.5pt;margin:0 0 4pt}.mosaico{width:100%;border-collapse:separate;border-spacing:5pt;table-layout:fixed}.mosaico td{width:50%;vertical-align:top;border:0}.sec{page-break-inside:avoid;margin-bottom:5pt}.sec img{width:100%;max-height:190pt;object-fit:contain;border:0.5pt solid #d9e5f0}.tblAnaliseWord{width:100%;border-collapse:collapse;font-size:6.3pt;table-layout:fixed;margin-top:3pt}.tblAnaliseWord th{background:#1e4e79;color:#fff;border:0.5pt solid #1e4e79;padding:2pt}.tblAnaliseWord td{border:0.5pt solid #c4d3e3;padding:2pt;word-wrap:break-word;overflow-wrap:break-word}.rodape{font-size:7pt;color:#666;text-align:right;margin-top:6pt}`;
-  const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><style>${css}</style></head><body><div class="WordSection1"><h1>${escHtml(titulo)}</h1><table class="mosaico">${linhas}</table><div class="rodape">SIGOM · ${rotuloAnalise()} · ${new Date().toLocaleString('pt-BR')}</div></div>
+  const imagens=[];
+  const htmlBlocos=[];
 
-</body></html>`;
-  return {titulo,html};
+  for(const bloco of blocos){
+    if(bloco[2]==='tblCrit'){
+      htmlBlocos.push(blocoAnaliseWordHTML(bloco,''));
+      continue;
+    }
+    const dataUri=capturarChartPNG_SIGOM(bloco[2]);
+    let src=dataUri;
+    if(modo==='word' && dataUri){
+      const nome=`sigom-grafico-${imagens.length+1}.png`;
+      imagens.push({nome,base64:dataUri.split(',')[1]||''});
+      src=`cid:${nome}`;
+    }
+    htmlBlocos.push(blocoAnaliseWordHTML(bloco,src));
+  }
+
+  let linhas='';
+  for(let i=0;i<htmlBlocos.length;i+=2){
+    linhas+='<tr><td>'+htmlBlocos[i]+'</td><td>'+(htmlBlocos[i+1]||'')+'</td></tr>';
+  }
+
+  const css=`@page WordSection1{size:841.9pt 595.3pt;mso-page-orientation:landscape;margin:18pt 14pt 18pt 14pt;}@page{size:A4 landscape;margin:7mm}div.WordSection1{page:WordSection1;}body{font-family:Arial,sans-serif;color:#1a2b3c;margin:0;background:#fff}h1{text-align:center;color:#1e4e79;font-size:16pt;margin:0 0 7pt}h2{color:#1e4e79;font-size:9.5pt;margin:0 0 4pt}.mosaico{width:100%;border-collapse:separate;border-spacing:5pt;table-layout:fixed}.mosaico td{width:50%;vertical-align:top;border:0}.sec{page-break-inside:avoid;margin-bottom:5pt}.sec img{display:block;width:100%;height:auto;max-height:190pt;object-fit:contain;border:0.5pt solid #d9e5f0;background:#fff}.tblAnaliseWord{width:100%;border-collapse:collapse;font-size:6.3pt;table-layout:fixed;margin-top:3pt}.tblAnaliseWord th{background:#1e4e79;color:#fff;border:0.5pt solid #1e4e79;padding:2pt}.tblAnaliseWord td{border:0.5pt solid #c4d3e3;padding:2pt;word-wrap:break-word;overflow-wrap:break-word}.rodape{font-size:7pt;color:#666;text-align:right;margin-top:6pt}`;
+
+  const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escHtml(titulo)}</title><style>${css}</style></head><body><div class="WordSection1"><h1>${escHtml(titulo)}</h1><table class="mosaico">${linhas}</table><div class="rodape">SIGOM · ${escHtml(rotuloAnalise())} · ${new Date().toLocaleString('pt-BR')}</div></div></body></html>`;
+
+  return {titulo,html,imagens};
 }
-function exportarAnaliseWordSIGOM(){
-  const obj=montarDocumentoAnaliseSIGOM(); if(!obj)return;
+
+function montarMhtmlWordSIGOM(obj){
+  const boundary='----=_SIGOM_ANALISE_'+Date.now();
+  const partes=[
+    'MIME-Version: 1.0',
+    `Content-Type: multipart/related; boundary="${boundary}"; type="text/html"`,
+    '',
+    `--${boundary}`,
+    'Content-Type: text/html; charset="utf-8"',
+    'Content-Transfer-Encoding: base64',
+    'Content-Location: index.html',
+    '',
+    base64Utf8SIGOM(obj.html),
+    ''
+  ];
+
+  for(const img of obj.imagens||[]){
+    partes.push(
+      `--${boundary}`,
+      `Content-Type: image/png; name="${img.nome}"`,
+      'Content-Transfer-Encoding: base64',
+      `Content-Location: ${img.nome}`,
+      `Content-ID: <${img.nome}>`,
+      '',
+      img.base64,
+      ''
+    );
+  }
+  partes.push(`--${boundary}--`,'');
+  return partes.join('\r\n');
+}
+
+async function exportarAnaliseWordSIGOM(){
+  const obj=await montarDocumentoAnaliseSIGOM('word'); if(!obj)return;
+  const conteudo=montarMhtmlWordSIGOM(obj);
+  const blob=new Blob([conteudo],{type:'application/msword'});
+  const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob(['\ufeff'+obj.html],{type:'application/msword'}));
+  a.href=url;
   a.download=(obj.titulo||'SIGOM_Analises').replace(/[^\w\-]+/g,'_')+'.doc';
+  document.body.appendChild(a);
   a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),3000);
 }
-function exportarAnalisePDFSIGOM(){
-  const obj=montarDocumentoAnaliseSIGOM(); if(!obj)return;
+
+async function exportarAnalisePDFSIGOM(){
   const w=window.open('','_blank');
+  if(!w){alert('O navegador bloqueou a janela de impressão. Autorize pop-ups para o SIGOM.');return;}
+  w.document.write('<!DOCTYPE html><html><body style="font-family:Arial;padding:24px">Preparando gráficos do SIGOM…</body></html>');
+  const obj=await montarDocumentoAnaliseSIGOM('pdf');
+  if(!obj){w.close();return;}
+  w.document.open();
   w.document.write(obj.html);
-  w.document.close(); w.focus(); setTimeout(()=>w.print(),500);
+  w.document.close();
+  await new Promise(resolve=>{
+    const imgs=[...w.document.images];
+    if(!imgs.length)return resolve();
+    let pendentes=imgs.length;
+    const fim=()=>{pendentes--;if(pendentes<=0)resolve()};
+    imgs.forEach(img=>{
+      if(img.complete)fim();
+      else{img.onload=fim;img.onerror=fim}
+    });
+    setTimeout(resolve,2500);
+  });
+  w.focus();
+  setTimeout(()=>w.print(),250);
 }
 
 /* ---------- EXPORTAR TABELA FILTRADA COM COLUNAS SELECIONÁVEIS ---------- */

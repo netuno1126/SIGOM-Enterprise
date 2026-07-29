@@ -1,0 +1,5 @@
+SIGOM — Sistema Integrado de Gestão de Obras Militares
+Versão: Fase 12.29
+Data: 29/07/2026
+Finalidade: corrigir retorno da FIO, FIO desta obra, busca por Nº OPUS e exportações Word/PDF com gráficos.
+Commit recomendado: fix: corrigir navegação FIO e exportações de análises com gráficos

@@ -1,27 +1,18 @@
-SIGOM — Fase 12.28
-MFA selecionável no cadastro e editável futuramente
+SIGOM — Fase 12.29 consolidada
 
-ARQUIVOS A SUBSTITUIR NO GITHUB
+Inclui todas as alterações não publicadas da Fase 12.28 e as correções da Fase 12.29.
+
+Arquivos principais a substituir:
+- public/app/dashboard.html
+- public/app/fio.html
 - public/auth.js
 - public/app.html
 - public/app/administracao.html
 - public/app/administracao.js
 - netlify/functions/admin-users.mjs
 - package.json
+- README.md
+- VERSAO.txt
 
-SQL
-- supabase/25_fase_12_27_mfa_por_usuario.sql
-
-A migration já foi aplicada no Supabase operacional. Execute o SQL somente
-em uma nova instalação ou se a coluna profiles.mfa_obrigatorio ainda não existir.
-
-FUNCIONAMENTO
-- Novo usuário: caixa marcada = MFA obrigatório.
-- Novo usuário: caixa desmarcada = usuário dispensado de MFA.
-- Usuários cadastrados: coluna MFA mostra Obrigatório ou Dispensado.
-- Botão Editar: permite alterar a caixa e salvar para acessos futuros.
-- Desativar a exigência não apaga automaticamente um fator TOTP já cadastrado;
-  apenas deixa de exigir AAL2 no SIGOM.
-
-COMMIT ÚNICO
-feat: adicionar controle de MFA por usuário no cadastro e edição
+Commit único:
+fix: corrigir navegação FIO e exportações de análises com gráficos
