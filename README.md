@@ -1,41 +1,180 @@
 # SIGOM — Sistema Integrado de Gestão de Obras Militares
 
-Este é o **README único e consolidado** do repositório. As atualizações futuras devem alterar este arquivo, sem criar novos `README_FASE_*.md` na raiz.
+Este é o **README único e consolidado** do repositório. As atualizações futuras devem alterar este arquivo, sem criar novos arquivos `README_FASE_*.md` na raiz.
 
 ## Versão atual
 
-**Fase 12.19 — Persistência dos Saldos Alongados e documentação consolidada**
+**Fase 12.28 — Administração de usuários com MFA configurável individualmente**
 
-### Correções da Fase 12.19
+A versão atual consolida as correções operacionais, de autenticação, administração, IA, Dashboard, FIO, grupos, importações e segurança desenvolvidas após a Fase 12.19.
 
-- a importação de `Saldos_alongados_Dash.xlsx` grava definitivamente em `saldos_alongados_consolidado`;
-- a mesma importação mantém a tabela anual `saldos_alongados` sincronizada;
-- o importador confirma quantas linhas ficaram visíveis no Supabase antes de informar sucesso;
-- falhas de RLS ou de persistência passam a aparecer no relatório de erros;
-- o Dashboard usa a tabela consolidada como fonte principal e a tabela anual como contingência;
-- ao concluir a importação, a aba aberta recebe um aviso para recarregar os dados;
-- os dados permanecem disponíveis após `F5`, logout e novo login.
+## Novidades da Fase 12.28
 
-### SQL obrigatório desta versão
+### MFA selecionável no cadastro
 
-Execute no SQL Editor do Supabase, após as migrations anteriores:
+O formulário de criação de usuários possui a opção:
 
 ```text
-supabase/22_fase_12_19_persistencia_saldos_alongados.sql
+☑ Exigir autenticação em dois fatores (MFA)
 ```
 
-O script é idempotente e não apaga registros existentes.
+- marcada: o usuário deverá cadastrar e informar o código TOTP;
+- desmarcada: o usuário entrará apenas com e-mail/nome de usuário e senha;
+- a opção permanece marcada por padrão.
 
-## Implantação
+### MFA editável posteriormente
 
-1. Faça backup do Supabase.
-2. Execute as migrations ainda pendentes, terminando pela migration `22`.
-3. Publique o conteúdo da pasta no GitHub.
-4. Aguarde o deploy automático do Netlify ou use **Clear cache and deploy site**.
-5. Atualize o navegador com `Ctrl + Shift + R`.
-6. Importe novamente `Saldos_alongados_Dash.xlsx`.
-7. Confirme no resultado a quantidade de linhas consolidadas e anuais visíveis.
-8. Pressione `F5`, saia e entre novamente para validar a persistência.
+A tabela administrativa de usuários possui a coluna **MFA**, com as situações:
+
+```text
+Obrigatório
+Dispensado
+```
+
+Ao clicar em **Editar**, o Administrador poderá marcar ou desmarcar a exigência e confirmar em **Salvar**.
+
+A configuração é armazenada em:
+
+```text
+public.profiles.mfa_obrigatorio
+```
+
+Desativar a exigência não exclui automaticamente um fator TOTP já cadastrado no Supabase; apenas deixa de exigir AAL2 no acesso ao SIGOM.
+
+## Autenticação
+
+O SIGOM mantém uma única tela oficial de acesso.
+
+Fluxo:
+
+```text
+Login inicial
+→ autenticação Supabase
+→ consulta do perfil
+→ verificação da política individual de MFA
+→ Dashboard completo
+```
+
+### Login por e-mail
+
+O e-mail é autenticado diretamente pelo Supabase Auth.
+
+### Login por nome de usuário
+
+O nome de usuário é resolvido pela Netlify Function:
+
+```text
+netlify/functions/login-identifier.mjs
+```
+
+A senha utilizada é a mesma da conta de e-mail correspondente.
+
+### Perfis
+
+- Administrador;
+- Editor;
+- Auditor;
+- Consulta.
+
+A situação do usuário e a política de MFA são consultadas em `public.profiles` antes da abertura do sistema.
+
+## Administração de usuários
+
+A administração utiliza:
+
+```text
+netlify/functions/admin-users.mjs
+public/app/administracao.html
+public/app/administracao.js
+```
+
+O Administrador pode:
+
+- listar usuários;
+- criar usuário;
+- definir nome completo;
+- definir nome de usuário;
+- definir e-mail;
+- definir senha provisória;
+- selecionar perfil;
+- exigir ou dispensar MFA;
+- editar os dados posteriormente;
+- ativar ou desativar a conta.
+
+As operações administrativas são realizadas pela Netlify Function. A `SUPABASE_SERVICE_ROLE_KEY` nunca deve ser exposta no navegador.
+
+## Correções posteriores à Fase 12.24
+
+### Fase 12.25 — Dashboard restaurado
+
+- corrigido o encerramento indevido do bloco JavaScript principal;
+- removida a tag `</script>` inserida dentro do modelo de exportação;
+- restaurados filtros, gráficos, abas, tabelas e exportações;
+- mantido o login único sem remover funcionalidades do Dashboard.
+
+### Fase 12.26 — IA SIGOM
+
+- corrigida a rota da Function para:
+
+```text
+/api/ia-sigom
+```
+
+- respostas vazias ou HTML de erro deixam de causar `Unexpected end of JSON input`;
+- o frontend passa a mostrar o código HTTP e a mensagem real da Function;
+- o módulo mantém contexto de obras, FIO, objetivos, alertas e paralisações;
+- a IA continua sem alterar dados oficiais automaticamente.
+
+### Correções administrativas e Netlify Functions
+
+- tratamento de respostas vazias e inválidas;
+- mensagens administrativas específicas;
+- correção do erro `HTTP 502` na inicialização;
+- leitura segura das variáveis com `Netlify.env.get(...)`;
+- fallback para `process.env`;
+- respostas sempre em JSON;
+- restauração da dependência:
+
+```json
+"@supabase/supabase-js": "^2.57.4"
+```
+
+### Fase 12.27 — MFA por usuário
+
+- criada a coluna `profiles.mfa_obrigatorio`;
+- a política global `requireMfa` passou a respeitar a configuração individual;
+- usuários dispensados não são redirecionados para o cadastramento TOTP;
+- usuários protegidos continuam exigindo sessão AAL2.
+
+## FIO
+
+A exportação PowerPoint permanece no modelo estável anterior às tabelas nativas:
+
+- formas retangulares editáveis;
+- caixas de texto editáveis;
+- logos DEC e DOM incorporadas;
+- quadro financeiro editável;
+- PA, IDP e observações editáveis;
+- sem uso de tabela OOXML nativa que possa corromper o arquivo.
+
+A FIO consulta obras e grupos no Supabase e preserva o histórico de versões.
+
+## Grupos
+
+As tabelas oficiais são:
+
+```text
+grupos
+grupo_obras
+```
+
+Administrador e Editor podem criar, editar e vincular obras. Auditor e Consulta permanecem em leitura.
+
+Os grupos podem ser importados e exportados no formato:
+
+```text
+grupos_obras.json
+```
 
 ## Fontes operacionais
 
@@ -43,117 +182,214 @@ O script é idempotente e não apaga registros existentes.
 - `portfolio_obras`: Planilha do Portfólio;
 - `principais_obras`: nomes institucionais associados ao Nº OPUS;
 - `saldos_alongados_consolidado`: matriz OM × exercícios 2016–2026;
-- `saldos_alongados`: formato anual para gráficos e análises;
-- `grupos` e `grupo_obras`: grupos e vínculos compartilhados;
-- `fio_edicoes`: histórico da FIO.
+- `saldos_alongados`: estrutura anual para gráficos;
+- `grupos` e `grupo_obras`: grupos e vínculos;
+- `fio_edicoes`: histórico da FIO;
+- `objetivos`, `objetivo_metas` e `objetivo_obras`: Objetivos e Metas;
+- `obras_paralisadas`: paralisações e recontratações;
+- `alertas` e `timeline_eventos`: inteligência operacional;
+- `profiles`: perfil, situação, username e política individual de MFA.
 
-## Regras institucionais preservadas
+## Regras institucionais
 
-- a interface homologada não deve perder funções;
-- os dados importados devem permanecer no Supabase;
-- nenhuma atualização deve depender apenas de `localStorage`;
-- a obra continua sendo identificada por Nº OPUS e contrato;
-- `IDP = % medido ÷ % estimado`;
+- nenhuma funcionalidade homologada deve ser retirada;
+- a obra permanece como entidade central;
+- os dados devem persistir no Supabase após `F5`, logout e novo login;
+- nenhuma operação institucional deve depender somente de `localStorage`;
+- Portfólio aceita Nº OPUS sem contrato;
 - valores financeiros usam o padrão `pt-BR`;
-- Administrador e Editor gravam; Auditor e Consulta permanecem em leitura.
+- percentuais são exibidos sem multiplicação indevida por 100;
+- `IDP = % medido ÷ % estimado`;
+- alterações relevantes devem ser auditadas;
+- a documentação principal permanece neste único `README.md`.
 
-## Histórico consolidado
+## Importações
 
-### Fases 12.14 a 12.18
+O fluxo institucional é:
 
-- persistência e alternância real do Portfólio;
-- Portfólio selecionado por padrão após o login;
-- Média Mensal Global contextual e abreviada;
-- estado inicial dos filtros padronizado;
-- grupos da FIO carregados do Supabase;
-- correção do PowerPoint da FIO com tabelas editáveis.
+```text
+Selecionar arquivo
+→ validar
+→ conferir prévia
+→ confirmar
+→ gravar no Supabase
+→ verificar persistência
+→ atualizar Dashboard
+```
 
-### Fases 12.5 a 12.13
+Bases aceitas:
 
-- importação de Principais Obras;
-- login por e-mail ou nome de usuário;
-- menu institucional consolidado;
-- PowerPoint editável da FIO;
-- correção de percentuais;
-- perfil e cadastro de usuários;
-- edição, ativação e desativação de usuários.
+- Planilha de Obras;
+- Planilha do Portfólio;
+- Principais Obras;
+- Saldos Alongados;
+- Objetivos e Metas;
+- Grupos em JSON.
 
-### Fases 12.1 a 12.4
+O Nº OPUS é obrigatório. No Portfólio, o contrato é opcional.
 
-- modelo fiel da Planilha de Obras e do Portfólio;
-- estrutura oficial de Saldos Alongados;
-- Dashboard e FIO baseline ligados ao Supabase;
-- grupos e operação online.
+## SQL e migrations relevantes
+
+As migrations devem ser executadas em ordem e apenas quando ainda não aplicadas.
+
+Últimas migrations:
+
+```text
+supabase/22_fase_12_19_persistencia_saldos_alongados.sql
+supabase/23_fase_12_20_portfolio_opus_sem_contrato.sql
+supabase/24_fase_12_23_edicao_admin_saneamento.sql
+supabase/25_fase_12_27_mfa_por_usuario.sql
+```
+
+A migration `25` cria `profiles.mfa_obrigatorio`.
+
+## Variáveis do Netlify
+
+Obrigatórias para autenticação e administração:
+
+```text
+SUPABASE_URL
+SUPABASE_PUBLISHABLE_KEY
+SUPABASE_SERVICE_ROLE_KEY
+```
+
+Para a IA:
+
+```text
+OPENAI_API_KEY
+```
+
+`OPENAI_MODEL` é opcional quando a Function possui um modelo padrão.
+
+No plano gratuito do Netlify, as variáveis podem ficar no escopo padrão do projeto.
+
+## Segurança
+
+Nunca publique no frontend ou no GitHub:
+
+- `SUPABASE_SERVICE_ROLE_KEY`;
+- `OPENAI_API_KEY`;
+- senhas;
+- tokens privados;
+- códigos TOTP.
+
+No frontend podem permanecer somente:
+
+- URL pública do projeto Supabase;
+- chave publicável do Supabase.
+
+A Content Security Policy deve usar domínio curinga:
+
+```text
+https://*.supabase.co
+wss://*.supabase.co
+```
+
+## Estrutura principal
+
+```text
+public/
+├── index.html
+├── app.html
+├── auth.js
+├── config.js
+└── app/
+    ├── dashboard.html
+    ├── fio.html
+    ├── objetivos.html
+    ├── obras-paralisadas.html
+    ├── administracao.html
+    ├── administracao.js
+    ├── ia-sigom.html
+    ├── ia-sigom.js
+    └── guia-usuario.html
+
+netlify/
+└── functions/
+    ├── admin-users.mjs
+    ├── login-identifier.mjs
+    └── ai-sigom.mjs
+
+supabase/
+└── migrations SQL versionadas
+```
+
+## Implantação consolidada
+
+1. Faça backup do Supabase.
+2. Confirme se as migrations necessárias já foram executadas.
+3. Substitua os arquivos funcionais no GitHub.
+4. Atualize este mesmo `README.md`.
+5. Faça um único commit.
+6. Aguarde o deploy automático ou use **Clear cache and deploy site**.
+7. Atualize o navegador com `Ctrl + Shift + R`.
+8. Teste:
+   - login por e-mail;
+   - login por username;
+   - usuário com MFA obrigatório;
+   - usuário dispensado de MFA;
+   - cadastro e edição de usuário;
+   - grupos;
+   - importações;
+   - FIO;
+   - IA;
+   - gráficos e exportações.
+
+## Histórico resumido
+
+### Fases 12.19 a 12.28
+
+- persistência dos Saldos Alongados;
+- README único;
+- IA no cabeçalho;
+- Portfólio por Nº OPUS sem contrato;
+- restauração do PowerPoint estável da FIO;
+- correção de grupos e username;
+- edição administrativa e saneamento de percentuais;
+- login único;
+- Guia Completo do Usuário;
+- restauração do Dashboard;
+- correção da rota da IA;
+- estabilização das Functions administrativas;
+- MFA individual por usuário;
+- seletor de MFA no cadastro e na edição.
+
+### Fases 12.1 a 12.18
+
+- tabelas fiéis às planilhas operacionais;
+- Portfólio persistente;
+- Principais Obras;
+- Saldos Alongados;
+- menu institucional;
+- grupos online;
+- nomes das obras;
+- login por username;
+- edição de usuários;
+- Média Mensal Global contextual;
+- FIO por grupo;
+- correções iniciais do PowerPoint.
 
 ### Fases 1 a 11
 
-- autenticação, MFA e perfis;
-- Dashboard, Visão da Obra e análises;
+- fundação web;
+- autenticação e perfis;
+- Dashboard conectado ao Supabase;
+- Visão da Obra e gráficos;
 - grupos e Portfólio;
 - administração e importações;
 - FIO online;
 - Objetivos e Metas;
 - Obras Paralisadas;
 - Painel do Diretor;
-- Pesquisa, Timeline e Alertas;
+- Pesquisa Global, Timeline e Alertas;
 - IA e briefings assistivos.
 
-## Segurança
+## Documentação
 
-Nunca publique no frontend:
+A documentação detalhada permanece em:
 
-- `SUPABASE_SERVICE_ROLE_KEY`;
-- `OPENAI_API_KEY`;
-- senhas ou tokens privados.
+```text
+docs/
+```
 
-No navegador permanecem somente a URL do projeto e a chave publicável do Supabase.
-
-## Documentação detalhada
-
-Os marcos técnicos continuam em `docs/`. Eles complementam este README único, mas não devem ser duplicados em novos arquivos README na raiz.
-
-
-## Fase 12.20 — IA no cabeçalho e Portfólio por Nº OPUS
-
-- Botão **✨ IA** ao lado de **☰ Menu**, abrindo `/app/ia-sigom.html`.
-- A IA usa a sessão autenticada e a Function `ai-sigom` sem alterar dados oficiais.
-- Na importação do Portfólio, o contrato passa a ser opcional.
-- O Nº OPUS é a chave mínima obrigatória.
-- Registros repetidos com o mesmo Nº OPUS e contrato vazio são consolidados.
-- Obras sem contrato permanecem visíveis após F5 e novo login.
-- Execute `supabase/23_fase_12_20_portfolio_opus_sem_contrato.sql`.
-- A documentação permanece consolidada neste único `README.md`.
-
-
-## Fase 12.21 — Estabilidade do PPT da FIO e contingência de autenticação
-
-- A exportação da FIO voltou a usar formas e caixas de texto editáveis, removendo tabelas OOXML que geravam arquivos recusados por algumas versões do Microsoft PowerPoint.
-- Login por e-mail passa a autenticar diretamente no Supabase; a Netlify Function continua sendo usada somente para login por nome de usuário.
-- Nenhum novo README paralelo foi criado.
-
-## Fase 12.22 — estabilidade operacional
-
-- restaura a exportação PowerPoint da FIO ao modelo anterior baseado em formas e caixas de texto;
-- remove o uso de tabelas nativas do PowerPoint na exportação;
-- consolida as políticas RLS de `grupos` e `grupo_obras`;
-- mantém gravação de grupos somente para Administrador e Editor;
-- cadastra o username `fabiobarboza.dom` para a conta administradora correspondente;
-- mantém login por e-mail e nome de usuário com MFA.
-
-A migration `supabase/24_fase_12_22_grupos_username_fio_rollback.sql` já foi aplicada ao projeto de produção em 28/07/2026.
-
-
-## Fase 12.23 — Edição administrativa e saneamento de valores
-
-A aba Tabelas possui modo de edição exclusivo do Administrador, com motivo obrigatório e auditoria. A importação de percentuais preserva 3,07 como 3,07%, sem converter para 307%.
-
-
-## Fase 12.24 — Login único e Guia do Usuário
-
-- mantém somente a tela oficial de login da página inicial;
-- bloqueia a tela de login legada dentro do Dashboard;
-- valida sessão Supabase e MFA antes de carregar o iframe;
-- corrige o vínculo do username `apgdom` no Supabase;
-- inclui `Ajuda → Guia completo do usuário` no menu suspenso;
-- acrescenta guia HTML pesquisável e imprimível;
-- não exige nova senha e não cria outro mecanismo de autenticação.
+Ela complementa este README, mas não deve gerar novos arquivos `README_FASE_*.md` na raiz.

@@ -1,14 +1,27 @@
-SIGOM Fase 12.26 — Correção da IA
+SIGOM — Fase 12.28
+MFA selecionável no cadastro e editável futuramente
 
-Substituir:
-public/app/ia-sigom.js
+ARQUIVOS A SUBSTITUIR NO GITHUB
+- public/auth.js
+- public/app.html
+- public/app/administracao.html
+- public/app/administracao.js
+- netlify/functions/admin-users.mjs
+- package.json
 
-Correções:
-- rota alterada de /.netlify/functions/ai-sigom para /api/ia-sigom;
-- resposta da Function lida primeiro como texto;
-- tratamento de resposta vazia, HTML ou JSON inválido;
-- mensagem de erro detalhada;
-- histórico não bloqueia a resposta caso falhe.
+SQL
+- supabase/25_fase_12_27_mfa_por_usuario.sql
 
-Commit sugerido:
-fix: corrigir rota e resposta vazia da IA SIGOM
+A migration já foi aplicada no Supabase operacional. Execute o SQL somente
+em uma nova instalação ou se a coluna profiles.mfa_obrigatorio ainda não existir.
+
+FUNCIONAMENTO
+- Novo usuário: caixa marcada = MFA obrigatório.
+- Novo usuário: caixa desmarcada = usuário dispensado de MFA.
+- Usuários cadastrados: coluna MFA mostra Obrigatório ou Dispensado.
+- Botão Editar: permite alterar a caixa e salvar para acessos futuros.
+- Desativar a exigência não apaga automaticamente um fator TOTP já cadastrado;
+  apenas deixa de exigir AAL2 no SIGOM.
+
+COMMIT ÚNICO
+feat: adicionar controle de MFA por usuário no cadastro e edição

@@ -85,7 +85,7 @@ export default async (req) => {
       if (ids.length) {
         const result = await admin
           .from('profiles')
-          .select('id,nome,username,perfil,ativo')
+          .select('id,nome,username,perfil,ativo,mfa_obrigatorio')
           .in('id', ids)
         if (result.error) throw result.error
         profiles = result.data || []
@@ -137,7 +137,8 @@ export default async (req) => {
         nome,
         username,
         perfil: body.perfil || 'consulta',
-        ativo: true
+        ativo: true,
+        mfa_obrigatorio: body.mfa_obrigatorio !== false
       })
 
       if (profileInsertError) {
@@ -154,6 +155,7 @@ export default async (req) => {
       const patch = { atualizado_em: new Date().toISOString() }
       if (body.perfil) patch.perfil = body.perfil
       if (typeof body.ativo === 'boolean') patch.ativo = body.ativo
+      if (typeof body.mfa_obrigatorio === 'boolean') patch.mfa_obrigatorio = body.mfa_obrigatorio
       if (body.nome !== undefined) patch.nome = String(body.nome || '').trim()
 
       if (body.username !== undefined) {

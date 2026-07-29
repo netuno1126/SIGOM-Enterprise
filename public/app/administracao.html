@@ -115,12 +115,14 @@
           <label>E-mail<input name="email" type="email" required></label>
           <label>Senha provisória<input name="password" type="password" minlength="8" required></label>
           <label>Perfil<select name="perfil"><option value="consulta">Consulta</option><option value="editor">Editor</option><option value="auditor">Auditor</option><option value="administrador">Administrador</option></select></label>
+          <label class="check"><input name="mfa_obrigatorio" type="checkbox" checked> Exigir autenticação em dois fatores (MFA)</label>
+          <small>Quando marcada, o usuário deverá cadastrar e informar o código do aplicativo autenticador.</small>
           <button type="submit">Criar usuário</button>
           <p id="createUserStatus"></p>
         </form>
         <article class="card users-card">
           <h3>Usuários cadastrados</h3>
-          <div class="table-wrap"><table><thead><tr><th>Usuário</th><th>Perfil</th><th>Ativo</th><th>Ação</th></tr></thead><tbody id="usersBody"></tbody></table></div>
+          <div class="table-wrap"><table><thead><tr><th>Usuário</th><th>Perfil</th><th>MFA</th><th>Ativo</th><th>Ação</th></tr></thead><tbody id="usersBody"></tbody></table></div>
         </article>
       </div>
     </section>

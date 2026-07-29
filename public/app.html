@@ -26,16 +26,28 @@
   const boot=document.getElementById('boot');
   let profile=null;
   const perfilLabel=v=>({administrador:'Administrador',editor:'Editor',auditor:'Auditor',consulta:'Consulta'}[String(v||'').toLowerCase()]||'Consulta');
-  async function sair(){try{await client.auth.signOut()}catch(e){}try{sessionStorage.removeItem('sigom_auth_user')}catch(e){}location.replace('/')}
+
+  async function sair(){
+    try{await client.auth.signOut()}catch(e){}
+    try{sessionStorage.removeItem('sigom_auth_user')}catch(e){}
+    location.replace('/');
+  }
+
   function prepararDashboard(){
     try{
       const w=frame.contentWindow,d=frame.contentDocument;if(!w||!d)return;
       d.body.classList.add('auth-ok');
       d.body.classList.toggle('admin-ok',String(profile?.perfil||'').toLowerCase()==='administrador');
       d.getElementById('loginScreen')?.remove();
-      const info={login:profile?.username||profile?.nome||'',nome:profile?.nome||profile?.username||'Usuário',perfil:perfilLabel(profile?.perfil),sessionId:''};
+      const info={
+        login:profile?.username||profile?.nome||'',
+        nome:profile?.nome||profile?.username||'Usuário',
+        perfil:perfilLabel(profile?.perfil),
+        sessionId:''
+      };
       try{w.sessionStorage.setItem('sigom_auth_user',JSON.stringify(info))}catch(e){}
-      const userBox=d.getElementById('authUserBox');if(userBox)userBox.textContent=`${info.nome} — ${info.perfil}`;
+      const userBox=d.getElementById('authUserBox');
+      if(userBox)userBox.textContent=`${info.nome} — ${info.perfil}`;
       const menu=d.querySelector('#menuDrop .dropcontent');
       if(menu&&!d.getElementById('sigomHelpButton')){
         const sec=d.createElement('div');sec.className='dropsec';sec.textContent='Ajuda';
@@ -44,19 +56,53 @@
         const conta=[...menu.querySelectorAll('.dropsec')].find(x=>x.textContent.trim().toLowerCase()==='conta');
         if(conta){menu.insertBefore(sec,conta);menu.insertBefore(btn,conta)}else{menu.append(sec,btn)}
       }
-      w.logoutSIGOM=sair;const logout=d.getElementById('logoutBtn');if(logout)logout.onclick=sair;
+      w.logoutSIGOM=sair;
+      const logout=d.getElementById('logoutBtn');
+      if(logout)logout.onclick=sair;
     }catch(e){console.warn('Preparação do dashboard:',e)}
   }
+
   async function iniciar(){
     try{
-      const {data:{session}}=await client.auth.getSession();if(!session){location.replace('/');return}
-      if(cfg.requireMfa){const {data:aal}=await client.auth.mfa.getAuthenticatorAssuranceLevel();if(aal?.currentLevel!=='aal2'){location.replace('/');return}}
-      const {data,error}=await client.from('profiles').select('nome,username,perfil,ativo').eq('id',session.user.id).maybeSingle();if(error)throw error;
-      if(data?.ativo===false){await sair();return}profile=data||{nome:session.user.email,perfil:'consulta',ativo:true};
-      frame.addEventListener('load',()=>{prepararDashboard();setTimeout(prepararDashboard,250);setTimeout(prepararDashboard,1200);boot.style.display='none';frame.style.display='block'});
+      const {data:{session}}=await client.auth.getSession();
+      if(!session){location.replace('/');return}
+
+      const {data,error}=await client
+        .from('profiles')
+        .select('nome,username,perfil,ativo,mfa_obrigatorio')
+        .eq('id',session.user.id)
+        .maybeSingle();
+      if(error)throw error;
+      if(data?.ativo===false){await sair();return}
+      profile=data||{
+        nome:session.user.email,
+        perfil:'consulta',
+        ativo:true,
+        mfa_obrigatorio:true
+      };
+
+      const exigirMfa=cfg.requireMfa && profile.mfa_obrigatorio!==false;
+      if(exigirMfa){
+        const {data:aal,error:aalError}=await client.auth.mfa.getAuthenticatorAssuranceLevel();
+        if(aalError)throw aalError;
+        if(aal?.currentLevel!=='aal2'){location.replace('/');return}
+      }
+
+      frame.addEventListener('load',()=>{
+        prepararDashboard();
+        setTimeout(prepararDashboard,250);
+        setTimeout(prepararDashboard,1200);
+        boot.style.display='none';
+        frame.style.display='block';
+      });
       frame.src='/app/dashboard.html';
-    }catch(e){console.error(e);document.querySelector('#bootCard span').textContent='Sessão inválida. Retornando ao acesso principal…';setTimeout(()=>location.replace('/'),1200)}
+    }catch(e){
+      console.error(e);
+      document.querySelector('#bootCard span').textContent='Sessão inválida. Retornando ao acesso principal…';
+      setTimeout(()=>location.replace('/'),1200);
+    }
   }
+
   iniciar();
 })();
 </script>

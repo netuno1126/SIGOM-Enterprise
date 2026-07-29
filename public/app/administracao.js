@@ -288,6 +288,12 @@ async function loadUsers(){
         </div>
       </td>
       <td><select data-user-profile="${u.id}" disabled>${['consulta','editor','auditor','administrador'].map(p=>`<option ${p===u.perfil?'selected':''}>${p}</option>`).join('')}</select></td>
+      <td>
+        <label class="check compact-check">
+          <input type="checkbox" data-user-mfa="${u.id}" ${u.mfa_obrigatorio!==false?'checked':''} disabled>
+          <span>${u.mfa_obrigatorio!==false?'Obrigatório':'Dispensado'}</span>
+        </label>
+      </td>
       <td>${u.ativo?'Sim':'Não'}</td>
       <td class="user-actions">
         <button class="mini-btn secondary" data-edit-user="${u.id}">Editar</button>
@@ -301,6 +307,7 @@ async function loadUsers(){
       $(`[data-user-display="${id}"]`).classList.add('hidden');
       $(`[data-user-editor="${id}"]`).classList.remove('hidden');
       $(`[data-user-profile="${id}"]`).disabled=false;
+      $(`[data-user-mfa="${id}"]`).disabled=false;
       $(`[data-save-user="${id}"]`).classList.remove('hidden');
       b.classList.add('hidden');
     });
@@ -314,21 +321,30 @@ async function loadUsers(){
           nome:$(`[data-user-name="${id}"]`).value,
           username:$(`[data-user-username="${id}"]`).value,
           email:$(`[data-user-email="${id}"]`).value,
-          perfil:$(`[data-user-profile="${id}"]`).value
+          perfil:$(`[data-user-profile="${id}"]`).value,
+          mfa_obrigatorio:$(`[data-user-mfa="${id}"]`).checked
         });
         await loadUsers();
       }catch(e){alert(e.message);b.disabled=false}
     });
 
     $$('[data-toggle-user]').forEach(b=>b.onclick=async()=>{await adminCall('update',{userId:b.dataset.toggleUser,ativo:b.dataset.active!=='true'});await loadUsers()});
-  }catch(e){$('#usersBody').innerHTML=`<tr><td colspan="4">${esc(e.message)}</td></tr>`}
+  }catch(e){$('#usersBody').innerHTML=`<tr><td colspan="5">${esc(e.message)}</td></tr>`}
 }
 async function createUser(e){
   e.preventDefault();
   const f=new FormData(e.target);
   try{
-    await adminCall('create',{nome:f.get('nome'),username:f.get('username'),email:f.get('email'),password:f.get('password'),perfil:f.get('perfil')});
-    $('#createUserStatus').textContent='Usuário criado com sucesso. Ele poderá entrar com o e-mail ou com @'+f.get('username')+'.';
+    await adminCall('create',{
+      nome:f.get('nome'),
+      username:f.get('username'),
+      email:f.get('email'),
+      password:f.get('password'),
+      perfil:f.get('perfil'),
+      mfa_obrigatorio:f.get('mfa_obrigatorio')==='on'
+    });
+    const exigeMfa=f.get('mfa_obrigatorio')==='on';
+    $('#createUserStatus').textContent='Usuário criado com sucesso. Ele poderá entrar com o e-mail ou com @'+f.get('username')+'. MFA: '+(exigeMfa?'obrigatório':'dispensado')+'.';
     e.target.reset();
     await loadUsers();
   }catch(err){$('#createUserStatus').textContent=err.message}
