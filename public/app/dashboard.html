@@ -50,8 +50,10 @@ header .sub{font-size:12px;opacity:.85}
 .dropcontent button:hover{background:#eaf1f8;color:var(--azul)}
 .dropcontent .drophead{padding:8px 12px 6px;font-size:12px;font-weight:700;color:var(--azul);border-bottom:1px solid #e4ecf4;margin-bottom:4px}
 .dropcontent .dropsec{padding:8px 12px 2px;font-size:10.5px;font-weight:700;color:#8aa3bd;text-transform:uppercase;letter-spacing:.4px}
-.dropcontent button.adminOnly{display:none}
-body.admin-ok .dropcontent button.adminOnly{display:block}
+.dropcontent button.adminOnly,.dropcontent button.userAdminOnly{display:none}
+body.admin-ok .dropcontent button.adminOnly,
+body.editor-ok .dropcontent button.adminOnly{display:block}
+body.admin-ok .dropcontent button.userAdminOnly{display:block}
 .tabs .right{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
 .btn{border:none;padding:9px 14px;border-radius:8px;font-weight:700;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.15)}
 .btn.green{background:var(--verde);color:#fff}
@@ -241,9 +243,12 @@ select#selAtrasadas{border-color:var(--vermelho);background:#fff3f0;color:var(--
 body.auth-ok #authPanel{display:flex}
 #authPanel .authUser{font-size:12px;font-weight:700}
 #authPanel button{background:#fff;color:#1e4e79;border:none;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.16)}
-#authPanel button.adminOnly{display:none}
-body.admin-ok #authPanel button.adminOnly{display:inline-block}
-body:not(.admin-ok) .adminOnly{display:none!important}
+#authPanel button.adminOnly,#authPanel button.userAdminOnly{display:none}
+body.admin-ok #authPanel button.adminOnly,
+body.editor-ok #authPanel button.adminOnly{display:inline-block}
+body.admin-ok #authPanel button.userAdminOnly{display:inline-block}
+body:not(.admin-ok):not(.editor-ok) .adminOnly{display:none!important}
+body:not(.admin-ok) .userAdminOnly{display:none!important}
 body.logo-locked .logoSlot{cursor:default}
 
 /* Botão externo para abrir o slide FIO sem poluir o dashboard */
@@ -339,9 +344,11 @@ body.logo-locked .logoSlot{cursor:default}
        <button onclick="abrirObjetivosMetas();closeDrops()">🎯 Objetivos e Metas</button>
        <button onclick="exportarPDF()">🖨 Exportar PDF</button>
        <button class="adminOnly" onclick="salvarConfig()">💾 Salvar configuração</button>
+       <div class="dropsec">Ajuda</div>
+       <button id="sigomHelpButton" onclick="window.open('/app/guia-usuario.html','_blank','noopener');closeDrops()">❓ Guia completo do usuário</button>
        <div class="dropsec">Conta</div>
        <button onclick="alterarSenhaSIGOM()">🔑 Alterar senha</button>
-       <button class="adminOnly" onclick="abrirCadastroUsuariosSIGOM();closeDrops()">👥 Cadastrar novos usuários</button>
+       <button class="userAdminOnly" onclick="abrirCadastroUsuariosSIGOM();closeDrops()">👥 Cadastrar novos usuários</button>
        <button class="adminOnly" onclick="abrirPainelLogosSIGOM()">🖼 Logos</button>
        <button id="logoutBtn" onclick="logoutSIGOM()">🔒 Sair</button>
      </div>
@@ -2014,7 +2021,7 @@ function pedirGrupo(){
   return g;
 }
 function criarGrupo(){
-  if(!isAdminSIGOM()){alert('Apenas perfil Auditor/Administrador pode gerenciar grupos.');return null;}
+  if(!isAdminSIGOM()){alert('Apenas os perfis Administrador e Editor podem gerenciar grupos.');return null;}
   const nome=prompt('Nome do novo grupo:'); if(!nome)return null;
   if(GRUPOS[nome]){alert('Já existe um grupo com esse nome.');return nome;}
   const desc=prompt('Descrição (opcional):')||'';
@@ -2023,7 +2030,7 @@ function criarGrupo(){
   salvarGrupos(); logGrupo('CRIAR_GRUPO',nome); return nome;
 }
 function criarSubgrupo(g){
-  if(!isAdminSIGOM()){alert('Apenas perfil Auditor/Administrador pode criar subgrupos.');return;}
+  if(!isAdminSIGOM()){alert('Apenas os perfis Administrador e Editor podem criar subgrupos.');return;}
   const nome=prompt('Nome do subgrupo dentro de "'+g+'":'); if(!nome)return;
   GRUPOS[g].subgrupos=GRUPOS[g].subgrupos||{};
   if(GRUPOS[g].subgrupos[nome]){alert('Já existe esse subgrupo.');return;}
@@ -2032,7 +2039,7 @@ function criarSubgrupo(g){
   salvarGrupos(); logGrupo('CRIAR_SUBGRUPO',g+' / '+nome); abrirGrupos(false,'ativos');
 }
 function addObraAoGrupo(chave,nomeGrupo){
-  if(!isAdminSIGOM()){alert('Apenas perfil Auditor/Administrador pode adicionar obras aos grupos.');return;}
+  if(!isAdminSIGOM()){alert('Apenas os perfis Administrador e Editor podem adicionar obras aos grupos.');return;}
   if(!chave){alert('Obra sem chave OPUS/Contrato — não é possível agrupar.');return;}
   const alvo=nomeGrupo||pedirGrupo(); if(!alvo)return;
   if(alvo.includes('::')){const [g,sg]=alvo.split('::');GRUPOS[g].subgrupos=GRUPOS[g].subgrupos||{};GRUPOS[g].subgrupos[sg]=GRUPOS[g].subgrupos[sg]||{obras:[]};const arr=GRUPOS[g].subgrupos[sg].obras;if(!arr.includes(chave)){arr.push(chave);salvarGrupos();logGrupo('ADICIONAR_OBRA_SUBGRUPO',g+' / '+sg+' :: '+chave);alert('Obra adicionada ao subgrupo "'+g+' / '+sg+'".');}else alert('Esta obra já está nesse subgrupo.');return;}
@@ -2040,7 +2047,7 @@ function addObraAoGrupo(chave,nomeGrupo){
   if(!GRUPOS[alvo].obras.includes(chave)){GRUPOS[alvo].obras.push(chave);salvarGrupos();logGrupo('ADICIONAR_OBRA',alvo+' :: '+chave);alert('Obra adicionada ao grupo "'+alvo+'".');}else alert('Esta obra já está no grupo "'+alvo+'".');
 }
 function removerObraDeGrupo(chave){
-  if(!isAdminSIGOM()){alert('Apenas perfil Auditor/Administrador pode remover obras de grupos.');return;}
+  if(!isAdminSIGOM()){alert('Apenas os perfis Administrador e Editor podem remover obras de grupos.');return;}
   const opus=String(chave).split('|')[0];
   const dentro=[];
   Object.keys(GRUPOS).forEach(g=>{
@@ -2083,7 +2090,7 @@ function visualizarObrasGrupo(g,aba='ativos'){const ov=document.getElementById('
 function visualizarObrasSubgrupo(g,sg){const ov=document.getElementById('grpOverlay');if(!ov)return;const keys=subgrupoObrasKeys(g,sg);const html=!keys.length?'<div class="note">Nenhuma obra neste subgrupo.</div>':'<div class="grpAddList">'+keys.map(k=>{const r=acharObraPorGroupKey(k);return '<label><span>•</span><span><b>'+esc(k)+'</b><br>'+(r?esc(r['Descrição']||'')+' — '+esc(r['OM Beneficiada']||''):'<span class="note">Não localizada na planilha atual</span>')+'</span></label>';}).join('')+'</div>';ov.querySelector('.ovl-card').innerHTML=`<div class="ovl-head"><b>👁 Subgrupo — ${esc(g)} / ${esc(sg)}</b><button class="ovl-x" onclick="abrirGrupos(true,'ativos')">↩</button></div>${html}`;}
 function abrirAdicionarObrasSubgrupo(g,sg){abrirAdicionarObrasGrupo(g+'::'+sg);}
 function abrirAdicionarObrasGrupo(g){
-  if(!isAdminSIGOM()){alert('Apenas perfil Auditor/Administrador pode adicionar obras.');return;}
+  if(!isAdminSIGOM()){alert('Apenas os perfis Administrador e Editor podem adicionar obras.');return;}
   const ov=document.getElementById('grpOverlay');if(!ov)return;const label=g.includes('::')?g.replace('::',' / '):g;
   ov.querySelector('.ovl-card').innerHTML=`<div class="ovl-head"><b>+ Adicionar Obras — ${esc(label)}</b><button class="ovl-x" onclick="abrirGrupos(false,'ativos')">↩</button></div><div class="grpAddPanel"><div class="grpAddGrid"><input id="grpBusca" placeholder="Buscar por OPUS, contrato, RM, OM, obra ou empresa" oninput="renderAddObrasGrupo('${esc(g)}')"><select id="grpFonte" onchange="renderAddObrasGrupo('${esc(g)}')"><option value="DATA">Todas as obras</option><option value="PORT">Obras do Portfólio Selecionado</option></select><select id="grpRM" onchange="renderAddObrasGrupo('${esc(g)}')"><option value="">RM — todas</option>${[...new Set(DATA.map(r=>r.RM).filter(v=>v!=null))].sort((a,b)=>a-b).map(v=>`<option value="${esc(v)}">RM ${esc(v)}</option>`).join('')}</select></div><div class="note">Pesquise por contrato, OM beneficiada ou Nº OPUS. Marque as obras e confirme.</div><div id="grpAddLista"></div><div style="margin-top:10px"><button class="btn green" onclick="confirmarAddObrasGrupo('${esc(g)}')">Adicionar marcadas</button></div></div>`;
   renderAddObrasGrupo(g);
@@ -2107,7 +2114,7 @@ function confirmarAddObrasGrupo(g){
   let n=0; vals.forEach(k=>{if(!arr.includes(k)){arr.push(k);n++;}}); salvarGrupos(); logGrupo('ADICIONAR_OBRAS_LOTE',g+' :: '+n+' obra(s)'); alert(n+' obra(s) adicionada(s) a "'+g.replace('::',' / ')+'".'); abrirGrupos(false,'ativos');
 }
 function adicionarSelecionadasAoGrupo(){
-  if(!isAdminSIGOM()){alert('Apenas perfil Auditor/Administrador pode adicionar obras aos grupos.');return;}
+  if(!isAdminSIGOM()){alert('Apenas os perfis Administrador e Editor podem adicionar obras aos grupos.');return;}
   if(!GRPSEL.size){alert('Marque obras na coluna ☑ Grupo.');return;}
   const g=pedirGrupo(); if(!g)return;
   let arr; if(g.includes('::')){const [gg,sg]=g.split('::');GRUPOS[gg].subgrupos=GRUPOS[gg].subgrupos||{};GRUPOS[gg].subgrupos[sg]=GRUPOS[gg].subgrupos[sg]||{obras:[]};arr=GRUPOS[gg].subgrupos[sg].obras;}else{GRUPOS[g].obras=GRUPOS[g].obras||[];arr=GRUPOS[g].obras;}
@@ -2680,7 +2687,10 @@ function normalizarPerfilSIGOM(perfil){
 function isAdminSIGOM(){
   const u=getAuthInfo();
   const p=normalizarPerfilSIGOM(u&&u.perfil);
-  return p==='administrador'||p==='auditor';
+  return p==='administrador'||p==='editor';
+}
+function podeEditarOperacaoSIGOM(){
+  return isAdminSIGOM();
 }
 function isAdministradorSIGOM(){
   const u=getAuthInfo();
@@ -2694,8 +2704,12 @@ function perfilLabelSIGOM(){
 function aplicarPerfilVisual(){
   const u=getAuthInfo();
   const administrador=isAdministradorSIGOM();
+  const perfil=normalizarPerfilSIGOM(u&&u.perfil);
+  const editor=perfil==='editor';
   document.body.classList.toggle('admin-ok',administrador);
-  document.body.classList.toggle('logo-locked',!administrador);
+  document.body.classList.toggle('editor-ok',editor);
+  document.body.classList.toggle('can-edit-ok',administrador||editor);
+  document.body.classList.toggle('logo-locked',!(administrador||editor));
   const box=document.getElementById('authUserBox');
   if(box&&u){
     const nome=u.nome||u.login||'Usuário';
@@ -2729,7 +2743,7 @@ function abrirCadastroUsuariosSIGOM(){
 }
 
 async function cadastrarUsuarioSIGOM(){
-  if(!isAdminSIGOM()){alert('Apenas perfil Auditor/Administrador pode cadastrar usuário.');return;}
+  if(!isAdministradorSIGOM()){alert('Acesso exclusivo do Administrador.');return;}
   const admin=getAuthInfo();
   const login=prompt('Login do novo usuário:');
   if(login===null)return;

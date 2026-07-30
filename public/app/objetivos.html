@@ -1011,8 +1011,8 @@ function renderVisao(){
     +'<div class="collapsibleBody">'
     +'<div class="objgrid">'
     +objCard('o1','Objetivo 01','Concluir 17 obras do PEEx',c1+'/17 concluídas',c1>=17?'v':c1>0?'a':'c')
-    +objCard('o2','Objetivo 02','Cancelar no máx. 5% dos RP','Dados pendentes','c')
-    +objCard('o3','Objetivo 03','Liquidar ≥ 75% dos créditos','Dados pendentes','c')
+    +objCard('o2','Objetivo 02','Acompanhar a execução dos Restos a Pagar','Dados pendentes','c')
+    +objCard('o3','Objetivo 03','Controlar % de RPNP cancelados','Dados pendentes','c')
     +objCard('o4','Objetivo 04','Projetar e licitar 38 usinas FV','Importar base FV','c')
     +objCard('o5','Objetivo 05','Recontratar obras paralisadas',rec+'/'+p5.length+' recontratadas',rec>=p5.length?'v':rec>0?'a':'c')
     +'</div></div></div>'
@@ -1269,5 +1269,6 @@ function exportarPPTX(){
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/config.js"></script>
 <script src="/app/objetivos-baseline-supabase.js"></script>
+<script src="/app/objetivos-supabase-persistencia.js"></script>
 </body>
 </html>

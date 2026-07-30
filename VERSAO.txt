@@ -1,15 +1,25 @@
 SIGOM — Sistema Integrado de Gestão de Obras Militares
-Versão: Fase 12.30
-Data: 29/07/2026
+Versão: Fase 12.33 Institucional
+Revisão: 1
+Data: 30/07/2026
 
-Atualização:
-- correção definitiva do botão Exportar Word na aba Análises;
-- abertura imediata do seletor “Salvar como” no Chrome/Edge;
-- gravação do documento após captura dos gráficos;
-- download alternativo para navegadores sem File System Access API;
-- link manual de contingência caso o navegador bloqueie o download;
-- gráficos e tabelas permanecem incorporados ao documento;
-- filtros e grupo selecionado permanecem respeitados.
+Conteúdo consolidado:
+- todas as correções das Fases 12.31 e 12.32;
+- Objetivos e Metas integrados ao Supabase;
+- observações permanentes e histórico de auditoria;
+- indicador RPNP do Objetivo 3;
+- Editor com gestão operacional de grupos;
+- Ajuda para todos os perfis;
+- versionamento da FIO;
+- PDF e PPT da FIO usando dados manuais;
+- exportação por grupos usando a última edição salva;
+- fotografias manuais incluídas no PowerPoint;
+- README, documentação e manifesto atualizados.
+
+Regra de exportação:
+1. obra atual: conteúdo visível na tela;
+2. demais obras: última edição salva;
+3. sem edição: dados originais da planilha.
 
 Commit recomendado:
-fix: corrigir download Word das análises
+feat: publicar Fase 12.33 institucional consolidada

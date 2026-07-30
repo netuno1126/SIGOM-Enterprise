@@ -1,18 +1,11 @@
-SIGOM — Fase 12.29 consolidada
+SIGOM — Fase 12.33 Institucional — Revisão 1
 
-Inclui todas as alterações não publicadas da Fase 12.28 e as correções da Fase 12.29.
+Este é o único pacote que deve ser publicado.
+Não publique separadamente as Fases 12.31 e 12.32.
 
-Arquivos principais a substituir:
-- public/app/dashboard.html
-- public/app/fio.html
-- public/auth.js
-- public/app.html
-- public/app/administracao.html
-- public/app/administracao.js
-- netlify/functions/admin-users.mjs
-- package.json
-- README.md
-- VERSAO.txt
+Commit:
+feat: publicar Fase 12.33 institucional consolidada
 
-Commit único:
-fix: corrigir navegação FIO e exportações de análises com gráficos
+Atenção:
+- as migrations 12.32 e 12.33 já foram aplicadas no Supabase atual;
+- não execute novamente o SQL no projeto operacional.

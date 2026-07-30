@@ -463,3 +463,179 @@ com número da fase, data, finalidade e commit recomendado.
 - navegadores sem `showSaveFilePicker` utilizam download por `Blob`;
 - há link manual de contingência quando o download automático é bloqueado;
 - nenhuma alteração no Supabase é necessária.
+
+
+## Fase 12.31 — Editor com gestão operacional completa e Ajuda para todos
+
+### Perfil Editor
+
+O perfil **Editor** passa a ter a mesma visão operacional do Administrador para:
+
+- criar grupos;
+- criar subgrupos;
+- renomear grupos;
+- adicionar e remover obras;
+- arquivar e desarquivar grupos;
+- esvaziar e excluir grupos;
+- importar e exportar grupos;
+- editar tabelas e configurações operacionais;
+- acessar as ferramentas de operação do Dashboard.
+
+O Editor continua sem permissão para:
+
+- criar usuários;
+- editar usuários;
+- ativar ou desativar usuários;
+- excluir usuários;
+- alterar perfil, e-mail, senha provisória ou MFA de outras contas.
+
+A gestão de usuários permanece exclusiva do perfil **Administrador** e protegida pela Netlify Function `admin-users`.
+
+### Perfil Auditor
+
+O perfil **Auditor** permanece em modo de leitura:
+
+- pode visualizar grupos e subgrupos;
+- pode consultar obras, FIO, análises e relatórios;
+- não pode criar, editar, arquivar ou excluir grupos.
+
+### Ajuda
+
+O botão:
+
+```text
+❓ Guia completo do usuário
+```
+
+fica visível para todos os perfis autenticados:
+
+- Administrador;
+- Editor;
+- Auditor;
+- Consulta.
+
+### Banco de dados
+
+Nenhuma migration nova é necessária. As políticas do Supabase já permitem gravação operacional para Administrador e Editor.
+
+
+## Fase 12.32 — Correção do versionamento da FIO
+
+### Problema corrigido
+
+Ao salvar uma nova edição da FIO, o Supabase retornava:
+
+```text
+duplicate key value violates unique constraint "fio_edicoes_obra_id_unique"
+```
+
+A tabela possuía uma restrição incorreta:
+
+```text
+UNIQUE (obra_id)
+```
+
+Essa regra permitia somente uma FIO por obra e impedia o histórico.
+
+### Estrutura correta
+
+A FIO passa a usar:
+
+```text
+UNIQUE (obra_id, versao)
+```
+
+Assim, cada obra pode possuir versões sucessivas, sem substituir ou apagar as anteriores.
+
+### Proteção adicional no frontend
+
+O módulo `fio-save-version-fix.js`:
+
+1. consulta a maior versão diretamente no Supabase;
+2. calcula a próxima versão;
+3. salva uma nova linha;
+4. em conflito `23505`, tenta novamente com o número seguinte;
+5. preserva as edições já existentes.
+
+### Supabase operacional
+
+A correção já foi aplicada diretamente no projeto atual. O SQL do pacote deve ser usado somente em outra instalação ou recuperação.
+
+### Atualizações consolidadas
+
+Esta versão também contém a Fase 12.31 ainda não publicada:
+
+- Editor com gestão completa de grupos e subgrupos;
+- gestão de usuários exclusiva do Administrador;
+- botão Ajuda para todos os perfis.
+
+
+## Fase 12.33 — Objetivos e Metas integrados ao Supabase
+
+- consolida integralmente as Fases 12.31 e 12.32 ainda não publicadas;
+- usa as mesmas tabelas `obras` e `portfolio_obras` do Dashboard;
+- salva observações e estado atual em `objetivos_auditoria`;
+- registra cada alteração em `objetivos_auditoria_historico`;
+- permite abrir a FIO diretamente pelo Nº OPUS e contrato;
+- cria histórico de medições em `objetivos_indicadores_medicoes`;
+- Administrador e Editor gravam; Auditor e Consulta leem.
+
+### Objetivo 3 — RPNP
+
+```text
+% RPNP Cancelados = RPNP Cancelados ÷ RPNP Inscritos × 100
+```
+
+Exemplo da referência recebida:
+
+```text
+RPNP Inscritos: 226.830.970,87
+RPNP Cancelados: 1.290.032,08
+Resultado: 0,5687%
+Exibição com uma casa decimal: 0,6%
+```
+
+A migration `fase_12_33_objetivos_auditoria_indicadores_rpnp` já foi aplicada no Supabase operacional.
+
+
+## Fase 12.33 Institucional — Exportações da FIO
+
+As exportações da FIO passam a respeitar as alterações manuais.
+
+### Ordem de prioridade
+
+```text
+conteúdo visível da obra atual
+→ última edição salva da obra
+→ dados originais das planilhas
+```
+
+### PDF individual
+
+O PDF individual utiliza exatamente o conteúdo exibido na FIO no momento da impressão, incluindo alterações ainda não salvas.
+
+### PDF por grupo
+
+Cada obra do grupo é materializada com sua última edição salva. Obras sem edição usam a base oficial.
+
+### PowerPoint individual e por grupo
+
+O PowerPoint extrai da FIO editada:
+
+- título;
+- Nº OPUS e ação orçamentária;
+- características;
+- início;
+- empresa;
+- valor total;
+- empenho;
+- saldo de empenho;
+- executado;
+- medição mensal;
+- entrega projetada;
+- PA;
+- IDP;
+- observações e problemas;
+- fotografia.
+
+As caixas do PowerPoint permanecem editáveis. A fotografia é incorporada como imagem.

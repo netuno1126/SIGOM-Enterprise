@@ -37,7 +37,10 @@
     try{
       const w=frame.contentWindow,d=frame.contentDocument;if(!w||!d)return;
       d.body.classList.add('auth-ok');
-      d.body.classList.toggle('admin-ok',String(profile?.perfil||'').toLowerCase()==='administrador');
+      const perfilAtual=String(profile?.perfil||'').toLowerCase();
+      d.body.classList.toggle('admin-ok',perfilAtual==='administrador');
+      d.body.classList.toggle('editor-ok',perfilAtual==='editor');
+      d.body.classList.toggle('can-edit-ok',['administrador','editor'].includes(perfilAtual));
       d.getElementById('loginScreen')?.remove();
       const info={
         login:profile?.username||profile?.nome||'',

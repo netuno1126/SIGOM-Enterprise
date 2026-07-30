@@ -328,7 +328,76 @@ function autoFitTextFIO(){
     }
   });
 }
-function exportarPDFObraAtual(){window.print();}
+
+function htmlEdicaoSalvaFIO(r){
+  const chave=chaveEdicaoFIO(r);
+  return (FIO_EDICOES[chave]&&FIO_EDICOES[chave].html)||store.get(fioKey(r))||'';
+}
+function htmlAtualDaFIO(r){
+  if(OBRAS[fioIndexAtual]===r){
+    const atual=document.getElementById('fioSlide');
+    if(atual){
+      const clone=atual.cloneNode(true);
+      clone.querySelectorAll('input').forEach(x=>x.remove());
+      return clone.innerHTML;
+    }
+  }
+  return htmlEdicaoSalvaFIO(r)||buildFioSlideHTML(r,true);
+}
+function materializarSlideFIO(r,usarTelaAtual=false){
+  if(usarTelaAtual&&OBRAS[fioIndexAtual]===r)return htmlAtualDaFIO(r);
+  return htmlEdicaoSalvaFIO(r)||buildFioSlideHTML(r,true);
+}
+function extrairDadosFIOExportacao(r,usarTelaAtual=false){
+  const html=materializarSlideFIO(r,usarTelaAtual);
+  const doc=new DOMParser().parseFromString('<div id="fioExportRoot">'+html+'</div>','text/html');
+  const root=doc.getElementById('fioExportRoot');
+  const tds=[...root.querySelectorAll('.fio-table tbody td')].map(x=>x.textContent.trim());
+  const mini=[...root.querySelectorAll('.fio-mini-val')].map(x=>x.textContent.trim());
+  const foto=root.querySelector('.fio-photo img')?.getAttribute('src')||store.get(photoKey(r))||'';
+  return {
+    html,
+    titulo:root.querySelector('.fio-title')?.textContent.trim()||String(r['Descrição']||r['OM Beneficiada']||'Anexo da Obra'),
+    opusBar:root.querySelector('.fio-opus-bar')?.textContent.trim()||`Nr OPUS: ${r['Solicitação']||'—'} - AO: ${acaoOrcamentariaFIO(r)}`,
+    caracteristicas:root.querySelector('.fio-caracteristicas')?.textContent.replace(/\s+/g,' ').trim()||stripHtml(caracteristicasHTML(r)),
+    inicio:tds[0]||dt(r['Data Assinatura']||r['Início Obra']),
+    empresa:tds[1]||String(r['Empresa']||'—'),
+    valorTotal:tds[2]||fmtMi(toNum(r['Valor Atual'])),
+    empenho:tds[3]||fmtMi(toNum(r['Total NE'])),
+    saldoEmpenho:tds[4]||'—',
+    executado:tds[5]||pct(pctAcumulado(r['% medido']||r['% Última'])),
+    medicaoMensal:tds[6]||fmtR(mediaMensal(r)),
+    entrega:tds[7]||entregaTextoPlano(r),
+    pa:mini[0]||String(r['PA']||'Não'),
+    idp:mini[1]||(isNum(calcIDP(r))?calcIDP(r).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'—'),
+    observacoes:root.querySelector('.fio-obs-body')?.textContent.replace(/\s+/g,' ').trim()||stripHtml(obsHTML(r)),
+    foto
+  };
+}
+async function imagemFIODataUri(src){
+  if(!src)return null;
+  if(/^data:image\//i.test(src))return src;
+  try{
+    const resp=await fetch(src);
+    if(!resp.ok)return null;
+    const blob=await resp.blob();
+    return await new Promise((resolve,reject)=>{
+      const fr=new FileReader();
+      fr.onload=()=>resolve(fr.result);
+      fr.onerror=reject;
+      fr.readAsDataURL(blob);
+    });
+  }catch(e){
+    console.warn('Foto FIO para exportação:',e);
+    return null;
+  }
+}
+
+function exportarPDFObraAtual(){
+  autoFitTextFIO();
+  document.body.classList.remove('printing-group');
+  setTimeout(()=>window.print(),80);
+}
 function exportarPDFGrupoSelecionado(){
   const nome=document.getElementById('fioSelectGrupo')?.value||'';
   if(!nome){alert('Selecione um grupo para exportar em PDF.');return;}
@@ -336,7 +405,7 @@ function exportarPDFGrupoSelecionado(){
   if(!itens.length){alert('Nenhuma obra do grupo foi localizada na planilha carregada.');return;}
   let cont=document.getElementById('printGroupContainer');
   if(!cont){cont=document.createElement('div');cont.id='printGroupContainer';cont.className='print-group-container';document.body.appendChild(cont);}
-  cont.innerHTML=itens.map(x=>`<div class="fio-slide" style="--fio-font-scale:${escalaAtualFIO()}">${buildFioSlideHTML(x.obra,false)}</div>`).join('');
+  cont.innerHTML=itens.map(x=>`<div class="fio-slide" style="--fio-font-scale:${escalaAtualFIO()}">${materializarSlideFIO(x.obra,false)}</div>`).join('');
   document.body.classList.add('printing-group');
   setTimeout(()=>{window.print();setTimeout(()=>{document.body.classList.remove('printing-group');cont.innerHTML='';},500)},100);
 }
@@ -383,35 +452,40 @@ async function gerarPPTFIO(obras,arquivo){
   const pptx=new PptxGenJS(); pptx.defineLayout({name:'FIO16x9',width:13.333,height:7.5}); pptx.layout='FIO16x9';
   const [logoDEC,logoDOM]=await Promise.all([imagemUrlDataUri('/assets/logos/dec.png'),imagemUrlDataUri('/assets/logos/dom.png')]);
   const AZ='0070C0',AZE='1E4E79',AM='FFCC33',CIN='E6E6E6',BOR='4D4D4D',VD='70AD47',LR='E67E22';
-  obras.forEach(r=>{
+  for(const r of obras){
+    const usarTelaAtual=OBRAS[fioIndexAtual]===r;
+    const dados=extrairDadosFIOExportacao(r,usarTelaAtual);
+    const fotoFIO=await imagemFIODataUri(dados.foto);
     const s=pptx.addSlide(); s.background={color:CIN};
     s.addShape(pptx.ShapeType.rect,{x:0.05,y:0.05,w:13.23,h:7.40,fill:{color:CIN},line:{color:BOR,width:3}});
-    const title=String(r['Descrição']||r['OM Beneficiada']||'Anexo da Obra'); const ao=acaoOrcamentariaFIO(r);
+    const title=dados.titulo;
     s.addShape(pptx.ShapeType.rect,{x:0.28,y:0.22,w:12.78,h:0.72,fill:{color:AZE},line:{color:'B8C6D8',width:.5}});
     s.addText(title,{x:0.38,y:0.34,w:11.6,h:0.42,fontFace:'Arial',fontSize:20,bold:true,color:'FFFFFF',fit:'shrink'});
     if(logoDEC)s.addImage({data:logoDEC,x:12.10,y:0.26,w:0.43,h:0.48});else s.addText('DEC',{x:12.10,y:0.30,w:0.45,h:0.35,fontSize:9,bold:true,color:AZE,fill:{color:'FFFFFF'},align:'center',valign:'mid'});
     if(logoDOM)s.addImage({data:logoDOM,x:12.58,y:0.26,w:0.43,h:0.48});else s.addText('DOM',{x:12.58,y:0.30,w:0.45,h:0.35,fontSize:9,bold:true,color:AZE,fill:{color:'FFFFFF'},align:'center',valign:'mid'});
     s.addShape(pptx.ShapeType.rect,{x:0.28,y:0.94,w:12.78,h:0.28,fill:{color:AZ},line:{color:'FFFFFF',width:.5}});
-    s.addText(`Nr OPUS: ${r['Solicitação']||'—'}  -  AO: ${ao}`,{x:0.32,y:0.98,w:12.65,h:0.16,fontSize:10,bold:true,color:'FFFFFF',align:'center',fit:'shrink'});
+    s.addText(dados.opusBar,{x:0.32,y:0.98,w:12.65,h:0.16,fontSize:10,bold:true,color:'FFFFFF',align:'center',fit:'shrink'});
     s.addShape(pptx.ShapeType.rect,{x:0.28,y:1.22,w:12.78,h:1.45,fill:{color:AM},line:{color:'FFFFFF',width:.5}});
-    const carac=['Concepção do Objeto','Fundações','Estrutura','Cobertura','Paredes Internas','Terraplenagem e Pavimentação'].map(k=>`${k}: ${r[k]||'—'}`).join('\n');
-    s.addText(carac,{x:0.45,y:1.30,w:12.45,h:1.25,fontSize:9.5,bold:true,color:'000000',breakLine:false,fit:'shrink',bullet:{type:'bullet'}});
+    const carac=dados.caracteristicas;
+    s.addText(carac,{x:0.45,y:1.30,w:12.45,h:1.25,fontSize:9.5,bold:true,color:'000000',breakLine:false,fit:'shrink'});
     const y=2.72, hH=.45, hV=1.03, x0=.28, totalW=12.78, cw=totalW/8;
     const headers=['INÍCIO','EMPRESA','VALOR TOTAL','EMPENHO','SALDO DE\nEMPENHO','EXECUTADO','MEDIÇÃO\nMENSAL','ENTREGA COM BASE\nNA MEDIÇÃO'];
-    const totalNE=toNum(r['Total NE']); const totalNF=toNum(r['Total Notas Fiscais']); const saldoFinal=(isNum(totalNE)&&isNum(totalNF))?Math.max(0,totalNE-totalNF):null;
-    const vals=[dt(r['Data Assinatura']||r['Início Obra']),r['Empresa']||'—',fmtMi(toNum(r['Valor Atual'])),fmtMi(toNum(r['Total NE'])),fmtMi(saldoFinal),pct(pctAcumulado(r['% medido']||r['% Última'])),fmtR(mediaMensal(r)),entregaTextoPlano(r)];
+    const vals=[dados.inicio,dados.empresa,dados.valorTotal,dados.empenho,dados.saldoEmpenho,dados.executado,dados.medicaoMensal,dados.entrega];
     headers.forEach((hh,i)=>{s.addShape(pptx.ShapeType.rect,{x:x0+i*cw,y,w:cw,h:hH,fill:{color:AZ},line:{color:'FFFFFF',width:.5}});s.addText(hh,{x:x0+i*cw,y:y+.06,w:cw,h:hH-.08,fontSize:9,bold:true,color:'FFFFFF',align:'center',valign:'mid',fit:'shrink'});});
     vals.forEach((vv,i)=>{s.addShape(pptx.ShapeType.rect,{x:x0+i*cw,y:y+hH,w:cw,h:hV,fill:{color:AM},line:{color:'FFFFFF',width:.5}});s.addText(String(vv),{x:x0+i*cw+.02,y:y+hH+.12,w:cw-.04,h:hV-.18,fontSize:9.5,bold:true,color:'000000',align:'center',valign:'mid',fit:'shrink'});});
     s.addShape(pptx.ShapeType.rect,{x:.28,y:4.42,w:3.0,h:1.63,fill:{color:'FFFFFF'},line:{color:VD,width:.8}});
-    s.addText('FOTO\nDa Obra',{x:.28,y:5.0,w:3.0,h:.45,fontSize:14,align:'center',valign:'mid',color:'000000'});
-    const idp=calcIDP(r);
+    if(fotoFIO){
+      s.addImage({data:fotoFIO,x:.31,y:4.47,w:2.94,h:1.53});
+    }else{
+      s.addText('FOTO\nDa Obra',{x:.28,y:5.0,w:3.0,h:.45,fontSize:14,align:'center',valign:'mid',color:'000000'});
+    }
     s.addShape(pptx.ShapeType.rect,{x:3.45,y:4.42,w:.62,h:.42,fill:{color:'245FA8'},line:{color:'FFFFFF',width:.5}});s.addText('PA',{x:3.45,y:4.54,w:.62,h:.12,fontSize:9,bold:true,color:'FFFFFF',align:'center'});
     s.addShape(pptx.ShapeType.rect,{x:4.07,y:4.42,w:.62,h:.42,fill:{color:'245FA8'},line:{color:'FFFFFF',width:.5}});s.addText('IDP',{x:4.07,y:4.54,w:.62,h:.12,fontSize:9,bold:true,color:'FFFFFF',align:'center'});
     s.addShape(pptx.ShapeType.rect,{x:4.69,y:4.42,w:8.37,h:.42,fill:{color:'245FA8'},line:{color:'FFFFFF',width:.5}});s.addText('OBSERVAÇÕES/PROBLEMAS TÉCNICOS-ORÇAMENTÁRIOS',{x:4.75,y:4.54,w:8.25,h:.12,fontSize:9,bold:true,color:'FFFFFF',align:'center',fit:'shrink'});
-    s.addShape(pptx.ShapeType.rect,{x:3.45,y:4.84,w:.62,h:1.21,fill:{color:'FFC000'},line:{color:'FFFFFF',width:.5}});s.addText(String(r['PA']||'Não'),{x:3.45,y:5.25,w:.62,h:.25,fontSize:10,bold:true,align:'center'});
-    s.addShape(pptx.ShapeType.rect,{x:4.07,y:4.84,w:.62,h:1.21,fill:{color:'FFC000'},line:{color:'FFFFFF',width:.5}});s.addText(isNum(idp)?idp.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'—',{x:4.07,y:5.25,w:.62,h:.25,fontSize:10,bold:true,align:'center'});
-    s.addShape(pptx.ShapeType.rect,{x:4.69,y:4.84,w:8.37,h:1.21,fill:{color:'FFC000'},line:{color:'FFFFFF',width:.5}});s.addText(stripHtml(obsHTML(r)),{x:4.83,y:4.93,w:8.12,h:1.0,fontSize:9.5,color:'000000',fit:'shrink'});
-  });
+    s.addShape(pptx.ShapeType.rect,{x:3.45,y:4.84,w:.62,h:1.21,fill:{color:'FFC000'},line:{color:'FFFFFF',width:.5}});s.addText(dados.pa,{x:3.45,y:5.25,w:.62,h:.25,fontSize:10,bold:true,align:'center'});
+    s.addShape(pptx.ShapeType.rect,{x:4.07,y:4.84,w:.62,h:1.21,fill:{color:'FFC000'},line:{color:'FFFFFF',width:.5}});s.addText(dados.idp,{x:4.07,y:5.25,w:.62,h:.25,fontSize:10,bold:true,align:'center'});
+    s.addShape(pptx.ShapeType.rect,{x:4.69,y:4.84,w:8.37,h:1.21,fill:{color:'FFC000'},line:{color:'FFFFFF',width:.5}});s.addText(dados.observacoes,{x:4.83,y:4.93,w:8.12,h:1.0,fontSize:9.5,color:'000000',fit:'shrink'});
+  }
   pptx.writeFile({fileName:arquivo});
 }
 function stripHtml(s){return String(s||'').replace(/<li>/g,'• ').replace(/<br\s*\/?>/g,'\n').replace(/<[^>]+>/g,'').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>')}
@@ -630,5 +704,6 @@ window.SIGOM_APLICAR_DADOS_FIO=function(payload){
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/config.js"></script>
 <script src="/app/fio-supabase-adapter.js"></script>
+<script src="/app/fio-save-version-fix.js"></script>
 </body>
 </html>
