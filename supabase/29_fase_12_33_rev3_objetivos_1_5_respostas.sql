@@ -1,0 +1,4 @@
+-- Fase 12.33 Institucional — Revisão 3
+-- Cria persistência e histórico das respostas editáveis dos Objetivos 1 e 5.
+-- A migration já foi aplicada no Supabase operacional.
+-- Consulte o README para os campos e regras de acesso.

@@ -175,6 +175,50 @@ tr.atrasada td{background:#fff3f0!important}
 footer{display:flex;justify-content:space-between;font-size:11px;color:#7a8da0;padding:14px 22px;flex-wrap:wrap;gap:8px}
 #devName{font-weight:700;color:var(--azul);cursor:pointer}
 @media print{header .logoSlot,.tabs,.filters,.btn,.no-print,#loginScreen{display:none!important}body{background:#fff}.card{box-shadow:none;border:1px solid #ccd}.tblbox{max-height:none;overflow:visible}}
+
+.obj-financeiro-grid{display:grid;grid-template-columns:repeat(4,minmax(180px,1fr));gap:10px;margin:12px 0}
+.obj-financeiro-card{border:1px solid #9bb7cf;border-radius:10px;background:#eef5fb;padding:12px}
+.obj-financeiro-card .lbl{font-size:12px;color:#315a7d;font-weight:700}
+.obj-financeiro-card .val{font-size:21px;font-weight:800;color:#173f67;margin-top:6px}
+.obj-financeiro-card.meta{background:#e8f3e4;border-color:#82a876}
+.obj-financeiro-card.meta .val{color:#285c25}
+.obj-update-line{font-size:11px;color:#64748b;margin-top:8px}
+.obj3-exec-print{display:none}
+@media print{
+  body.print-obj3-executivo > *:not(#obj3ExecPrint){display:none!important}
+  body.print-obj3-executivo #obj3ExecPrint{display:block!important}
+  @page{size:A4 landscape;margin:8mm}
+  #obj3ExecPrint{font-family:Arial,sans-serif;color:#111;background:#fff}
+  #obj3ExecPrint .slide{width:100%;min-height:180mm;border:1px solid #7b9bb5;background:#f2f5f7;box-sizing:border-box;padding:0}
+  #obj3ExecPrint .top{height:18mm;background:#2f75b5;color:#fff;display:flex;align-items:center;justify-content:center;font-size:23px;font-weight:800;border-bottom:2px solid #58c7d8}
+  #obj3ExecPrint .title{font-size:23px;text-align:center;padding:12mm 14mm 5mm;font-weight:500}
+  #obj3ExecPrint .title b{font-weight:800}
+  #obj3ExecPrint .years{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin:0 10mm}
+  #obj3ExecPrint .year{border:1px solid #6985a0;text-align:center}
+  #obj3ExecPrint .year h3{margin:0;background:#2f75b5;color:#fff;padding:5mm 2mm;font-size:17px}
+  #obj3ExecPrint .year.current h3{background:#285d2b}
+  #obj3ExecPrint .year .body{background:#fff;padding:5mm 3mm;font-size:16px;font-weight:700;min-height:24mm}
+  #obj3ExecPrint .year.current .body{background:#eaf3e8}
+  #obj3ExecPrint .bottom{display:grid;grid-template-columns:1fr 1fr;gap:18mm;margin:14mm 22mm 0}
+  #obj3ExecPrint .metric{background:#2f75b5;color:#fff;border:2px solid #1f4d77;padding:7mm;text-align:center;font-size:20px;font-weight:800}
+  #obj3ExecPrint .foot{text-align:right;margin:8mm 10mm 0;color:#4b5563;font-size:11px}
+}
+
+
+.obj-edit-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
+.obj-edit-table textarea,.obj-edit-table input{width:100%;min-width:135px;box-sizing:border-box;border:1px solid #b8c8d8;border-radius:6px;padding:6px;font:inherit;background:#fff}
+.obj-edit-table textarea{min-height:76px;resize:vertical}
+.obj-edit-table .base-cell{min-width:110px}
+.obj-edit-table .desc-cell{min-width:240px}
+.obj-save-state{font-size:11px;color:#64748b;margin-top:4px}
+.obj-save-state.ok{color:#2e7d32;font-weight:700}
+.obj-save-state.err{color:#b91c1c;font-weight:700}
+.obj-edit-table th{position:sticky;top:0;z-index:2}
+@media print{
+  .obj-edit-toolbar,.obj-row-actions{display:none!important}
+  .obj-edit-table textarea,.obj-edit-table input{border:0;padding:0;background:transparent;resize:none}
+}
+
 </style>
 </head>
 <body>
@@ -1011,8 +1055,8 @@ function renderVisao(){
     +'<div class="collapsibleBody">'
     +'<div class="objgrid">'
     +objCard('o1','Objetivo 01','Concluir 17 obras do PEEx',c1+'/17 concluídas',c1>=17?'v':c1>0?'a':'c')
-    +objCard('o2','Objetivo 02','Acompanhar a execução dos Restos a Pagar','Dados pendentes','c')
-    +objCard('o3','Objetivo 03','Controlar % de RPNP cancelados','Dados pendentes','c')
+    +objCard('o2','Objetivo 02','Reduzir a perda de RPNP','Dados do Supabase','b')
+    +objCard('o3','Objetivo 03','Liquidar ≥ 75% dos créditos recebidos','Dados do Supabase','b')
     +objCard('o4','Objetivo 04','Projetar e licitar 38 usinas FV','Importar base FV','c')
     +objCard('o5','Objetivo 05','Recontratar obras paralisadas',rec+'/'+p5.length+' recontratadas',rec>=p5.length?'v':rec>0?'a':'c')
     +'</div></div></div>'
@@ -1270,5 +1314,6 @@ function exportarPPTX(){
 <script src="/config.js"></script>
 <script src="/app/objetivos-baseline-supabase.js"></script>
 <script src="/app/objetivos-supabase-persistencia.js"></script>
+<script src="/app/objetivos-respostas-editaveis.js"></script>
 </body>
 </html>

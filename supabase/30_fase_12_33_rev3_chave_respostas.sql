@@ -1,0 +1,4 @@
+-- Fase 12.33 Institucional — Revisão 3
+-- Adiciona chave lógica única para upsert das respostas:
+-- OBJETIVO|EXERCICIO|OPUS|CONTRATO
+-- A migration já foi aplicada no Supabase operacional.

@@ -1,6 +1,6 @@
 {
   "name": "sigom-enterprise",
-  "version": "12.33.1",
+  "version": "12.33.3",
   "private": true,
   "type": "module",
   "dependencies": {

@@ -639,3 +639,103 @@ O PowerPoint extrai da FIO editada:
 - fotografia.
 
 As caixas do PowerPoint permanecem editáveis. A fotografia é incorporada como imagem.
+
+
+## Fase 12.33 Institucional — Revisão 2
+
+### Objetivo 2
+
+**Reduzir a perda de Restos a Pagar Não Processados (RPNP).**
+
+Indicador:
+
+```text
+% RPNP cancelados = RPNP cancelados ÷ RPNP inscritos × 100
+```
+
+A medição anteriormente registrada no Objetivo 3 foi preservada e transferida para o Objetivo 2.
+
+### Objetivo 3
+
+**Aumentar as liquidações dos créditos recebidos.**
+
+Meta de 2026:
+
+```text
+Liquidar, no mínimo, 75% dos créditos recebidos no ano.
+```
+
+Indicador:
+
+```text
+% liquidado = valor liquidado ÷ crédito recebido × 100
+```
+
+O módulo permite registrar exercício, data de referência, crédito recebido, valor liquidado e fonte/observação. O percentual é calculado automaticamente.
+
+### PDF executivo
+
+O botão **Exportar PDF executivo** produz uma página A4 paisagem baseada no modelo institucional apresentado, contendo:
+
+- histórico de 2023, 2024 e 2025;
+- crédito recebido em 2026;
+- valor liquidado em 2026;
+- percentual liquidado;
+- data de referência;
+- data e hora da atualização;
+- fonte dos dados.
+
+
+## Fase 12.33 Institucional — Revisão 3
+
+### Objetivos 1 e 5 editáveis
+
+As tabelas dos Objetivos 1 e 5 agora possuem campos editáveis diretamente na página.
+
+Operações:
+
+- salvar uma obra;
+- salvar todas as respostas;
+- consultar o histórico de cada obra;
+- exportar em Excel no mesmo formato do modelo recebido.
+
+### Persistência
+
+Estado atual:
+
+```text
+objetivos_respostas
+```
+
+Histórico:
+
+```text
+objetivos_respostas_historico
+```
+
+A chave lógica é formada por objetivo, exercício, Nº OPUS e contrato.
+
+### Respostas importadas
+
+Foram importadas as respostas válidas do consolidado do Objetivo 1 atualizado em 31/07/2026 e da planilha da CEO AMAN para o Objetivo 5.
+
+Células-modelo preenchidas apenas com `11` ou `15` não foram tratadas como respostas institucionais.
+
+### Exportação Excel
+
+Objetivo 1:
+
+```text
+Objetivo | Nº OPUS | Contrato | RM | Contratante / CRO | Descrição da Obra |
+% Medido | Situação atual | Andamento | Previsão | Motivos | Providências |
+Confirmação | Nova data
+```
+
+Objetivo 5:
+
+```text
+Objetivo | Nº OPUS | Contrato | RM | Contratante / CRO | Descrição da Obra |
+Situação do contrato anterior | Estágio do projeto remanescente |
+Situação da licitação | Pendências | Previsão do edital |
+Previsão de reinício | Outras observações
+```
