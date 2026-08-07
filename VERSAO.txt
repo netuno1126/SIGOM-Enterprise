@@ -1,15 +1,16 @@
 SIGOM — Sistema Integrado de Gestão de Obras Militares
-Versão: Fase 12.33 Institucional
-Revisão: 3
-Data: 31/07/2026
+Versão: Fase 12.34 Institucional
+Revisão: Indicadores Executivos do Objetivo 05
+Data: 06/08/2026
 
-Inclusões:
-- tabelas editáveis dos Objetivos 1 e 5;
-- salvar por obra e salvar todas;
-- persistência no Supabase;
-- histórico por usuário, data e hora;
-- importação das respostas atualizadas encaminhadas;
-- exportação Excel no mesmo formato dos modelos;
-- preservação das Revisões 1 e 2 e das Fases 12.31/12.32.
-
-Migrations da Revisão 3 já aplicadas no Supabase operacional.
+Inclui integralmente a Fase 12.33 já publicada e as evoluções da Fase 12.34:
+- Objetivo 4 acumulativo, sem exclusão de implantações históricas;
+- deduplicação por Nº OPUS no Objetivo 4;
+- nova aba Indicadores Obj 05;
+- cartões e percentuais automáticos;
+- gráfico de rosca e evolução histórica;
+- exportação completa em PDF e PPTX;
+- observações e auditorias permanentes no Supabase;
+- integração Dashboard ⇄ Objetivos ⇄ FIO;
+- campos Responsável pela pendência e Prazo;
+- preservação integral dos registros e histórico existentes.

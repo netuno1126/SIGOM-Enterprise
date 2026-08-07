@@ -739,3 +739,54 @@ Situação do contrato anterior | Estágio do projeto remanescente |
 Situação da licitação | Pendências | Previsão do edital |
 Previsão de reinício | Outras observações
 ```
+
+
+## Fase 12.34 — Objetivo 4 acumulativo
+
+A base do Objetivo 4 é cumulativa. A ausência de uma implantação em uma planilha nova não exclui nem reduz o histórico. Novas planilhas apenas adicionam ou atualizam. Uma implantação concluída permanece concluída.
+
+Tabelas: `objetivo4_implantacoes` e `objetivo4_implantacoes_historico`.
+
+O módulo também exporta o consolidado acumulado em Excel.
+
+
+## Fase 12.34 Institucional — Indicadores do Objetivo 05
+
+Foi adicionada a aba **Indicadores Obj 05**, sem substituir a tabela detalhada existente.
+
+### Indicadores automáticos
+
+- total da lista;
+- localizadas e percentual;
+- recontratadas e percentual;
+- em andamento e percentual;
+- não localizadas/pendentes e percentual;
+- percentual geral de recontratação.
+
+Os percentuais utilizam o total consolidado do Objetivo 05 como denominador.
+
+### Visualizações
+
+- gráfico de rosca da situação atual;
+- gráfico da evolução histórica da recontratação;
+- tabela consolidada com observações e auditoria;
+- identificação do responsável pela pendência e prazo.
+
+### Exportações
+
+- **PDF completo:** indicadores, gráficos, relação de obras, observações e auditoria;
+- **PPTX completo:** slide executivo com cartões e gráficos, seguido da relação detalhada em páginas editáveis.
+
+### Integração
+
+A aba possui acesso direto ao Dashboard, à FIO e à tabela detalhada do Objetivo 05.
+
+### Persistência
+
+Os dados atuais permanecem nas tabelas existentes. A evolução dos indicadores é registrada em:
+
+```text
+objetivo5_indicadores_historico
+```
+
+A migration é não destrutiva e não apaga observações, auditorias, respostas ou obras.
