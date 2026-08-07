@@ -33,6 +33,216 @@
     location.replace('/');
   }
 
+  function instalarProjecoesEngenharia(){
+    try{
+      const d=frame.contentDocument,w=frame.contentWindow;
+      if(!d||!w||d.getElementById('sigom-projecoes-engenharia-1234'))return;
+      const s=d.createElement('script');
+      s.id='sigom-projecoes-engenharia-1234';
+      s.textContent=`(()=>{
+'use strict';
+const VERSION='12.34.1';
+const MAX_MONTHS=360;
+const DAY=86400000;
+const isObj=v=>v&&typeof v==='object'&&!Array.isArray(v);
+const clean=s=>String(s??'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9%]+/g,' ').trim();
+function num(v){
+ if(v==null||v==='')return null;
+ if(typeof v==='number')return Number.isFinite(v)?v:null;
+ let s=String(v).trim().replace(/R\\$/gi,'').replace(/\\s/g,'').replace(/%/g,'');
+ if(!s)return null;
+ if(s.includes(','))s=s.replace(/\\./g,'').replace(',','.');
+ else if(/^\\d{1,3}(\\.\\d{3})+$/.test(s))s=s.replace(/\\./g,'');
+ const n=Number(s);return Number.isFinite(n)?n:null;
+}
+function pct(v){
+ const n=num(v);if(n==null)return null;
+ if(n>=0&&n<=1)return n*100;
+ if(n>100&&n<=10000&&Number.isInteger(n))return n/100;
+ return n;
+}
+function date(v){
+ if(!v)return null;
+ if(v instanceof Date&&!isNaN(v))return v;
+ if(typeof v==='number'&&v>20000&&v<100000)return new Date(Date.UTC(1899,11,30)+v*DAY);
+ const s=String(v).trim();
+ let m=s.match(/^(\\d{2})\\/(\\d{2})\\/(\\d{4})$/);if(m){const x=new Date(+m[3],+m[2]-1,+m[1]);return isNaN(x)?null:x}
+ m=s.match(/^(\\d{4})-(\\d{2})-(\\d{2})/);if(m){const x=new Date(+m[1],+m[2]-1,+m[3]);return isNaN(x)?null:x}
+ const x=new Date(s);return isNaN(x)?null:x;
+}
+function dateBR(v){const x=date(v);return x?x.toLocaleDateString('pt-BR'):'—'}
+function addMonths(base,months){
+ const d=new Date(base);if(!Number.isFinite(months)||months<0||months>MAX_MONTHS)return null;
+ const whole=Math.floor(months),frac=months-whole;d.setMonth(d.getMonth()+whole);d.setDate(d.getDate()+Math.round(frac*30.4375));return d;
+}
+function first(o,names,parser=x=>x){
+ if(!isObj(o))return null;
+ const entries=Object.entries(o);
+ for(const name of names){
+  const target=clean(name);
+  const hit=entries.find(([k,v])=>clean(k)===target&&v!==''&&v!=null);
+  if(hit){const p=parser(hit[1]);if(p!=null)return p}
+ }
+ for(const name of names){
+  const target=clean(name);
+  const hit=entries.find(([k,v])=>clean(k).includes(target)&&v!==''&&v!=null);
+  if(hit){const p=parser(hit[1]);if(p!=null)return p}
+ }
+ return null;
+}
+const opKey=o=>String(first(o,['Solicitação','Nº OPUS','Nr OPUS','OPUS','opus'])??'').replace(/\\D/g,'');
+function moneyRate(o){
+ const candidates=['Média liq. 3 últimas medições','Média liq. 3','Média mensal liquidada','Média Mensal','Media Mensal Global','Média liquidação','media_liquidacao_3'];
+ for(const c of candidates){const x=first(o,[c],num);if(x!=null&&x>0)return x}
+ const hist=history(o).filter(p=>p.finance!=null).sort((a,b)=>a.date-b.date);
+ if(hist.length>=2){
+  const recent=hist.slice(-4),diff=recent[recent.length-1].finance-recent[0].finance;
+  const months=Math.max((recent[recent.length-1].date-recent[0].date)/DAY/30.4375,1);
+  if(diff>0)return diff/months;
+ }
+ return null;
+}
+function balance(o){
+ const direct=first(o,['Saldo NE não liquidado','Saldo NE','saldo_ne_nao_liquidado'],num);
+ if(direct!=null)return Math.max(0,direct);
+ const ne=first(o,['Total NE','Empenhado NE','Empenho'],num),nf=first(o,['Total Notas Fiscais','Liquidado NF','Executado'],num);
+ return ne!=null&&nf!=null?Math.max(0,ne-nf):null;
+}
+function history(o){
+ const out=[];
+ const seen=new Set();
+ const arrays=[];
+ for(const [k,v] of Object.entries(o||{}))if(Array.isArray(v)&&/(med|hist|evol|fisic|finance)/.test(clean(k)))arrays.push(v);
+ for(const a of arrays)for(const p of a){
+  if(!isObj(p))continue;
+  const dt=first(p,['data','Data','data medição','Data Medição','referência'],date);
+  if(!dt)continue;
+  const physical=first(p,['% medido','percentual medido','medido','percentual','fisico'],pct);
+  const finance=first(p,['liquidado','NF','valor liquidado','executado acumulado'],num);
+  const k=dt.toISOString().slice(0,10);if(seen.has(k))continue;seen.add(k);out.push({date:dt,physical,finance});
+ }
+ return out;
+}
+function financial(o){
+ const saldo=balance(o);if(saldo==null)return {text:'Não estimável',reason:'Saldo financeiro indisponível',months:null,date:null};
+ if(saldo<=0)return {text:'0 meses',reason:'Recursos totalmente liquidados',months:0,date:new Date()};
+ const rate=moneyRate(o);if(!(rate>0))return {text:'Não estimável',reason:'Sem liquidações recentes suficientes',months:null,date:null};
+ const months=saldo/rate;
+ if(!Number.isFinite(months)||months>MAX_MONTHS)return {text:'Superior a 30 anos',reason:'Ritmo financeiro insuficiente',months,date:null};
+ const dt=addMonths(new Date(),months);
+ return {text:months<1?'< 1 mês':Math.round(months)+' meses',reason:'Saldo ÷ média mensal liquidada',months,date:dt};
+}
+function linearRate(points){
+ const ps=points.filter(p=>p.date&&p.physical!=null).sort((a,b)=>a.date-b.date).slice(-4);
+ if(ps.length<2)return null;
+ const x0=ps[0].date.getTime(),xs=ps.map(p=>(p.date.getTime()-x0)/DAY/30.4375),ys=ps.map(p=>p.physical);
+ const xm=xs.reduce((a,b)=>a+b,0)/xs.length,ym=ys.reduce((a,b)=>a+b,0)/ys.length;
+ const den=xs.reduce((s,x)=>s+(x-xm)**2,0);if(!den)return null;
+ const slope=xs.reduce((s,x,i)=>s+(x-xm)*(ys[i]-ym),0)/den;
+ return slope>0?slope:null;
+}
+function physical(o){
+ const current=first(o,['% medido','% Medido','percentual medido','% Última'],pct);
+ if(current==null)return {text:'Não estimável',reason:'Percentual medido indisponível',months:null,date:null};
+ if(current>=100)return {text:'Concluída',reason:'Execução física igual ou superior a 100%',months:0,date:new Date()};
+ let rate=linearRate(history(o));
+ if(!(rate>0)){
+  rate=first(o,['Média mensal física','Ritmo físico mensal','Média Mensal Global','media_fisica_mensal'],pct);
+ }
+ if(!(rate>0))return {text:'Não estimável',reason:'Sem avanço físico mensurável',months:null,date:null};
+ const months=(100-current)/rate;
+ if(!Number.isFinite(months)||months<0||months>MAX_MONTHS)return {text:'Não estimável',reason:'Projeção superior a 30 anos',months,date:null};
+ const dt=addMonths(new Date(),months);
+ return {text:dateBR(dt),reason:'Tendência das últimas medições',months,date:dt,rate};
+}
+function enrich(o){
+ if(!isObj(o))return;
+ const f=financial(o),p=physical(o);
+ const fText=f.date?f.text+' · até '+dateBR(f.date):f.text;
+ const fields={
+  'Estimativa duração recursos':fText,'Estimativa de Duração dos Recursos Atuais':fText,'Estimativa Recursos':fText,
+  'estimativa_recursos':fText,'estimativaRecursos':fText,
+  'Término pela Tendência das Medições':p.text,'Termino pela Tendencia das Medicoes':p.text,
+  'Entrega com base na medição':p.text,'Entrega com base nas medições':p.text,
+  'data projetada':p.text,'Término Projetado Tendência':p.text,
+  '_sigom_estimativa_financeira':f,'_sigom_projecao_fisica':p
+ };
+ Object.assign(o,fields);
+}
+function arrays(){
+ const out=[];
+ for(const k of Object.getOwnPropertyNames(window)){
+  let v;try{v=window[k]}catch(e){continue}
+  if(Array.isArray(v)&&v.length&&v.some(isObj))out.push(v);
+ }
+ return out;
+}
+function findByOpus(opus){
+ if(!opus)return null;
+ for(const a of arrays()){const hit=a.find(o=>opKey(o)===opus);if(hit)return hit}
+ return null;
+}
+function enrichAll(){for(const a of arrays())for(const o of a)enrich(o)}
+function current(){
+ const sel=[...document.querySelectorAll('select')].find(x=>/\\d{10,}/.test(x.value||x.selectedOptions?.[0]?.textContent||''));
+ const txt=sel?(sel.value||sel.selectedOptions?.[0]?.textContent||''):document.body.innerText.slice(0,400);
+ const m=String(txt).match(/\\d{10,}/);return m?findByOpus(m[0]):null;
+}
+function patchCards(){
+ const o=current();if(!o)return;
+ const f=o._sigom_estimativa_financeira||financial(o),p=o._sigom_projecao_fisica||physical(o);
+ const cards=[...document.querySelectorAll('.dcard,.kpi,.card')];
+ for(const c of cards){
+  const label=clean(c.querySelector('.dcard-lbl,.lbl,h3')?.textContent||c.textContent.slice(0,120));
+  const value=c.querySelector('b,.val,.dcard-text');
+  if(!value)continue;
+  if(label.includes('estimativa de duracao dos recursos')){value.textContent=f.date?f.text+' · '+dateBR(f.date):f.text;value.title=f.reason}
+  if(label.includes('termino pela tendencia')||label.includes('entrega com base na medicao')){value.textContent=p.text;value.title=p.reason}
+ }
+}
+function patchTables(){
+ for(const table of document.querySelectorAll('table')){
+  const heads=[...table.querySelectorAll('thead th')].map(x=>clean(x.textContent));
+  const iOp=heads.findIndex(x=>x.includes('opus'));
+  const iFin=heads.findIndex(x=>x.includes('estimativa')&&x.includes('recurso'));
+  const iPhy=heads.findIndex(x=>x.includes('tendencia')||x.includes('entrega com base'));
+  if(iOp<0||(iFin<0&&iPhy<0))continue;
+  for(const tr of table.querySelectorAll('tbody tr')){
+   const td=[...tr.children],opus=String(td[iOp]?.textContent||'').replace(/\\D/g,''),o=findByOpus(opus);if(!o)continue;
+   enrich(o);
+   if(iFin>=0&&td[iFin]){const f=o._sigom_estimativa_financeira;td[iFin].textContent=f.date?f.text+' · '+dateBR(f.date):f.text;td[iFin].title=f.reason}
+   if(iPhy>=0&&td[iPhy]){const p=o._sigom_projecao_fisica;td[iPhy].textContent=p.text;td[iPhy].title=p.reason}
+  }
+ }
+}
+function patchFio(){
+ const o=current();if(!o)return;enrich(o);
+ const p=o._sigom_projecao_fisica;
+ const cells=[...document.querySelectorAll('th,td,.fio-mini-label,.fio-mini-val')];
+ const lab=cells.find(x=>clean(x.textContent).includes('entrega com base na medicao'));
+ if(lab){
+  const cell=lab.tagName==='TH'?lab.closest('table')?.querySelector('tbody tr')?.children[lab.cellIndex]:lab.nextElementSibling;
+  if(cell)cell.textContent=p.text;
+ }
+}
+function expose(){
+ window.SIGOM_PROJECOES_ENGENHARIA={version:VERSION,financial,physical,enrich,enrichAll};
+ const aliases=['estimativaRecursosSIGOM','estimativaRecursos','calcularEstimativaRecursos'];
+ for(const n of aliases)window[n]=o=>{const r=financial(o);return r.date?r.text+' · '+dateBR(r.date):r.text};
+ const palias=['entregaTextoPlano','projecaoTerminoMedicoes','calcularTerminoTendencia'];
+ for(const n of palias)window[n]=o=>physical(o).text;
+}
+let busy=false;
+function run(){if(busy)return;busy=true;try{enrichAll();patchCards();patchTables();patchFio()}finally{setTimeout(()=>busy=false,80)}}
+expose();run();
+new MutationObserver(()=>run()).observe(document.documentElement,{subtree:true,childList:true});
+setInterval(run,2500);
+console.info('SIGOM Fase 12.34.1: projeções de engenharia ativadas.');
+})();`;
+      (d.head||d.documentElement).appendChild(s);
+    }catch(e){console.warn('Projeções de engenharia:',e)}
+  }
+
   function prepararDashboard(){
     try{
       const w=frame.contentWindow,d=frame.contentDocument;if(!w||!d)return;
@@ -62,6 +272,7 @@
       w.logoutSIGOM=sair;
       const logout=d.getElementById('logoutBtn');
       if(logout)logout.onclick=sair;
+      instalarProjecoesEngenharia();
     }catch(e){console.warn('Preparação do dashboard:',e)}
   }
 

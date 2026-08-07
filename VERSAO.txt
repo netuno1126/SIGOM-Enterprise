@@ -1,16 +1,19 @@
 SIGOM — Sistema Integrado de Gestão de Obras Militares
-Versão: Fase 12.34 Institucional
-Revisão: Indicadores Executivos do Objetivo 05
+Versão: Fase 12.34.1
 Data: 06/08/2026
 
-Inclui integralmente a Fase 12.33 já publicada e as evoluções da Fase 12.34:
-- Objetivo 4 acumulativo, sem exclusão de implantações históricas;
-- deduplicação por Nº OPUS no Objetivo 4;
-- nova aba Indicadores Obj 05;
-- cartões e percentuais automáticos;
-- gráfico de rosca e evolução histórica;
-- exportação completa em PDF e PPTX;
-- observações e auditorias permanentes no Supabase;
-- integração Dashboard ⇄ Objetivos ⇄ FIO;
-- campos Responsável pela pendência e Prazo;
-- preservação integral dos registros e histórico existentes.
+Correções:
+- estimativa financeira baseada em saldo NE não liquidado ÷ ritmo mensal de liquidação;
+- projeção física baseada na tendência das medições;
+- bloqueio de datas inválidas e projeções acima de 30 anos;
+- substituição de Invalid Date e anos absurdos por “Não estimável”;
+- atualização dos cartões da Visão da Obra;
+- atualização das tabelas e exportações;
+- atualização da entrega com base nas medições na FIO;
+- preservação das funcionalidades já existentes da Fase 12.34.
+
+Arquivo substituído:
+public/app.html
+
+Commit:
+fix: corrigir projeções física e financeira na Fase 12.34
