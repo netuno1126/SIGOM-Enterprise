@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Atualizações de Medição — SIGOM</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--az:#1e4e79;--az2:#2e75b6;--bg:#edf3f8;--card:#fff;--ok:#70ad47;--warn:#e67e22;--red:#c00000;--txt:#18324a}
+*{box-sizing:border-box;font-family:Segoe UI,Arial,sans-serif}body{margin:0;background:var(--bg);color:var(--txt)}
+header{background:linear-gradient(90deg,#163f67,#2e75b6);color:white;padding:18px 26px;display:flex;justify-content:space-between;align-items:center;gap:16px}
+header h1{margin:0;font-size:24px}header p{margin:5px 0 0;opacity:.9}
+.actions{display:flex;gap:8px;flex-wrap:wrap}button{border:0;border-radius:8px;padding:9px 13px;font-weight:700;cursor:pointer}
+button.primary{background:white;color:var(--az)}button.blue{background:var(--az2);color:#fff}button.gray{background:#d9e2ea;color:#234}
+main{max-width:1500px;margin:auto;padding:16px}.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:12px}
+.kpi{background:white;padding:14px;border-radius:12px;box-shadow:0 2px 8px #0001;border-left:5px solid var(--az2)}
+.kpi strong{display:block;font-size:24px;color:var(--az);margin-top:4px}.filters{display:flex;gap:8px;flex-wrap:wrap;background:#fff;padding:12px;border-radius:12px;margin-bottom:12px}
+.filters input,.filters select{padding:8px;border:1px solid #c8d5e2;border-radius:8px;min-width:150px}
+.card{background:#fff;border-radius:12px;padding:14px;box-shadow:0 2px 8px #0001}.status{font-size:12px;margin:8px 0;color:#5c7185}
+table{width:100%;border-collapse:collapse;font-size:12px}th{background:var(--az);color:white;position:sticky;top:0;padding:8px;text-align:left}
+td{padding:8px;border-bottom:1px solid #e0e8ef}tr.unread td{background:#fff7d1}tr:hover td{background:#eef6ff}
+.tablewrap{max-height:650px;overflow:auto}.pill{display:inline-block;border-radius:999px;padding:3px 8px;font-weight:800;font-size:10px}
+.pill.up{background:#dcf4d2;color:#255d20}.pill.read{background:#e8edf2;color:#53606c}.opus{font-weight:800;color:var(--az)}
+@media(max-width:800px){header{align-items:flex-start;flex-direction:column}.tablewrap{overflow:auto}table{min-width:980px}}
+</style>
+</head><body>
+<header>
+<div><div style="font-size:11px;font-weight:800;letter-spacing:.8px">SIGOM 2026 · FASE 12.34.2</div><h1>🔔 Atualizações de Medição</h1><p>Avanços físicos detectados automaticamente nas atualizações das obras.</p></div>
+<div class="actions"><button class="primary" onclick="location.href='/app.html'">Dashboard</button><button class="primary" onclick="location.href='/app/objetivos.html'">Objetivos e Metas</button><button class="primary" id="refresh">Atualizar</button></div>
+</header>
+<main>
+<div class="kpis">
+ <div class="kpi"><span>Alertas registrados</span><strong id="kTotal">0</strong></div>
+ <div class="kpi"><span>Não lidos</span><strong id="kUnread">0</strong></div>
+ <div class="kpi"><span>Obras com avanço</span><strong id="kWorks">0</strong></div>
+ <div class="kpi"><span>Avanço acumulado</span><strong id="kDelta">0,00 p.p.</strong></div>
+</div>
+<div class="filters">
+ <input id="q" placeholder="Buscar OPUS, contrato ou obra">
+ <select id="rm"><option value="">RM — todas</option></select>
+ <select id="read"><option value="">Leitura — todas</option><option value="0">Não lidos</option><option value="1">Lidos</option></select>
+ <input id="dateFrom" type="date" title="A partir de">
+ <button class="gray" id="clear">Limpar</button>
+ <button class="blue" id="markAll">Marcar filtrados como lidos</button>
+</div>
+<div id="status" class="status">Inicializando...</div>
+<div class="card"><div class="tablewrap"><table>
+<thead><tr><th>Data</th><th>Nº OPUS</th><th>Contrato</th><th>Obra</th><th>RM</th><th>% anterior</th><th>% atual</th><th>Avanço</th><th>Situação</th><th>Ação</th></tr></thead>
+<tbody id="body"></tbody></table></div></div>
+</main>
+<script src="/config.js"></script>
+<script>
+const cfg=window.SIGOM_CONFIG,db=supabase.createClient(cfg.supabaseUrl,cfg.supabasePublishableKey),$=id=>document.getElementById(id);
+let alerts=[],works=new Map;
+const num=v=>Number.isFinite(Number(v))?Number(v):0,fmt=v=>num(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function auth(){const {data:{session}}=await db.auth.getSession();if(!session){location.href='/';throw Error('Sessão não encontrada')}}
+async function load(){
+ $('status').textContent='Carregando alertas...';await auth();
+ let {data,error}=await db.from('alertas_medicao').select('*').order('criado_em',{ascending:false}).limit(2000);if(error)throw error;alerts=data||[];
+ const opus=[...new Set(alerts.map(a=>a.opus).filter(Boolean))];
+ if(opus.length){let {data:o}=await db.from('obras').select('id,opus,contrato,nome_obra,descricao,rm,om_beneficiada').in('opus',opus);(o||[]).forEach(x=>works.set(String(x.opus),x))}
+ fillRM();render();$('status').textContent=`Atualizado em ${new Date().toLocaleString('pt-BR')}`;
+}
+function fillRM(){const rms=[...new Set([...works.values()].map(x=>x.rm).filter(Boolean))].sort();$('rm').innerHTML='<option value="">RM — todas</option>'+rms.map(x=>`<option>${esc(x)}</option>`).join('')}
+function filtered(){
+ const q=$('q').value.trim().toLowerCase(),rm=$('rm').value,rd=$('read').value,d=$('dateFrom').value?new Date($('dateFrom').value+'T00:00:00'):null;
+ return alerts.filter(a=>{const o=works.get(String(a.opus))||{};const hay=[a.opus,a.contrato,o.nome_obra,o.descricao,o.om_beneficiada].join(' ').toLowerCase();
+ return (!q||hay.includes(q))&&(!rm||o.rm===rm)&&(!rd||(rd==='1')===!!a.lido)&&(!d||new Date(a.criado_em)>=d)});
+}
+function render(){
+ const a=filtered(),unique=new Set(a.map(x=>x.opus)),delta=a.reduce((s,x)=>s+num(x.variacao),0);
+ $('kTotal').textContent=a.length.toLocaleString('pt-BR');$('kUnread').textContent=a.filter(x=>!x.lido).length.toLocaleString('pt-BR');$('kWorks').textContent=unique.size.toLocaleString('pt-BR');$('kDelta').textContent=fmt(delta)+' p.p.';
+ $('body').innerHTML=a.map(x=>{const o=works.get(String(x.opus))||{},name=o.nome_obra||o.descricao||'—';return `<tr class="${x.lido?'':'unread'}">
+ <td>${new Date(x.criado_em).toLocaleString('pt-BR')}</td><td class="opus">${esc(x.opus)}</td><td>${esc(x.contrato||o.contrato||'—')}</td><td>${esc(name)}</td><td>${esc(o.rm||'—')}</td>
+ <td>${fmt(x.percentual_anterior)}%</td><td>${fmt(x.percentual_novo)}%</td><td><span class="pill up">+${fmt(x.variacao)} p.p.</span></td><td><span class="pill ${x.lido?'read':'up'}">${x.lido?'Lido':'Novo'}</span></td>
+ <td><button class="gray" onclick="openWork('${esc(x.opus)}')">Abrir obra</button> ${x.lido?'':`<button class="blue" onclick="markRead('${x.id}')">Lido</button>`}</td></tr>`}).join('')||'<tr><td colspan="10">Nenhum alerta encontrado.</td></tr>';
+}
+async function markRead(id){const {error}=await db.from('alertas_medicao').update({lido:true,lido_em:new Date().toISOString()}).eq('id',id);if(error)return alert(error.message);const a=alerts.find(x=>x.id===id);if(a)a.lido=true;render()}
+async function markAll(){const ids=filtered().filter(x=>!x.lido).map(x=>x.id);if(!ids.length)return;const {error}=await db.from('alertas_medicao').update({lido:true,lido_em:new Date().toISOString()}).in('id',ids);if(error)return alert(error.message);alerts.forEach(x=>{if(ids.includes(x.id))x.lido=true});render()}
+function openWork(opus){location.href='/app.html?opus='+encodeURIComponent(opus)+'#obra'}
+['q','rm','read','dateFrom'].forEach(id=>$(id).addEventListener(id==='q'?'input':'change',render));$('refresh').onclick=()=>load().catch(e=>$('status').textContent='Erro: '+e.message);
+$('clear').onclick=()=>{$('q').value='';$('rm').value='';$('read').value='';$('dateFrom').value='';render()};$('markAll').onclick=markAll;
+load().catch(e=>$('status').textContent='Erro: '+e.message);
+</script></body></html>

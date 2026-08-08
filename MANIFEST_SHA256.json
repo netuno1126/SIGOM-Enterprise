@@ -1,8 +1,13 @@
 {
-  "versao": "12.34.1",
+  "versao": "12.34.2",
   "arquivos": {
-    "README_APLICACAO.md": "4b66887cc34d2a21a064186cd45880fafe35b0de11ffc9b81a9b01599171a753",
-    "VERSAO.txt": "e57aef29eda197c5e24022974e4fbc1caf6b8366a634cf54b3b7f6c7674fdc51",
-    "public/app.html": "5fca49feae5dbf25607bec5a2857fcb519f15531d463dd26544c02949e0805a8"
+    "APLICAR_FASE_12_34_2.py": "9fe7173d6defe3a57788e9ad18028b18f4f6e1e678e92f7bba82a958440d98db",
+    "README_FASE_12_34_2.md": "6c61fbab6beb7923aeec24e23ab675a7131fb5e5bd2c4cebe4c435dca0a8ce90",
+    "VERSAO.txt": "934447d865413d95a60df8a940bfc258f83aae8cdcff20aee18a372a1c88952d",
+    "public/app/alertas-medicao.html": "852af51e63b696b80e4072946736a413309310d2dfa64f4090915aae0ebad8a0",
+    "public/app/dashboard-projecoes-12-34-2.js": "f35d26667a87786e5219a88a92dc5bf61109f35900770f6dce04fd6958530ba2",
+    "public/app/fase-12-34-2-integracao.js": "e3ae24e8038fad1036a9e38b409e2d1aa7ac205a088c9759f66e25bccf897601",
+    "public/app/visao-diretor.html": "4a100481eaf277a07d8ff902c7289d5a1aa558d0c38eec2fc44189e63b42c518",
+    "supabase/33_fase_12_34_2_alertas_diretor_obj5.sql": "56cd01277e32163f8dff7d243522b8fcc42a1c2e824390d7b90742557ee30ad4"
   }
 }
