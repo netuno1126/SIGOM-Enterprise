@@ -22,7 +22,8 @@ function addMenu(label,url){
 async function boot(){
  const a=addButton('🔔 Atualizações de Medição','/app/alertas-medicao.html','sigomAlertasMedicaoBtn');
  addButton('Visão do Diretor','/app/visao-diretor.html','sigomVisaoDiretorBtn');
- addMenu('Atualizações de Medição','/app/alertas-medicao.html');addMenu('Visão do Diretor','/app/visao-diretor.html');
+ addButton('💡 Caixa de Sugestões','/app/sugestoes.html','sigomSugestoesBtn');
+ addMenu('Atualizações de Medição','/app/alertas-medicao.html');addMenu('Visão do Diretor','/app/visao-diretor.html');addMenu('Caixa de Sugestões','/app/sugestoes.html');
  const c=await unread();if(a&&c>0){a.textContent=`🔔 Atualizações de Medição (${c})`;a.style.background='#c00000';a.style.color='#fff'}
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();

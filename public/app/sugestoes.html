@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Caixa de Sugestões — SIGOM</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--az:#1e4e79;--az2:#2e75b6;--bg:#edf3f8;--txt:#18324a;--green:#548235;--orange:#ed7d31;--red:#c00000}
+*{box-sizing:border-box;font-family:Segoe UI,Arial,sans-serif}body{margin:0;background:var(--bg);color:var(--txt)}
+header{background:linear-gradient(90deg,#163f67,#2e75b6);color:#fff;padding:18px 26px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}h1{margin:2px 0;font-size:25px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}button{border:0;border-radius:8px;padding:9px 12px;font-weight:800;cursor:pointer}
+.white{background:#fff;color:var(--az)}.blue{background:var(--az2);color:#fff}.green{background:var(--green);color:#fff}.gray{background:#dbe4ec;color:#234}
+main{max-width:1450px;margin:auto;padding:16px}.grid{display:grid;grid-template-columns:minmax(320px,460px) 1fr;gap:14px}
+.card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px #0001;margin-bottom:12px}.card h2{margin:0 0 12px;color:var(--az);font-size:17px}
+label{display:block;font-size:12px;font-weight:800;color:var(--az);margin:10px 0 4px}
+input,select,textarea{width:100%;padding:9px;border:1px solid #c7d4e1;border-radius:8px;font-size:13px;background:#fff}
+textarea{min-height:105px;resize:vertical}.help{font-size:11px;color:#687d91;line-height:1.45;margin-top:5px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:12px}.kpi{background:#fff;border-radius:10px;padding:12px;border-left:5px solid var(--az2);box-shadow:0 2px 8px #0001}.kpi strong{display:block;font-size:22px;color:var(--az);margin-top:3px}
+.filters{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}.filters input,.filters select{width:auto;min-width:150px}
+table{width:100%;border-collapse:collapse;font-size:11.5px}th{background:var(--az);color:#fff;text-align:left;padding:7px;position:sticky;top:0}td{padding:7px;border-bottom:1px solid #e0e8ef;vertical-align:top}
+.tbl{overflow:auto;max-height:620px}.status{font-size:12px;color:#61768a;margin:7px 0}.pill{display:inline-block;border-radius:999px;padding:3px 7px;font-size:10px;font-weight:800}
+.nova{background:#e7f0fa;color:#205c8e}.em_analise{background:#fff0d6;color:#8b5a00}.planejada{background:#e8e0fa;color:#5d3d91}.em_desenvolvimento{background:#d9ebff;color:#245b8a}.implantada{background:#dcf0d7;color:#2e6926}.nao_priorizada,.arquivada{background:#e8ecef;color:#5b6670}
+.adminBox{background:#f6f9fc;border:1px solid #d7e2ed;border-radius:8px;padding:8px}.adminBox select,.adminBox textarea{font-size:11px;padding:6px}.adminBox textarea{min-height:58px}
+.notice{background:#fff8d8;border:1px solid #eed77a;border-radius:9px;padding:10px;font-size:12px;margin-bottom:10px}
+@media(max-width:1000px){.grid{grid-template-columns:1fr}table{min-width:1100px}}
+</style></head>
+<body>
+<header><div class="top">
+<div><div style="font-size:11px;font-weight:800">SIGOM 2026 · FASE 12.34.3</div><h1>💡 Caixa de Sugestões</h1><div>Canal permanente para aperfeiçoamento do SIGOM a partir das necessidades dos usuários.</div></div>
+<div class="actions"><button class="white" onclick="location.href='/app.html'">Dashboard</button><button class="white" onclick="location.href='/app/objetivos.html'">Objetivos e Metas</button><button class="white" onclick="location.href='/app/visao-diretor.html'">Visão do Diretor</button></div>
+</div></header>
+<main>
+<div class="notice"><b>Finalidade:</b> registrar dificuldades, ideias, melhorias e novas necessidades percebidas na utilização do SIGOM. As sugestões ficam armazenadas no Supabase e poderão subsidiar futuras versões institucionais.</div>
+<div class="kpis">
+<div class="kpi">Sugestões visíveis<strong id="kTotal">0</strong></div>
+<div class="kpi">Novas<strong id="kNova">0</strong></div>
+<div class="kpi">Planejadas<strong id="kPlan">0</strong></div>
+<div class="kpi">Implantadas<strong id="kImpl">0</strong></div>
+</div>
+<div class="grid">
+<section class="card"><h2>Enviar sugestão</h2>
+<label>Título</label><input id="titulo" maxlength="160" placeholder="Ex.: Melhorar filtro de obras por RM">
+<label>Módulo do SIGOM</label>
+<select id="modulo"><option value="">Selecione</option><option>Dashboard</option><option>FIO</option><option>Objetivos e Metas</option><option>Grupos</option><option>Importações</option><option>Administração</option><option>Relatórios</option><option>IA SIGOM</option><option>Outro</option></select>
+<label>Categoria</label>
+<select id="categoria"><option value="melhoria">Melhoria</option><option value="correcao">Correção</option><option value="nova_funcionalidade">Nova funcionalidade</option><option value="usabilidade">Usabilidade</option><option value="relatorio">Relatório / exportação</option><option value="outro">Outro</option></select>
+<label>Descreva a sugestão</label><textarea id="sugestao" placeholder="Explique o problema observado ou a melhoria que ajudaria o trabalho na ponta da linha."></textarea>
+<label>Benefício esperado</label><textarea id="beneficio" placeholder="Ex.: reduzir retrabalho, facilitar reunião, melhorar controle, evitar erro de preenchimento."></textarea>
+<div class="help">Não inclua senhas, chaves, dados pessoais sensíveis ou informações que não devam ser armazenadas no sistema.</div>
+<button class="green" id="enviar" style="margin-top:12px;width:100%">Registrar sugestão</button>
+<div id="formStatus" class="status"></div>
+</section>
+<section class="card"><h2 id="listTitle">Minhas sugestões</h2>
+<div class="filters"><input id="q" placeholder="Pesquisar"><select id="fStatus"><option value="">Status — todos</option><option value="nova">Nova</option><option value="em_analise">Em análise</option><option value="planejada">Planejada</option><option value="em_desenvolvimento">Em desenvolvimento</option><option value="implantada">Implantada</option><option value="nao_priorizada">Não priorizada</option><option value="arquivada">Arquivada</option></select><select id="fModulo"><option value="">Módulo — todos</option></select></div>
+<div id="status" class="status">Carregando...</div>
+<div class="tbl"><table><thead><tr><th>Data</th><th>Título</th><th>Módulo</th><th>Categoria</th><th>Sugestão</th><th>Status</th><th id="adminHead">Acompanhamento</th></tr></thead><tbody id="body"></tbody></table></div>
+</section></div>
+</main>
+<script src="/config.js"></script>
+<script>
+const cfg=window.SIGOM_CONFIG,db=supabase.createClient(cfg.supabaseUrl,cfg.supabasePublishableKey),$=id=>document.getElementById(id);
+let session=null,profile=null,rows=[],isAdmin=false;
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const labels={nova:'Nova',em_analise:'Em análise',planejada:'Planejada',em_desenvolvimento:'Em desenvolvimento',implantada:'Implantada',nao_priorizada:'Não priorizada',arquivada:'Arquivada'};
+const catLabels={melhoria:'Melhoria',correcao:'Correção',nova_funcionalidade:'Nova funcionalidade',usabilidade:'Usabilidade',relatorio:'Relatório / exportação',outro:'Outro'};
+async function boot(){
+ const s=await db.auth.getSession();session=s.data.session;if(!session){location.href='/';return}
+ const {data:p,error}=await db.from('profiles').select('id,nome,username,perfil,ativo').eq('id',session.user.id).single();if(error)throw error;profile=p;
+ isAdmin=String(profile.perfil||'').toLowerCase()==='administrador';
+ $('listTitle').textContent=isAdmin?'Sugestões recebidas — visão do Administrador':'Minhas sugestões';
+ await load();
+}
+async function load(){
+ $('status').textContent='Carregando sugestões...';
+ const {data,error}=await db.from('sugestoes_melhoria').select('*').order('criado_em',{ascending:false});if(error)throw error;rows=data||[];
+ fillModules();render();$('status').textContent=`${rows.length} registro(s) disponível(is).`;
+}
+function fillModules(){const mods=[...new Set(rows.map(x=>x.modulo).filter(Boolean))].sort();$('fModulo').innerHTML='<option value="">Módulo — todos</option>'+mods.map(x=>`<option>${esc(x)}</option>`).join('')}
+function filtered(){const q=$('q').value.trim().toLowerCase(),st=$('fStatus').value,mo=$('fModulo').value;return rows.filter(x=>(!q||[x.titulo,x.sugestao,x.beneficio_esperado,x.modulo,x.observacao_admin].join(' ').toLowerCase().includes(q))&&(!st||x.status===st)&&(!mo||x.modulo===mo))}
+function render(){
+ const a=filtered();$('kTotal').textContent=a.length;$('kNova').textContent=a.filter(x=>x.status==='nova').length;$('kPlan').textContent=a.filter(x=>x.status==='planejada').length;$('kImpl').textContent=a.filter(x=>x.status==='implantada').length;
+ $('body').innerHTML=a.map(x=>`<tr>
+ <td>${new Date(x.criado_em).toLocaleString('pt-BR')}</td><td><b>${esc(x.titulo)}</b>${isAdmin?`<div style="font-size:10px;color:#778">Usuário: ${esc(x.usuario_id)}</div>`:''}</td><td>${esc(x.modulo||'—')}</td><td>${esc(catLabels[x.categoria]||x.categoria)}</td>
+ <td><div>${esc(x.sugestao)}</div>${x.beneficio_esperado?`<div style="margin-top:5px;font-size:10.5px;color:#587"><b>Benefício:</b> ${esc(x.beneficio_esperado)}</div>`:''}</td>
+ <td><span class="pill ${esc(x.status)}">${esc(labels[x.status]||x.status)}</span>${x.prioridade_admin?`<div style="font-size:10px;margin-top:5px"><b>Prioridade:</b> ${esc(x.prioridade_admin)}</div>`:''}</td>
+ <td>${isAdmin?adminEditor(x):`<div>${esc(x.observacao_admin||'Aguardando análise administrativa.')}</div>`}</td></tr>`).join('')||'<tr><td colspan="7">Nenhuma sugestão encontrada.</td></tr>';
+}
+function adminEditor(x){return `<div class="adminBox">
+<select id="st_${x.id}">${['nova','em_analise','planejada','em_desenvolvimento','implantada','nao_priorizada','arquivada'].map(s=>`<option value="${s}" ${x.status===s?'selected':''}>${labels[s]}</option>`).join('')}</select>
+<select id="pr_${x.id}" style="margin-top:5px"><option value="">Prioridade</option>${['baixa','media','alta','critica'].map(p=>`<option value="${p}" ${x.prioridade_admin===p?'selected':''}>${p[0].toUpperCase()+p.slice(1)}</option>`).join('')}</select>
+<textarea id="ob_${x.id}" placeholder="Observação administrativa / decisão">${esc(x.observacao_admin||'')}</textarea>
+<button class="blue" onclick="saveAdmin('${x.id}')">Salvar análise</button></div>`}
+async function saveAdmin(id){
+ const payload={status:$('st_'+id).value,prioridade_admin:$('pr_'+id).value||null,observacao_admin:$('ob_'+id).value.trim()||null,analisado_por:session.user.id,analisado_em:new Date().toISOString(),atualizado_em:new Date().toISOString()};
+ const {error}=await db.from('sugestoes_melhoria').update(payload).eq('id',id);if(error)return alert(error.message);await load();
+}
+async function send(){
+ const titulo=$('titulo').value.trim(),sug=$('sugestao').value.trim();if(!titulo||!sug){$('formStatus').textContent='Informe o título e a sugestão.';return}
+ $('enviar').disabled=true;$('formStatus').textContent='Registrando...';
+ const payload={usuario_id:session.user.id,titulo,modulo:$('modulo').value||null,categoria:$('categoria').value,sugestao:sug,beneficio_esperado:$('beneficio').value.trim()||null};
+ const {error}=await db.from('sugestoes_melhoria').insert(payload);$('enviar').disabled=false;if(error){$('formStatus').textContent='Erro: '+error.message;return}
+ $('titulo').value='';$('modulo').value='';$('categoria').value='melhoria';$('sugestao').value='';$('beneficio').value='';$('formStatus').textContent='Sugestão registrada com sucesso.';await load();
+}
+$('enviar').onclick=send;['q','fStatus','fModulo'].forEach(id=>$(id).addEventListener(id==='q'?'input':'change',render));
+boot().catch(e=>$('status').textContent='Erro: '+e.message);
+</script></body></html>

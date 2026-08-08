@@ -65,3 +65,10 @@ Esta revisão inclui explicitamente:
 - conteúdo executivo alinhado à palestra `Obj_Metas_2026_APG_07_08_2026 v3.pptx`;
 - indicadores de referência da palestra: 52 obras PEEx; RP 0,57%; liquidação 39,3%; UFV 34/38 (89,47%); Obj 5 com 5/12 recontratadas (42%);
 - integração entre Objetivos, Medições, Visão do Diretor e Dashboard.
+
+
+## Fase 12.34.3 — Caixa de Sugestões
+
+Nova opção `💡 Caixa de Sugestões` no menu.
+
+Todos os usuários podem registrar propostas de melhoria e acompanhar as próprias solicitações. O perfil Administrador pode consultar toda a base de sugestões, atribuir prioridade, alterar o status e registrar uma manifestação administrativa. A base fica preservada no Supabase em `public.sugestoes_melhoria`, formando um backlog institucional de evolução do SIGOM.

@@ -1,10 +1,15 @@
 {
-  "versao": "12.34.2-frontend-completo",
+  "versao": "12.34.3",
   "arquivos": {
-    "README_FASE_12_34_2.md": "3a7e56b4d8acb2e5face0e0062a2945da1a157ac708fc1f40dd28bb8fcfefa0c",
+    "MANIFEST_SHA256.json": "829953fa36817493279715c5a3741182459499ef75f743bab37ac9e9fb2197d9",
+    "README_FASE_12_34_2.md": "a342a998bf976c0733969c5dce49fff45877f434e741071255caf70f46f7cc76",
+    "VERSAO.txt": "b7850f4c0ad59414f0d3fce90850e94d7548d7fce8a11b1e02fe555337bf13da",
+    "docs/MARCO_FASE_12_34_3_CAIXA_SUGESTOES.md": "252830c7eb4e74a25ef15b573faee863511ea4d35046203cb534c4af73e0ddcd",
     "docs/REFERENCIA_VISAO_DIRETOR_PPT.txt": "800fcd8a74c9c1267838731768dc26ac9d9aa9cba493a9a8d881a3d709644a60",
     "public/app/alertas-medicao.html": "f020f77d18b5763cf33a101db5e9d96fe7db6757292d6b30391cad0fa4b9dada",
-    "public/app/fase-12-34-2-integracao.js": "be721b2bd18cfc37103aaddbd55941e1b89a10332106766bf0d0c205d7a54b23",
-    "public/app/visao-diretor.html": "d359a3784b4c9f3cbbb553104bf91daa8819d0319145859720c42086169c49fa"
+    "public/app/fase-12-34-2-integracao.js": "4c0255130ad75c4c6eeb28cdf14a1968238db41f4b1b0064a1ca5a2004c90d3e",
+    "public/app/sugestoes.html": "fe8d37771e38e63b0423600fce3e9a03718b0a1461c56120f027976210b72434",
+    "public/app/visao-diretor.html": "d359a3784b4c9f3cbbb553104bf91daa8819d0319145859720c42086169c49fa",
+    "supabase/34_fase_12_34_3_caixa_sugestoes.sql": "9ac05a1c6af79399db0a4a8e002c044d256715dd2c0f47a8a3191d7fbb153ad4"
   }
 }
