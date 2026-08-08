@@ -1,0 +1,7 @@
+No final de public/app/objetivos.html, imediatamente ANTES de </body>, acrescente:
+
+<script src="/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/app/integracao-menu-12-34-4.js"></script>
+
+Não remova nenhum código existente.
