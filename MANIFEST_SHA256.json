@@ -1,13 +1,10 @@
 {
-  "versao": "12.34.2",
+  "versao": "12.34.2-frontend-completo",
   "arquivos": {
-    "APLICAR_FASE_12_34_2.py": "9fe7173d6defe3a57788e9ad18028b18f4f6e1e678e92f7bba82a958440d98db",
-    "README_FASE_12_34_2.md": "6c61fbab6beb7923aeec24e23ab675a7131fb5e5bd2c4cebe4c435dca0a8ce90",
-    "VERSAO.txt": "934447d865413d95a60df8a940bfc258f83aae8cdcff20aee18a372a1c88952d",
-    "public/app/alertas-medicao.html": "852af51e63b696b80e4072946736a413309310d2dfa64f4090915aae0ebad8a0",
-    "public/app/dashboard-projecoes-12-34-2.js": "f35d26667a87786e5219a88a92dc5bf61109f35900770f6dce04fd6958530ba2",
-    "public/app/fase-12-34-2-integracao.js": "e3ae24e8038fad1036a9e38b409e2d1aa7ac205a088c9759f66e25bccf897601",
-    "public/app/visao-diretor.html": "4a100481eaf277a07d8ff902c7289d5a1aa558d0c38eec2fc44189e63b42c518",
-    "supabase/33_fase_12_34_2_alertas_diretor_obj5.sql": "56cd01277e32163f8dff7d243522b8fcc42a1c2e824390d7b90742557ee30ad4"
+    "README_FASE_12_34_2.md": "3a7e56b4d8acb2e5face0e0062a2945da1a157ac708fc1f40dd28bb8fcfefa0c",
+    "docs/REFERENCIA_VISAO_DIRETOR_PPT.txt": "800fcd8a74c9c1267838731768dc26ac9d9aa9cba493a9a8d881a3d709644a60",
+    "public/app/alertas-medicao.html": "f020f77d18b5763cf33a101db5e9d96fe7db6757292d6b30391cad0fa4b9dada",
+    "public/app/fase-12-34-2-integracao.js": "be721b2bd18cfc37103aaddbd55941e1b89a10332106766bf0d0c205d7a54b23",
+    "public/app/visao-diretor.html": "d359a3784b4c9f3cbbb553104bf91daa8819d0319145859720c42086169c49fa"
   }
 }

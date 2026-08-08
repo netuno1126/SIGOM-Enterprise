@@ -2,68 +2,62 @@
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Visão do Diretor — Objetivos e Metas</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
 :root{--az:#1e4e79;--az2:#2e75b6;--green:#548235;--red:#c00000;--orange:#ed7d31;--bg:#edf3f8;--txt:#142b40}
 *{box-sizing:border-box;font-family:Segoe UI,Arial,sans-serif}body{margin:0;background:var(--bg);color:var(--txt)}
-header{background:linear-gradient(90deg,#123f69,#2e75b6);color:#fff;padding:18px 26px;display:flex;justify-content:space-between;align-items:center;gap:12px}
-header h1{margin:0;font-size:25px}.actions{display:flex;gap:7px;flex-wrap:wrap}button{border:0;border-radius:8px;padding:9px 13px;font-weight:800;cursor:pointer}.white{background:#fff;color:var(--az)}.blue{background:var(--az2);color:#fff}
+header{background:linear-gradient(90deg,#123f69,#2e75b6);color:#fff;padding:18px 26px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+header h1{margin:2px 0;font-size:25px}.actions{display:flex;gap:7px;flex-wrap:wrap}button{border:0;border-radius:8px;padding:9px 13px;font-weight:800;cursor:pointer}.white{background:#fff;color:var(--az)}
 main{max-width:1500px;margin:auto;padding:15px}.summary{display:grid;grid-template-columns:repeat(5,minmax(170px,1fr));gap:10px;margin-bottom:12px}
 .obj{background:#fff;border-radius:12px;padding:14px;box-shadow:0 2px 8px #0001;border-top:5px solid var(--az2)}.obj h2{font-size:13px;margin:0;color:var(--az)}.obj strong{display:block;font-size:25px;margin:7px 0}.obj small{color:#60758a}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.card{background:#fff;padding:15px;border-radius:12px;box-shadow:0 2px 8px #0001;margin-bottom:12px}.card h2{font-size:16px;color:var(--az);margin:0 0 10px}
-canvas{width:100%!important;height:280px!important}.status{font-size:12px;color:#60758a;margin-bottom:10px}
-table{width:100%;border-collapse:collapse;font-size:11.5px}th{background:var(--az);color:white;padding:7px;text-align:left}td{padding:7px;border-bottom:1px solid #dfe7ee}.wrap{overflow:auto;max-height:440px}
-.tag{display:inline-block;padding:3px 7px;border-radius:999px;font-weight:800;font-size:10px;background:#e6eef6}.good{background:#dff1d8;color:#285c20}.bad{background:#f8d8d8;color:#8b1a1a}
-.heroMetric{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.heroMetric>div{flex:1;min-width:150px;background:#f3f7fb;border-radius:10px;padding:12px}.heroMetric strong{display:block;font-size:23px;color:var(--az)}
+.hero{display:flex;gap:10px;flex-wrap:wrap}.metric{flex:1;min-width:150px;background:#f3f7fb;border-radius:10px;padding:12px}.metric strong{display:block;font-size:22px;color:var(--az)}
+table{width:100%;border-collapse:collapse;font-size:11.5px}th{background:var(--az);color:white;padding:7px;text-align:left}td{padding:7px;border-bottom:1px solid #dfe7ee}.wrap{overflow:auto;max-height:420px}
+.tag{display:inline-block;padding:3px 7px;border-radius:999px;font-weight:800;font-size:10px;background:#e6eef6}.good{background:#dff1d8;color:#285c20}.bad{background:#f8d8d8;color:#8b1a1a}.warn{background:#ffe4c3;color:#8a4b00}
+.source{font-size:11px;color:#64788b;margin-top:8px}.status{font-size:12px;color:#60758a;margin-bottom:10px}
 @media(max-width:1000px){.summary{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}}@media print{header .actions{display:none}body{background:white}.card,.obj{box-shadow:none}}
 </style></head><body>
-<header><div><div style="font-size:11px;font-weight:800;letter-spacing:.8px">SIGOM 2026 · FASE 12.34.2</div><h1>Visão do Diretor — Objetivos e Metas DOM/DEC</h1><div>Modelo executivo para apresentação ao escalão superior.</div></div>
-<div class="actions"><button class="white" onclick="location.href='/app/objetivos.html'">Objetivos e Metas</button><button class="white" onclick="location.href='/app.html'">Dashboard</button><button class="white" onclick="print()">PDF</button><button class="white" id="refresh">Atualizar</button></div></header>
+<header><div><div style="font-size:11px;font-weight:800">SIGOM 2026 · FASE 12.34.2</div><h1>Visão do Diretor — Objetivos e Metas DOM/DEC</h1><div>Modelo executivo alinhado à 2ª Reunião de Objetivos e Metas 2026 — 10 AGO 2026.</div></div>
+<div class="actions"><button class="white" onclick="location.href='/app/objetivos.html'">Objetivos e Metas</button><button class="white" onclick="location.href='/app/alertas-medicao.html'">🔔 Medições</button><button class="white" onclick="location.href='/app.html'">Dashboard</button><button class="white" onclick="print()">PDF</button><button class="white" id="refresh">Atualizar</button></div></header>
 <main><div id="status" class="status">Inicializando...</div><section id="summary" class="summary"></section>
 <div class="grid">
- <section class="card"><h2>Objetivo 1 — Entregas PEEx</h2><div id="o1"></div></section>
- <section class="card"><h2>Objetivo 2 — Reduzir perda de RPNP</h2><div id="o2"></div></section>
- <section class="card"><h2>Objetivo 3 — Liquidação dos créditos recebidos</h2><div id="o3"></div></section>
- <section class="card"><h2>Objetivo 4 — Implantações fotovoltaicas</h2><div id="o4"></div></section>
+<section class="card"><h2>Objetivo 1 — Entregas PEEx 2024–2027</h2><div id="o1"></div><div class="source">Palestra: 52 obras significativas; 4 para 2024, 26 para 2025/2026 conforme quadro apresentado, 17 para 2026 e 5 para 2027.</div></section>
+<section class="card"><h2>Objetivo 2 — Reduzir perda de RPNP</h2><div id="o2"></div><div class="source">Palestra: perda de RP até 5 AGO = R$ 1,290 Mi (0,57%).</div></section>
+<section class="card"><h2>Objetivo 3 — Liquidação dos créditos recebidos</h2><div id="o3"></div><div class="source">Palestra: crédito até 5 AGO = R$ 241,7 Mi; liquidação = R$ 94,9 Mi (39,3%).</div></section>
+<section class="card"><h2>Objetivo 4 — Implantações fotovoltaicas</h2><div id="o4"></div><div class="source">Palestra: 38 UFV previstas em 2026; 34 licitadas/em obra = 89,47% da meta.</div></section>
 </div>
-<section class="card"><h2>Objetivo 5 — Obras paralisadas / recontratação</h2><div id="o5"></div></section>
+<section class="card"><h2>Objetivo 5 — Obras paralisadas / recontratação</h2><div id="o5"></div><div class="source">Palestra: 5 das 12 obras paralisadas recontratadas = 42%.</div></section>
+<section class="card"><h2>Alertas de avanço físico</h2><div id="alerts"></div></section>
 <section class="card"><h2>Obras que demandam atenção do Diretor</h2><div class="wrap"><table><thead><tr><th>OPUS</th><th>Obra</th><th>RM</th><th>% Medido</th><th>% Estimado</th><th>IDP</th><th>Situação</th></tr></thead><tbody id="critical"></tbody></table></div></section>
-</main>
-<script src="/config.js"></script>
-<script>
+</main><script src="/config.js"></script><script>
 const cfg=window.SIGOM_CONFIG,db=supabase.createClient(cfg.supabaseUrl,cfg.supabasePublishableKey),$=id=>document.getElementById(id);
 const n=v=>Number.isFinite(Number(v))?Number(v):0,fmt=v=>n(v).toLocaleString('pt-BR',{maximumFractionDigits:2}),brl=v=>n(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let obras=[],obj5=[],obj4=[],resp=[];
+let obras=[],obj5=[],obj4=[],alerts=[];
 async function all(t){let out=[],from=0;while(1){let {data,error}=await db.from(t).select('*').range(from,from+999);if(error){if(error.code==='42P01')return [];throw error}out.push(...(data||[]));if(!data||data.length<1000)break;from+=1000}return out}
-async function load(){const {data:{session}}=await db.auth.getSession();if(!session){location.href='/';return}$('status').textContent='Carregando base executiva...';
- [obras,obj5,obj4,resp]=await Promise.all([all('obras'),all('objetivo5_lista_referencia'),all('objetivo4_implantacoes'),all('objetivos_respostas')]);render();$('status').textContent='Atualizado em '+new Date().toLocaleString('pt-BR')}
+async function load(){const {data:{session}}=await db.auth.getSession();if(!session){location.href='/';return}$('status').textContent='Carregando base executiva...';[obras,obj5,obj4,alerts]=await Promise.all([all('obras'),all('objetivo5_lista_referencia'),all('objetivo4_implantacoes'),all('alertas_medicao')]);render();$('status').textContent='Atualizado em '+new Date().toLocaleString('pt-BR')}
 function idp(o){const m=n(o.percentual_medido),e=n(o.percentual_estimado);return m>0?e/m:null}
 function risk(o){const x=idp(o);if(x!==null&&x<.70)return'Crítica';if(x!==null&&x<.85)return'Atenção';if(x!==null&&x>1)return'Adiantada';return'Adequada'}
 function card(t,v,s){return `<div class="obj"><h2>${t}</h2><strong>${v}</strong><small>${s}</small></div>`}
-function latestObjResp(numero){return resp.filter(x=>Number(x.objetivo)===numero).sort((a,b)=>new Date(b.atualizado_em)-new Date(a.atualizado_em))[0]?.respostas||{}}
 function render(){
  const critical=obras.filter(o=>risk(o)==='Crítica').sort((a,b)=>n(b.valor_atual)-n(a.valor_atual));
- const o1works=obras.filter(o=>/peex|objetivo 1|obj 1/i.test(JSON.stringify(o.dados||{})));
- const r2=latestObjResp(2),r3=latestObjResp(3);
- const rpIns=n(r2.rpnp_inscritos||r2.rp_inscritos),rpCan=n(r2.rpnp_cancelados||r2.rp_cancelados),rpPct=rpIns?rpCan/rpIns*100:0;
- const cred=n(r3.credito_2026||r3.credito_recebido||r3.credito),liq=n(r3.liquidacao_2026||r3.liquidado||r3.liquidacao),liqPct=cred?liq/cred*100:0;
- const concl4=obj4.filter(x=>x.concluida).length,total4=Math.max(obj4.length,38),pct4=38?concl4/38*100:0;
- const recontr=obj5.filter(x=>/recontrat/i.test(x.situacao||'')).length,total5=obj5.length||12,pct5=total5?recontr/total5*100:0;
+ const recontr=obj5.filter(x=>/recontrat/i.test(x.situacao||'')).length||5,total5=obj5.length||12,pct5=total5?recontr/total5*100:0;
+ const concl4=obj4.filter(x=>x.concluida).length;
+ const alertUnread=alerts.filter(x=>!x.lido).length,alertWorks=new Set(alerts.map(x=>x.opus)).size;
  $('summary').innerHTML=[
-  card('OBJ 1 — Entregas',o1works.length||'—','Obras identificadas na base PEEx'),
-  card('OBJ 2 — Perda RPNP',fmt(rpPct)+'%','Meta: no máximo 5%'),
-  card('OBJ 3 — Liquidação',fmt(liqPct)+'%','Meta: no mínimo 75%'),
-  card('OBJ 4 — Fotovoltaicas',concl4+' / 38',fmt(pct4)+'% da meta'),
-  card('OBJ 5 — Recontratação',recontr+' / '+total5,fmt(pct5)+'% recontratadas')
+  card('OBJ 1 — Entregas','52','obras significativas PEEx 2024–2027'),
+  card('OBJ 2 — Perda RPNP','0,57%','R$ 1,290 Mi até 5 AGO'),
+  card('OBJ 3 — Liquidação','39,3%','R$ 94,9 Mi de R$ 241,7 Mi'),
+  card('OBJ 4 — UFV','34 / 38','89,47% da meta 2026'),
+  card('OBJ 5 — Recontratação',recontr+' / '+total5,fmt(pct5)+'%')
  ].join('');
- $('o1').innerHTML=`<div class="heroMetric"><div><span>Obras PEEx identificadas</span><strong>${o1works.length||'—'}</strong></div><div><span>Obras críticas na carteira</span><strong>${critical.length}</strong></div><div><span>Valor atual da carteira</span><strong>${brl(obras.reduce((s,x)=>s+n(x.valor_atual),0))}</strong></div></div>`;
- $('o2').innerHTML=`<div class="heroMetric"><div><span>RPNP inscritos</span><strong>${rpIns?brl(rpIns):'Sem lançamento'}</strong></div><div><span>RPNP cancelados</span><strong>${rpCan?brl(rpCan):'Sem lançamento'}</strong></div><div><span>Perda</span><strong>${fmt(rpPct)}%</strong><span class="tag ${rpPct<=5?'good':'bad'}">Meta ≤ 5%</span></div></div>`;
- $('o3').innerHTML=`<div class="heroMetric"><div><span>Crédito recebido 2026</span><strong>${cred?brl(cred):'Sem lançamento'}</strong></div><div><span>Liquidado 2026</span><strong>${liq?brl(liq):'Sem lançamento'}</strong></div><div><span>Percentual liquidado</span><strong>${fmt(liqPct)}%</strong><span class="tag ${liqPct>=75?'good':'bad'}">Meta ≥ 75%</span></div></div>`;
- $('o4').innerHTML=`<div class="heroMetric"><div><span>Base acumulada</span><strong>${obj4.length}</strong></div><div><span>Concluídas</span><strong>${concl4}</strong></div><div><span>Meta 2026</span><strong>${fmt(pct4)}%</strong><span class="tag ${concl4>=38?'good':''}">${concl4}/38</span></div></div>`;
+ $('o1').innerHTML=`<div class="hero"><div class="metric"><span>Total do PEEx</span><strong>52</strong></div><div class="metric"><span>Meta 2024</span><strong>4 · 8%</strong></div><div class="metric"><span>Meta 2026</span><strong>17 · 32%</strong></div><div class="metric"><span>Meta 2027</span><strong>5 · 10%</strong></div></div>`;
+ $('o2').innerHTML=`<div class="hero"><div class="metric"><span>Perda até 5 AGO</span><strong>R$ 1,290 Mi</strong></div><div class="metric"><span>Percentual</span><strong>0,57%</strong><span class="tag good">Meta ≤ 5%</span></div></div>`;
+ $('o3').innerHTML=`<div class="hero"><div class="metric"><span>Crédito até 5 AGO</span><strong>R$ 241,7 Mi</strong></div><div class="metric"><span>Liquidado</span><strong>R$ 94,9 Mi</strong></div><div class="metric"><span>Percentual</span><strong>39,3%</strong><span class="tag warn">Meta ≥ 75%</span></div></div>`;
+ $('o4').innerHTML=`<div class="hero"><div class="metric"><span>Meta 2026</span><strong>38 UFV</strong></div><div class="metric"><span>Licitadas/em obra</span><strong>34</strong></div><div class="metric"><span>Atingimento</span><strong>89,47%</strong></div>${concl4?`<div class="metric"><span>Concluídas no banco</span><strong>${concl4}</strong></div>`:''}</div>`;
  const map=new Map(obras.map(o=>[String(o.opus),o]));
- $('o5').innerHTML=`<div class="heroMetric"><div><span>Total oficial</span><strong>${total5}</strong></div><div><span>Recontratadas</span><strong>${recontr}</strong></div><div><span>Percentual</span><strong>${fmt(pct5)}%</strong></div></div>
- <div class="wrap" style="margin-top:12px"><table><thead><tr><th>OPUS</th><th>Obra / OM</th><th>Contrato</th><th>% Medido</th><th>Situação</th></tr></thead><tbody>
- ${obj5.map(x=>{const o=map.get(String(x.opus))||{};return `<tr><td>${esc(x.opus)}</td><td>${esc(x.nome_obra||o.nome_obra||o.om_beneficiada||o.descricao||'—')}</td><td>${esc(o.contrato||x.contrato||'—')}</td><td>${fmt(o.percentual_medido)}%</td><td>${esc(x.situacao||'A acompanhar')}</td></tr>`}).join('')}</tbody></table></div>`;
+ $('o5').innerHTML=`<div class="hero"><div class="metric"><span>Total oficial</span><strong>${total5}</strong></div><div class="metric"><span>Recontratadas</span><strong>${recontr}</strong></div><div class="metric"><span>Percentual</span><strong>${fmt(pct5)}%</strong></div></div>
+ <div class="wrap" style="margin-top:12px"><table><thead><tr><th>OPUS</th><th>Obra</th><th>Contrato</th><th>% Medido</th><th>Situação</th><th>Responsável</th><th>Prazo</th></tr></thead><tbody>
+ ${obj5.map(x=>{const o=map.get(String(x.opus))||{};return `<tr><td>${esc(x.opus)}</td><td>${esc(x.nome_obra||o.nome_obra||o.descricao||'—')}</td><td>${esc(o.contrato||'—')}</td><td>${fmt(o.percentual_medido)}%</td><td>${esc(x.situacao||'A acompanhar')}</td><td>${esc(x.responsavel||'—')}</td><td>${x.prazo?new Date(x.prazo+'T12:00:00').toLocaleDateString('pt-BR'):'—'}</td></tr>`}).join('')}</tbody></table></div>`;
+ $('alerts').innerHTML=`<div class="hero"><div class="metric"><span>Alertas não lidos</span><strong>${alertUnread}</strong></div><div class="metric"><span>Obras com avanço registrado</span><strong>${alertWorks}</strong></div><div class="metric"><span>Ação</span><strong style="font-size:14px"><a href="/app/alertas-medicao.html">Abrir Atualizações de Medição</a></strong></div></div>`;
  $('critical').innerHTML=critical.slice(0,30).map(o=>`<tr><td>${esc(o.opus)}</td><td>${esc(o.nome_obra||o.descricao||'—')}</td><td>${esc(o.rm||'—')}</td><td>${fmt(o.percentual_medido)}%</td><td>${fmt(o.percentual_estimado)}%</td><td>${idp(o)==null?'—':fmt(idp(o))}</td><td><span class="tag bad">${risk(o)}</span></td></tr>`).join('')||'<tr><td colspan="7">Nenhuma obra crítica.</td></tr>';
 }
 $('refresh').onclick=()=>load().catch(e=>$('status').textContent='Erro: '+e.message);load().catch(e=>$('status').textContent='Erro: '+e.message);

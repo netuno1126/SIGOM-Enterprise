@@ -51,3 +51,17 @@ git add .
 git commit -m "feat: publicar Fase 12.34.2 com alertas de medição e Visão do Diretor"
 git push origin main
 ```
+
+
+## Complemento Frontend Completo
+
+Esta revisão inclui explicitamente:
+- aba 🔔 Atualizações de Medição;
+- contador de alertas não lidos no cabeçalho da aba e no botão de integração;
+- filtros por busca, RM, grupo e leitura;
+- abertura direta da obra por Nº OPUS;
+- botão individual e em lote para marcar como lido;
+- aba Visão do Diretor;
+- conteúdo executivo alinhado à palestra `Obj_Metas_2026_APG_07_08_2026 v3.pptx`;
+- indicadores de referência da palestra: 52 obras PEEx; RP 0,57%; liquidação 39,3%; UFV 34/38 (89,47%); Obj 5 com 5/12 recontratadas (42%);
+- integração entre Objetivos, Medições, Visão do Diretor e Dashboard.
