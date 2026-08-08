@@ -281,6 +281,9 @@ footer{display:flex;justify-content:space-between;font-size:11px;color:#7a8da0;p
           <button onclick="window.print();closeDrops()">🖨 Exportar PDF</button>
           <div class="dropsec">Visualização</div>
           <button onclick="abrirGrupos();closeDrops()">🗂 Gerenciar Grupos</button>
+          <button onclick="window.location.href='/app/visao-diretor.html';closeDrops()">👁 Visão do Diretor</button>
+          <button id="menuAlertasMedicaoOBJ" onclick="window.location.href='/app/alertas-medicao.html';closeDrops()">🔔 Atualizações de Medição <span id="menuAlertasBadgeOBJ"></span></button>
+          <button onclick="window.location.href='/app/sugestoes.html';closeDrops()">💡 Caixa de Sugestões</button>
           <button onclick="salvarConfig();closeDrops()">💾 Salvar configuração</button>
           <div class="dropsec">Conta</div>
           <button onclick="logoutOBJ()">🔒 Sair</button>
@@ -302,6 +305,8 @@ footer{display:flex;justify-content:space-between;font-size:11px;color:#7a8da0;p
     <button data-t="obj5" onclick="show('obj5')">Obj 05 — Paralisadas</button>
     <button data-t="obj5ind" onclick="show('obj5ind')">Indicadores Obj 05</button>
     <button data-t="exec" onclick="show('exec')">Painel Executivo</button>
+    <button id="tabVisaoDiretor" onclick="window.location.href='/app/visao-diretor.html'">👁 Visão do Diretor</button>
+    <button id="tabAlertasMedicao" onclick="window.location.href='/app/alertas-medicao.html'">🔔 Medições <span id="tabAlertasBadge"></span></button>
     <div class="right">
       <button class="btn gray" onclick="pick('fileInput')">📂 Planilha</button>
       <button class="btn blue" onclick="exportarPPTX()">📊 PPTX</button>
@@ -1324,5 +1329,6 @@ function exportarPPTX(){
 <script src="/app/objetivos-respostas-editaveis.js"></script>
 <script src="/app/objetivo4-acumulativo.js"></script>
 <script src="/app/objetivo5-indicadores-institucional.js"></script>
+<script src="/app/fase-12-34-5-contadores.js"></script>
 </body>
 </html>

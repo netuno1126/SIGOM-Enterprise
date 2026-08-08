@@ -1,0 +1,11 @@
+{
+  "dashboard_menu_alertas": true,
+  "dashboard_menu_sugestoes": true,
+  "dashboard_menu_visao_diretor": true,
+  "objetivos_tab_visao_diretor": true,
+  "objetivos_tab_medicoes": true,
+  "objetivos_menu_sugestoes": true,
+  "alertas_page": true,
+  "visao_diretor_page": true,
+  "sugestoes_page": true
+}

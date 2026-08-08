@@ -1,2 +1,2 @@
-SIGOM 2026 — Fase 12.34.3
-Caixa de Sugestões institucional · melhoria contínua orientada pelos usuários
+SIGOM 2026 — Fase 12.34.5
+Integração física da navegação: Atualizações de Medição, Visão do Diretor e Caixa de Sugestões.
