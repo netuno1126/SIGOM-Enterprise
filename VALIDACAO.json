@@ -1,0 +1,10 @@
+{
+  "versao": "12.34.5.1",
+  "arquivo": "public/app/dashboard.html",
+  "sha256": "b9addd90564e5fcc53e115aec2d399f74dca0bb2046a28c5dae24a1e048a3894",
+  "validacoes": {
+    "contador_apenas_uma_vez": true,
+    "contador_antes_body_final": true,
+    "sem_injecao_no_html_word": true
+  }
+}

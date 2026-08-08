@@ -1,11 +1,5 @@
-SIGOM — Fase 12.33 Institucional — Revisão 1
+SIGOM Fase 12.34.5.1 — Hotfix
 
-Este é o único pacote que deve ser publicado.
-Não publique separadamente as Fases 12.31 e 12.32.
+Corrige o dashboard da 12.34.5. O script do contador foi inserido acidentalmente dentro do HTML gerado para exportação Word, encerrando o <script> principal antes da hora e fazendo o JavaScript aparecer como texto na tela.
 
-Commit:
-feat: publicar Fase 12.33 institucional consolidada
-
-Atenção:
-- as migrations 12.32 e 12.33 já foram aplicadas no Supabase atual;
-- não execute novamente o SQL no projeto operacional.
+Substitua somente public/app/dashboard.html.
